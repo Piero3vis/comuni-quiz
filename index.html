@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz: tutti i comuni d’Italia</title>
+<link rel="stylesheet" href="style.css">
+<script>try{const t=localStorage.getItem('comuniQuizTheme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Comuni d’Italia — il quiz sulla mappa</h1>
+  <div class="bar">
+    <input id="inp" type="text" placeholder="Premi Inizia, poi scrivi il nome di un comune…" autocomplete="off" autocapitalize="off" spellcheck="false" disabled>
+    <div class="stat"><span id="cnt">0</span> / <span id="tot">0</span><small>comuni</small></div>
+    <div class="stat" id="time">0:00:00<small>tempo</small></div>
+    <button id="theme" class="icon" aria-label="Tema: automatico" title="Tema: automatico">◐</button>
+    <button class="primary" id="go">Inizia</button>
+    <button id="giveup" disabled>Mi arrendo</button>
+  </div>
+  <div class="main">
+    <div id="mapbox"><canvas id="cv"></canvas><div id="tip"></div>
+      <div class="zoom"><button id="zi" aria-label="Ingrandisci">+</button><button id="zo" aria-label="Riduci">−</button><button id="zr" aria-label="Reimposta" style="font-size:13px">⌂</button></div>
+    </div>
+    <div class="side"><details class="reg" id="achbox"><summary>🏆 Traguardi <span class="c" id="achc"></span></summary><div id="achlist"></div></details><h2 style="margin-top:12px">Per regione</h2><div id="regs"></div>
+      <div class="msg">Accetta nomi con o senza accenti e apostrofi. In Alto Adige vale anche il nome tedesco. Se più comuni hanno lo stesso nome, si colorano tutti. Il progresso viene salvato in questo browser.</div>
+    </div>
+  </div>
+</div>
+<p class="foot">Confini dei comuni: © <a href="https://www.istat.it/">ISTAT</a>, tramite <a href="https://github.com/openpolis/geojson-italy">openpolis/geojson-italy</a>, licenza <a href="https://creativecommons.org/licenses/by/4.0/deed.it" rel="license">CC BY 4.0</a>; semplificati e modificati. Confini degli Stati (usati per individuare la costa): <a href="https://www.naturalearthdata.com/">Natural Earth</a>, pubblico dominio.<br>Nessun cookie: il progresso resta salvato solo in questo browser.</p>
+<script src="app.js"></script>
+</body>
+</html>

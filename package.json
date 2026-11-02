@@ -1,0 +1,13 @@
+{
+  "name": "comuni-italia-quiz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Quiz sulla mappa di tutti i comuni d'Italia",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "build:data": "python3 scripts/build_data.py",
+    "build": "python3 scripts/build_single_file.py",
+    "test": "python3 scripts/build_single_file.py && node tests/smoke.js"
+  },
+  "devDependencies": { "jsdom": "^30.1.3" }
+}

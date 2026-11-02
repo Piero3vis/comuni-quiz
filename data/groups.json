@@ -1,0 +1,297 @@
+{
+ "isole": [
+  {
+   "name": "Isole Eolie",
+   "comuni": [
+    "Lipari",
+    "Leni",
+    "Malfa",
+    "Santa Marina Salina"
+   ]
+  },
+  {
+   "name": "Isole minori siciliane",
+   "comuni": [
+    "Lipari",
+    "Leni",
+    "Malfa",
+    "Santa Marina Salina",
+    "Favignana",
+    "Pantelleria",
+    "Lampedusa e Linosa",
+    "Ustica"
+   ]
+  },
+  {
+   "name": "Isola d'Elba",
+   "comuni": [
+    "Portoferraio",
+    "Campo nell'Elba",
+    "Capoliveri",
+    "Marciana",
+    "Marciana Marina",
+    "Porto Azzurro",
+    "Rio"
+   ]
+  },
+  {
+   "name": "Arcipelago toscano",
+   "comuni": [
+    "Portoferraio",
+    "Campo nell'Elba",
+    "Capoliveri",
+    "Marciana",
+    "Marciana Marina",
+    "Porto Azzurro",
+    "Rio",
+    "Capraia Isola",
+    "Isola del Giglio"
+   ]
+  },
+  {
+   "name": "Ischia",
+   "comuni": [
+    "Ischia",
+    "Casamicciola Terme",
+    "Lacco Ameno",
+    "Forio",
+    "Barano d'Ischia",
+    "Serrara Fontana"
+   ]
+  },
+  {
+   "name": "Isole campane",
+   "comuni": [
+    "Ischia",
+    "Casamicciola Terme",
+    "Lacco Ameno",
+    "Forio",
+    "Barano d'Ischia",
+    "Serrara Fontana",
+    "Capri",
+    "Anacapri",
+    "Procida"
+   ]
+  },
+  {
+   "name": "Isole pontine",
+   "comuni": [
+    "Ponza",
+    "Ventotene"
+   ]
+  },
+  {
+   "name": "Isole minori sarde",
+   "comuni": [
+    "La Maddalena",
+    "Carloforte",
+    "Calasetta",
+    "Sant'Antioco"
+   ]
+  },
+  {
+   "name": "Tutte le isole minori italiane",
+   "union": true,
+   "comuni": [
+    "Isole Tremiti"
+   ]
+  }
+ ],
+ "cammini": [
+  {
+   "name": "Cammino di San Benedetto (Norcia–Montecassino)",
+   "comuni": [
+    "Norcia",
+    "Cascia",
+    "Monteleone di Spoleto",
+    "Leonessa",
+    "Poggio Bustone",
+    "Rieti",
+    "Rocca Sinibalda",
+    "Castel di Tora",
+    "Orvinio",
+    "Mandela",
+    "Subiaco",
+    "Trevi nel Lazio",
+    "Collepardo",
+    "Veroli",
+    "Arpino",
+    "Roccasecca",
+    "Aquino",
+    "Cassino"
+   ]
+  },
+  {
+   "name": "Via degli Dei (Bologna–Firenze)",
+   "comuni": [
+    "Bologna",
+    "Casalecchio di Reno",
+    "Sasso Marconi",
+    "Monzuno",
+    "Monghidoro",
+    "San Benedetto Val di Sambro",
+    "Firenzuola",
+    "Barberino di Mugello",
+    "Scarperia e San Piero",
+    "Vaglia",
+    "Fiesole",
+    "Firenze"
+   ]
+  },
+  {
+   "name": "Via di Francesco: Via del Nord (La Verna–Assisi)",
+   "comuni": [
+    "Chiusi della Verna",
+    "Pieve Santo Stefano",
+    "Sansepolcro",
+    "Citerna",
+    "Città di Castello",
+    "Pietralunga",
+    "Gubbio",
+    "Valfabbrica",
+    "Assisi"
+   ]
+  },
+  {
+   "name": "Via di Francesco: Via di Roma (Assisi–Roma)",
+   "comuni": [
+    "Assisi",
+    "Spello",
+    "Foligno",
+    "Trevi",
+    "Spoleto",
+    "Scheggino",
+    "Arrone",
+    "Terni",
+    "Greccio",
+    "Poggio Bustone",
+    "Rieti",
+    "Poggio San Lorenzo",
+    "Scandriglia",
+    "Monterotondo",
+    "Roma"
+   ]
+  },
+  {
+   "name": "Cammino dei Borghi Silenti (Umbria, anello)",
+   "comuni": [
+    "Montecchio",
+    "Guardea",
+    "Avigliano Umbro",
+    "Baschi"
+   ]
+  },
+  {
+   "name": "Via Francigena (Gran San Bernardo–Roma)",
+   "comuni": [
+    "Saint-Rhémy-en-Bosses",
+    "Saint-Oyen",
+    "Etroubles",
+    "Gignod",
+    "Aosta",
+    "Saint-Christophe",
+    "Quart",
+    "Nus",
+    "Chambave",
+    "Châtillon",
+    "Saint-Vincent",
+    "Montjovet",
+    "Verrès",
+    "Issogne",
+    "Arnad",
+    "Hône",
+    "Bard",
+    "Donnas",
+    "Pont-Saint-Martin",
+    "Carema",
+    "Settimo Vittone",
+    "Borgofranco d'Ivrea",
+    "Montalto Dora",
+    "Ivrea",
+    "Bollengo",
+    "Palazzo Canavese",
+    "Piverone",
+    "Viverone",
+    "Roppolo",
+    "Cavaglià",
+    "Santhià",
+    "Carisio",
+    "Balocco",
+    "Vercelli",
+    "Palestro",
+    "Robbio",
+    "Nicorvo",
+    "Mortara",
+    "Tromello",
+    "Garlasco",
+    "Gropello Cairoli",
+    "Pavia",
+    "Valle Salimbene",
+    "Linarolo",
+    "Belgioioso",
+    "Santa Cristina e Bissone",
+    "Miradolo Terme",
+    "Chignolo Po",
+    "Senna Lodigiana",
+    "Orio Litta",
+    "Calendasco",
+    "Piacenza",
+    "Pontenure",
+    "Cadeo",
+    "Fiorenzuola d'Arda",
+    "Alseno",
+    "Fidenza",
+    "Noceto",
+    "Medesano",
+    "Fornovo di Taro",
+    "Terenzo",
+    "Berceto",
+    "Pontremoli",
+    "Filattiera",
+    "Villafranca in Lunigiana",
+    "Aulla",
+    "Santo Stefano di Magra",
+    "Sarzana",
+    "Luni",
+    "Carrara",
+    "Massa",
+    "Montignoso",
+    "Pietrasanta",
+    "Camaiore",
+    "Lucca",
+    "Porcari",
+    "Altopascio",
+    "Fucecchio",
+    "San Miniato",
+    "Castelfiorentino",
+    "Gambassi Terme",
+    "San Gimignano",
+    "Colle di Val d'Elsa",
+    "Monteriggioni",
+    "Siena",
+    "Monteroni d'Arbia",
+    "Buonconvento",
+    "Montalcino",
+    "San Quirico d'Orcia",
+    "Castiglione d'Orcia",
+    "Radicofani",
+    "Acquapendente",
+    "San Lorenzo Nuovo",
+    "Bolsena",
+    "Montefiascone",
+    "Viterbo",
+    "Vetralla",
+    "Capranica",
+    "Sutri",
+    "Monterosi",
+    "Campagnano di Roma",
+    "Formello",
+    "Roma"
+   ]
+  },
+  {
+   "name": "Tutti i cammini",
+   "union": true
+  }
+ ]
+}

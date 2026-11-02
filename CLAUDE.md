@@ -1,0 +1,62 @@
+# CLAUDE.md
+
+Static, framework-free quiz page. UI language: Italian. No build step for the app itself; only the map data has a build script.
+
+## Architecture
+- `index.html` + `style.css` + `app.js`. `app.js` loads `data/map.json` and `data/groups.json` (or the inline `<script id="data">` that
+  `scripts/build_single_file.py` embeds), then runs everything inside `main()`.
+- The map is drawn on one `<canvas>` with a `Path2D` per comune; the view is `scale`, `ox`, `oy`. Everything is redrawn on change via `draw()` (rAF-batched).
+  Region outline (`rb`) and province outline (`pb`) are single paths stroked on top with constant on-screen width.
+- Hit testing uses `isPointInPath` on a scratch canvas context (`hc`) over all comuni; it is only used for hover and click.
+
+## Data format (`data/map.json`)
+Parallel arrays, indexed by comune number `i` (0..7895):
+- `n[i]` name (Alto Adige/Aosta names may be `Italiano/Tedesco`), `p[i]` province acronym, `r[i]` index into `regs`.
+- `d[i]` SVG path string in projected integer units (`x = lon*cos(41.9deg)*800`, `y = -lat*800`; first `M` absolute, then relative `l`, `z`).
+- `bb` bounding box `[minx, miny, maxx, maxy]` in the same units. `rb` and `pb`: region and province outlines as path strings.
+- `co`: indices of coastal comuni. `regs`: region names, sorted.
+Never edit `map.json` by hand: change `scripts/build_data.py` and regenerate.
+
+## Groups (`data/groups.json`)
+`isole` and `cammini`: lists of `{ name, comuni: [names] }`. A group with `"union": true` is every other group in its list plus its own extra `comuni`.
+`withGroups()` in `app.js` converts names to indices and throws if a name is missing or not unique (Samone, Livo, Peglio, Castro, San Teodoro are duplicated names in the data).
+
+## Quiz logic
+- Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.
+  `looseMap`/`lk()` is the fallback that also drops connecting words (di, del, della, nell, ...). Typing a name fills every comune with that name
+  (homonyms: both Castro, etc.; covered by `tests/smoke.js`).
+- State: `found[]` (Uint8Array), `foundCount`, `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
+- Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs }`. Always wrapped in try/catch.
+- Provinces: `PN` maps sigla to display name, `CM` lists ISTAT metropolitan cities, `provLabel(p)` gives "Città metropolitana di …" / "Provincia di …" for toasts.
+  `scripts/check_istat.py` checks `map.json`, `PN` and `CM` against ISTAT's current list.
+
+## Theme
+Three modes: automatic (no `data-theme` on `<html>`, follows `prefers-color-scheme`), `light`, `dark`. The `#theme` button cycles them and stores the
+choice in `localStorage['comuniQuizTheme']` (removed for automatic), separate from `comuniQuizV1`. An inline script in `<head>` applies it before first paint.
+`render()` reads colours from CSS variables, so call `draw()` after any theme change (button and `matchMedia` listener do).
+
+## Achievements
+Derived from the state, never stored: `achInit()` computes the unlocked set silently on load, `achCheck(i)` adds new ones and queues toasts.
+Ids: `m<n>` milestone, `p:<ACR>` province complete, `r:<k>` region complete, `p25/p50:<ACR>` and `r25/r50:<k>` quarter/half,
+`c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
+Provinces with fewer than 4 comuni get no quarter/half achievements.
+
+## Conventions
+- Keep it dependency-free (no framework, no bundler). Theme colours live in CSS variables with a dark-mode override.
+- Do not move the camera on guesses except through `ensureVisible()` (pan only if the new comune is entirely off screen).
+- Italian user-facing strings. Typographic apostrophe in prose, straight quotes in code.
+- The footer must keep the CC BY 4.0 attribution (ISTAT, openpolis link, licence link, "semplificati e modificati") and the "Nessun cookie" note.
+  No cookies, analytics or external resources: only `dist/quiz.html` is published (as `index.html`).
+
+## Commands
+`python3 -m http.server 8000` (dev), `npm test` (builds the single file and runs the jsdom smoke test),
+`python3 scripts/build_data.py` (regenerate map data; needs shapely and Node), `python3 scripts/build_single_file.py`,
+`python3 scripts/check_istat.py` (compare with ISTAT). jsdom 30 needs Node 22.22+/24.15+.
+
+## Workflow
+Spec-driven with OpenSpec: changes live in `openspec/changes/<name>/` (proposal, design, specs, tasks); `/opsx:propose`, `/opsx:apply`, `/opsx:archive`.
+Run `openspec validate <change> --strict` before applying.
+
+## Ideas not done yet
+Merge the 2026 comuni (Castegnero Nanto, Lirio into Montalto Pavese) in `build_data.py`. Export/import of progress (for moving between devices), optional highlight of all coastal comuni, more cammini (Cammino dei Briganti, Cammino Materano, Via Appia),
+region labels on the map, a tidy Via Francigena list from the official stage data.
