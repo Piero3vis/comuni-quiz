@@ -62,9 +62,20 @@ python3 scripts/check_istat.py      # exit code 1 if comuni or provinces differ 
 **Test**: `npm install && npm test` (jsdom 30 needs Node.js 22.22+ or 24.15+)
 
 ## Publishing
-Only the single file is published: run `python3 scripts/build_single_file.py` and serve `dist/quiz.html` as `index.html`
-at the site root (planned host: GitHub Pages, not set up yet). It loads nothing external, so no build step is needed on the host.
-Do not publish the repo root: `node_modules/`, `.claude/`, `openspec/` and `scripts/` are not needed online.
+Live site: **https://piero3vis.github.io/comuni-quiz/** (GitHub Pages).
+
+Only the single file is published. `.github/workflows/pages.yml` runs `npm test` (Node 22) on every pull request and on `main`;
+on `main`, if the tests pass, it copies `dist/quiz.html` to `index.html` and deploys it. Nothing else from the repo goes online.
+A failed test means no deploy: the previous version stays live. You can also start a deploy by hand from the Actions tab ("Run workflow").
+
+Recommended: in Settings → Branches, protect `main` and require the "test" check, so changes only arrive through green pull requests.
+
+### How to make a change
+1. `openspec new change <name>` (or `/opsx:propose`): proposal, design, specs, tasks; `openspec validate <name> --strict`.
+2. `git switch -c <name>`, implement, tick the tasks, commit.
+3. `git push -u origin <name>` and open a pull request (`gh pr create`): CI runs the tests.
+4. Merge when green: the site updates within a minute or two.
+5. `openspec archive <name>` to move the specs into `openspec/specs/`, commit on `main` (or in the same pull request before merging).
 
 Privacy: no cookies, no analytics, nothing is sent anywhere; progress and theme stay in the browser's `localStorage`
 (the footer says so). Adding analytics later would need a consent banner.
