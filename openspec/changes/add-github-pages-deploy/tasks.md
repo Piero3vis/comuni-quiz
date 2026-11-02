@@ -11,5 +11,5 @@
 ## 3. Verification
 
 - [x] 3.1 `openspec validate add-github-pages-deploy --strict`
-- [ ] 3.2 Push the branch, open a pull request, confirm the "test" job passes on GitHub (jsdom 30, Node 22) and deploy is skipped
+- [x] 3.2 Push the branch, open a pull request, confirm the "test" job passes on GitHub (jsdom 30, Node 22) and deploy is skipped (run 41467357589: Node 22.23.4, both variants OK)
 - [ ] 3.3 After merge: deploy job succeeds and `https://piero3vis.github.io/comuni-quiz/` serves the quiz
