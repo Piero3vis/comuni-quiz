@@ -56,6 +56,8 @@ Provinces with fewer than 4 comuni get no quarter/half achievements.
 ## Workflow
 Spec-driven with OpenSpec: changes live in `openspec/changes/<name>/` (proposal, design, specs, tasks); `/opsx:propose`, `/opsx:apply`, `/opsx:archive`.
 Run `openspec validate <change> --strict` before applying.
+One branch and one pull request per change; `.github/workflows/pages.yml` tests every PR (Node 22, `npm test`) and deploys `main` to
+https://piero3vis.github.io/comuni-quiz/ (only `dist/quiz.html` as `index.html`). Never push straight to `main`.
 
 ## Ideas not done yet
 Merge the 2026 comuni (Castegnero Nanto, Lirio into Montalto Pavese) in `build_data.py`. Export/import of progress (for moving between devices), optional highlight of all coastal comuni, more cammini (Cammino dei Briganti, Cammino Materano, Via Appia),
