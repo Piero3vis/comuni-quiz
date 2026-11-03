@@ -59,12 +59,12 @@ python3 scripts/build_single_file.py   # -> dist/quiz.html (~900 KB)
 python3 scripts/check_istat.py      # exit code 1 if comuni or provinces differ from ISTAT
 ```
 
-**Test**: `npm install && npm test` (jsdom 30 needs Node.js 22.22+ or 24.15+)
+**Test**: `npm install && npm test` (needs Node.js 22.23.4+, 24.22.1+ or 26.12.1+: earlier releases lack the Brotli fix; `.npmrc` makes npm refuse them)
 
 ## Publishing
 Live site: **https://piero3vis.github.io/comuni-quiz/** (GitHub Pages).
 
-Only the single file is published. `.github/workflows/pages.yml` runs `npm test` (Node 22) on every pull request and on `main`;
+Only the single file is published. `.github/workflows/pages.yml` runs `npm test` (Node 22.23.4) on every pull request and on `main`;
 on `main`, if the tests pass, it copies `dist/quiz.html` to `index.html` and deploys it. Nothing else from the repo goes online.
 A failed test means no deploy: the previous version stays live. You can also start a deploy by hand from the Actions tab ("Run workflow").
 

@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 22.23.4   # release con le correzioni di sicurezza (Brotli)
           cache: npm
       - run: npm ci
       - run: npm test   # genera dist/quiz.html ed esegue tests/smoke.js

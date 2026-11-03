@@ -9,5 +9,6 @@
     "build": "python3 scripts/build_single_file.py",
     "test": "python3 scripts/build_single_file.py && node tests/smoke.js"
   },
+  "engines": { "node": ">=22.23.4 <23 || >=24.22.1 <25 || >=26.12.1" },
   "devDependencies": { "jsdom": "^30.1.3" }
 }
