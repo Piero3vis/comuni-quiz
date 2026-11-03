@@ -40,6 +40,14 @@ async function run(label, htmlFile, useFetch){
   const docEl = d.documentElement, themes = [];
   for(let k=0;k<3;k++){ $('theme').click(); themes.push((docEl.dataset.theme||'auto') + ':' + (w.localStorage.getItem('comuniQuizTheme')||'-') + ':' + $('theme').title); }
   console.log(' theme cycle:', themes.join(' | '));
+  // traguardi segreti: nascosti fino a 69 e 420 comuni
+  const names = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')).n;
+  let ni = 0; const fillTo = n => { while(+$('cnt').textContent < n && ni < names.length) type(names[ni++]); };
+  const achText = () => $('achlist').textContent;
+  fillTo(60); const sec60 = achText();
+  fillTo(69); const sec69 = achText();
+  fillTo(420); const sec420 = achText();
+  console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d\/\d/)||['?'])[0]).join(' -> '));
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
   ok($('tot').textContent === '7896', 'totale comuni');
@@ -47,6 +55,9 @@ async function run(label, htmlFile, useFetch){
   ok(before === 8, 'conteggio dopo le risposte di prova');
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
+  ok(/Segreti\s*0\/2/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length === 2, 'segreti nascosti prima di 69');
+  ok(/Segreti\s*1\/2/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
+  ok(/Segreti\s*2\/2/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
   // licenza dei dati e privacy nel footer
   const foot = d.querySelector('.foot'), links = [...foot.querySelectorAll('a')].map(a=>a.href);
