@@ -208,7 +208,7 @@ function renderAch(){
     + [['r25','Regioni: un quarto'],['r50','Regioni: metà']].map(([pre,title])=>{ const l = D.regs.map((r,k)=>k).filter(k=>unlocked.has(pre+':'+k)); return `<details class="prov" data-a="${pre}"${openAch.has(pre)?' open':''}><summary><span>🗺️ ${title}</span><span class="c">${l.length}/${D.regs.length}</span></summary><ul>${l.map(k=>`<li>${D.regs[k].split('/')[0]}</li>`).join('')}</ul></details>`; }).join('');
 }
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
-function tick(){ elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
+function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; }
 function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed})); }catch(e){} }
 function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; } }catch(e){} }
@@ -216,9 +216,10 @@ function start(){
   running = true; gaveUp = false; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
 }
-function pause(){ running = false; clearInterval(timer); save(); $('inp').disabled = true; $('go').textContent = 'Riprendi'; }
-function finish(){ running = false; clearInterval(timer); $('inp').disabled = true; $('go').disabled = true; $('giveup').disabled = true; $('go').textContent = foundCount===N?'Completato!':'Finito'; save(); draw(); }
+function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').disabled = true; $('go').textContent = 'Riprendi'; }
+function finish(){ tick(); running = false; clearInterval(timer); $('inp').disabled = true; $('go').disabled = true; $('giveup').disabled = true; $('go').textContent = foundCount===N?'Completato!':'Finito'; save(); draw(); }
 $('go').onclick = ()=>{ running ? pause() : start(); };
+addEventListener('pagehide', ()=>{ if(running){ tick(); save(); } });
 $('giveup').onclick = ()=>{ if(confirm('Vuoi arrenderti? Verranno mostrati tutti i comuni mancanti.')){ gaveUp = true; finish(); } };
 const dupEl = document.createElement('div'); dupEl.style.cssText = 'position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--bad);border-radius:10px;padding:6px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .25s;pointer-events:none;z-index:6;max-width:80%;text-align:center'; box.appendChild(dupEl);
 let dupT = 0, dupClr = 0;
