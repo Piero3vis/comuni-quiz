@@ -47,6 +47,8 @@ Provinces with fewer than 4 comuni get no quarter/half achievements.
 - Italian user-facing strings. Typographic apostrophe in prose, straight quotes in code.
 - The footer must keep the CC BY 4.0 attribution (ISTAT, openpolis link, licence link, "semplificati e modificati") and the "Nessun cookie" note.
   No cookies, analytics or external resources: only `dist/quiz.html` is published (as `index.html`).
+- Search tags (title, description, canonical, Open Graph, JSON-LD, inline SVG favicon) and the `.about` text live in `index.html`.
+  They hard-code the site URL and the 7.896 count: update them if either changes (e.g. after the 2026 mergers); `tests/smoke.js` checks that the URLs agree.
 
 ## Commands
 `python3 -m http.server 8000` (dev), `npm test` (builds the single file and runs the jsdom smoke test),
