@@ -51,12 +51,12 @@ Provinces with fewer than 4 comuni get no quarter/half achievements.
 ## Commands
 `python3 -m http.server 8000` (dev), `npm test` (builds the single file and runs the jsdom smoke test),
 `python3 scripts/build_data.py` (regenerate map data; needs shapely and Node), `python3 scripts/build_single_file.py`,
-`python3 scripts/check_istat.py` (compare with ISTAT). jsdom 30 needs Node 22.22+/24.15+.
+`python3 scripts/check_istat.py` (compare with ISTAT). Node must be 22.23.4+, 24.22.1+ or 26.12.1+ (Brotli security fix; `engines` + `.npmrc` engine-strict enforce it, CI pins 22.23.4).
 
 ## Workflow
 Spec-driven with OpenSpec: changes live in `openspec/changes/<name>/` (proposal, design, specs, tasks); `/opsx:propose`, `/opsx:apply`, `/opsx:archive`.
 Run `openspec validate <change> --strict` before applying.
-One branch and one pull request per change; `.github/workflows/pages.yml` tests every PR (Node 22, `npm test`) and deploys `main` to
+One branch and one pull request per change; `.github/workflows/pages.yml` tests every PR (Node 22.23.4, `npm test`) and deploys `main` to
 https://piero3vis.github.io/comuni-quiz/ (only `dist/quiz.html` as `index.html`). Never push straight to `main`.
 
 ## Ideas not done yet
