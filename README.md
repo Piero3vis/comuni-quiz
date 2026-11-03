@@ -1,98 +1,41 @@
-# Quiz: tutti i comuni d'Italia
+# Quiz dei comuni d’Italia: quanti ne conosci?
 
-An interactive map quiz: type the name of any of Italy's ~7,900 comuni and it fills in on a single map.
-Static site, no framework, no backend. The interface is in Italian.
+### ▶ [Gioca subito online: piero3vis.github.io/comuni-quiz](https://piero3vis.github.io/comuni-quiz/)
 
-## Features
-- One map with every comune, province outlines (thin) and region outlines (bold), zoom and pan (wheel, drag, pinch).
-- Forgiving name matching: accents, apostrophes and case are ignored, German names in Alto Adige work,
-  small connecting words are optional ("Vodo di Cadore" finds Vodo Cadore, "Reggio Emilia" finds Reggio nell'Emilia).
-- Comuni that share a name (Castro, Samone, Livo, Peglio, San Teodoro) are all filled by one guess.
-- Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
-- Side panel grouped by region and province, with a progress bar per region.
-- Click an unfound comune for a hint (first letter, length) and an optional reveal.
-- Achievements: milestones (including 420 and 666), quarter/half/complete per province and region,
-  the whole coast and each regional coast, minor islands, and walking routes (cammini).
-- Light/dark theme button in the top bar (automatic → light → dark), remembered in `localStorage` (`comuniQuizTheme`).
-- Progress is saved in the browser (`localStorage`, key `comuniQuizV1`).
+Un gioco di geografia gratuito sulla mappa d’Italia: scrivi il nome di un comune e lo vedi colorarsi sulla cartina.
+I comuni italiani sono 7.896, dalle grandi città ai paesini di montagna. Riesci a trovarli tutti?
 
-## Run locally
-```bash
-python3 -m http.server 8000     # then open http://localhost:8000
-```
-(Opening `index.html` directly with a double click will not work: the page loads `data/*.json` with `fetch`.
-For a double-clickable file, build the single-file version below.)
+Si gioca nel browser, da computer, tablet o telefono. Non serve installare niente né registrarsi.
 
-## Project layout
-```
-index.html            page skeleton
-style.css             styles (light/dark theme via CSS variables)
-app.js                all the logic: loading, canvas map, quiz, side panel, achievements
-data/map.json         generated map data (see CLAUDE.md for the format)
-data/groups.json      hand-edited groups: islands and cammini, listed by comune name
-scripts/build_data.py regenerates data/map.json from the open data sources
-scripts/build_single_file.py   builds dist/quiz.html (CSS, JS and data inlined)
-scripts/check_istat.py         compares comuni and provinces with the current ISTAT list
-openspec/             OpenSpec specs and change proposals (spec-driven workflow)
-tests/smoke.js        jsdom smoke test (npm test)
-```
+## Come si gioca
+1. Apri il [quiz dei comuni](https://piero3vis.github.io/comuni-quiz/) e premi **Inizia**.
+2. Scrivi il nome di un comune: appena è giusto, si colora sulla mappa. Non serve premere Invio.
+3. Continua finché vuoi. Puoi mettere in pausa e riprendere più tardi.
 
-## Common tasks
-**Add a cammino or an island group**: edit `data/groups.json`, adding `{ "name": "...", "comuni": ["Comune 1", "Comune 2"] }`.
-Names must match `data/map.json` exactly and be unique (the page throws a clear error otherwise).
-Put new items before the last entry of the list: the last one has `"union": true` and automatically contains every other group.
+Qualche aiuto:
+- **Accenti, apostrofi e maiuscole non contano**: “cantu” trova Cantù.
+- **Le parole piccole si possono saltare**: “Reggio Emilia” trova Reggio nell’Emilia.
+- **In Alto Adige valgono anche i nomi tedeschi**: “Bozen” trova Bolzano.
+- **Comuni con lo stesso nome** (per esempio i due Castro, in Lombardia e in Puglia) si colorano insieme.
+- **Sei bloccato?** Clicca su un comune ancora vuoto: vedi l’iniziale e il numero di lettere, e se vuoi anche la soluzione.
+- **Mappa**: trascina per spostarti, usa la rotella o due dita per lo zoom.
 
-**Rebuild the map data** (only if you change simplification, projection or the coast rules):
-```bash
-pip install -r requirements.txt     # shapely
-python3 scripts/build_data.py       # needs Node.js (uses npx mapshaper); downloads ~50 MB into scripts/cache/
-```
-The output is deterministic: running it on the same sources reproduces the committed `data/map.json` exactly.
+## Cosa c’è nel gioco
+- Tutti i comuni d’Italia su un’unica mappa, con i confini di province e regioni.
+- Un elenco laterale per regione e provincia, con l’avanzamento di ciascuna.
+- Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), tutti i comuni della costa,
+  le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
+- Tema chiaro e scuro.
+- I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 
-**Single file** (handy for sharing or for hosts that take one HTML file):
-```bash
-python3 scripts/build_single_file.py   # -> dist/quiz.html (~900 KB)
-```
+## Privacy
+Nessun cookie, nessuna pubblicità, nessuna statistica. Non viene inviato nessun dato: i progressi restano nel tuo browser.
 
-**Check against ISTAT** (comuni, province sigle and names; needs internet, stdlib only):
-```bash
-python3 scripts/check_istat.py      # exit code 1 if comuni or provinces differ from ISTAT
-```
+## Dati
+- Confini dei comuni: © ISTAT, tramite [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy),
+  licenza [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); semplificati e modificati per il gioco.
+- Confini degli Stati (usati per calcolare la costa): [Natural Earth](https://www.naturalearthdata.com/), pubblico dominio.
+- Province aggiornate al 2026, comprese le nuove province della Sardegna.
 
-**Test**: `npm install && npm test` (needs Node.js 22.23.4+, 24.22.1+ or 26.12.1+: earlier releases lack the Brotli fix; `.npmrc` makes npm refuse them)
-
-## Publishing
-Live site: **https://piero3vis.github.io/comuni-quiz/** (GitHub Pages).
-
-Only the single file is published. `.github/workflows/pages.yml` runs `npm test` (Node 22.23.4) on every pull request and on `main`;
-on `main`, if the tests pass, it copies `dist/quiz.html` to `index.html` and deploys it. Nothing else from the repo goes online.
-A failed test means no deploy: the previous version stays live. You can also start a deploy by hand from the Actions tab ("Run workflow").
-
-Recommended: in Settings → Branches, protect `main` and require the "test" check, so changes only arrive through green pull requests.
-
-### How to make a change
-1. `openspec new change <name>` (or `/opsx:propose`): proposal, design, specs, tasks; `openspec validate <name> --strict`.
-2. `git switch -c <name>`, implement, tick the tasks, commit.
-3. `git push -u origin <name>` and open a pull request (`gh pr create`): CI runs the tests.
-4. Merge when green: the site updates within a minute or two.
-5. `openspec archive <name>` to move the specs into `openspec/specs/`, commit on `main` (or in the same pull request before merging).
-
-Privacy: no cookies, no analytics, nothing is sent anywhere; progress and theme stay in the browser's `localStorage`
-(the footer says so). Adding analytics later would need a consent banner.
-
-Note that saved progress belongs to the exact address the page is served from: a new URL or domain starts empty.
-
-## Data and credits
-- Municipal boundaries: © ISTAT, via [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy), licensed
-  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (licence checked on 2026-11-02). Simplified to 4%, reprojected and quantised,
-  so the footer says "semplificati e modificati". CC BY requires the credit, the licence link and the change notice: keep them in the footer.
-- State borders (used only to compute the coast): [Natural Earth](https://www.naturalearthdata.com/), public domain.
-
-## Known limitations
-- Provinces follow ISTAT 2026, including the Sardinian layout in force since 1 January 2026 (Città metropolitana di Sassari, Gallura Nord-Est Sardegna,
-  Ogliastra, Medio Campidano, Sulcis Iglesiente). ISTAT uses the sigla `CI` for Sulcis Iglesiente; a proposed vehicle-plate rule would use `SU`.
-- The dataset has 7,896 comuni; ISTAT lists 7,894 in 2026. Not yet merged: Castegnero + Nanto (VI) → Castegnero Nanto,
-  and Lirio (PV), absorbed by Montalto Pavese on 31 January 2026. Merging needs a step in `scripts/build_data.py`.
-- Coastal comuni are computed geometrically (644 found) and tuned by hand for the Alpine borders. Corner cases are possible.
-- The Via Francigena list (103 comuni) is built from the main stage towns; the official route crosses about 140 comuni.
-- Boundaries are simplified, so very small comuni look rough when zoomed in.
+## Per chi sviluppa
+Istruzioni tecniche, struttura del progetto e limiti noti sono in [DEVELOPMENT.md](DEVELOPMENT.md).
