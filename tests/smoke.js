@@ -23,6 +23,7 @@ async function run(label, htmlFile, useFetch){
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
   console.log(label, 'tot=', $('tot').textContent, 'regs=', d.querySelectorAll('#regs details.reg').length, 'ach=', $('achc').textContent);
+  const time0 = $('time').firstChild.textContent;
   $('go').click();
   const inp = $('inp'); const type = v=>{ inp.value = v; inp.dispatchEvent(new w.Event('input')); };
   type('vodo di cadore'); console.log(' after vodo di cadore:', $('cnt').textContent);
@@ -51,6 +52,7 @@ async function run(label, htmlFile, useFetch){
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
   ok($('tot').textContent === '7896', 'totale comuni');
+  ok(time0 === '0:00:00', 'timer a zero al caricamento (era ' + time0 + ')');
   ok(errors.length === 0, 'errori JS');
   ok(before === 8, 'conteggio dopo le risposte di prova');
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
@@ -80,4 +82,28 @@ async function run(label, htmlFile, useFetch){
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
   dom.window.close();
 }
-(async()=>{ await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// timer: riparte dal tempo salvato e lo salva correttamente in pausa
+async function runTimer(){
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8');
+  const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+    beforeParse(w){
+      w.Path2D = class {};
+      const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+      w.HTMLCanvasElement.prototype.getContext = ()=>noop;
+      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f: [0, 1], t: 65000 }));
+    }});
+  await new Promise(r=>setTimeout(r,1500));
+  const w = dom.window, $ = id=>w.document.getElementById(id), shown = ()=>$('time').firstChild.textContent;
+  const onLoad = shown();
+  $('go').click(); await new Promise(r=>setTimeout(r,1200)); const running = shown();
+  $('go').click(); const saved = JSON.parse(w.localStorage.getItem('comuniQuizV1')).t;
+  await new Promise(r=>setTimeout(r,700)); const paused = shown();
+  console.log('timer: load', onLoad, '| running', running, '| paused', paused, '| saved', saved);
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (timer): ' + msg); process.exitCode = 1; } };
+  ok(onLoad === '0:01:05', 'tempo salvato mostrato al caricamento');
+  ok(running === '0:01:06', 'il timer riparte dal tempo salvato');
+  ok(saved >= 66000 && saved < 68000, 'tempo salvato in pausa');
+  ok(paused === running, 'il timer resta fermo in pausa');
+  dom.window.close();
+}
+(async()=>{ await runTimer(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
