@@ -66,6 +66,17 @@ async function run(label, htmlFile, useFetch){
   ok(/Natural Earth/.test(foot.textContent) && /pubblico dominio/.test(foot.textContent), 'credito Natural Earth');
   ok(/Nessun cookie/.test(foot.textContent) && d.cookie === '', 'nessun cookie');
   if(!useFetch) ok(!d.querySelector('script[src], link[rel="stylesheet"]') && d.getElementById('data'), 'file unico senza risorse esterne');
+  // ricerca: titolo, descrizione, indirizzo canonico, anteprime, dati strutturati, favicon incorporata, testo visibile
+  const meta = sel => (d.querySelector(sel)||{}).content || '';
+  const site = 'https://piero3vis.github.io/comuni-quiz/';
+  ok(/^Quiz dei comuni d’Italia/.test(d.title), 'titolo');
+  ok(meta('meta[name="description"]').length > 50 && meta('meta[property="og:description"]') === meta('meta[name="description"]'), 'descrizione');
+  ok(d.querySelector('link[rel="canonical"]').href === site && meta('meta[property="og:url"]') === site, 'indirizzo canonico');
+  ok(meta('meta[property="og:title"]') === d.title && meta('meta[property="og:locale"]') === 'it_IT', 'anteprime Open Graph');
+  let ld = {}; try { ld = JSON.parse(d.querySelector('script[type="application/ld+json"]').textContent); } catch(e){}
+  ok(ld['@type'] === 'WebApplication' && ld.inLanguage === 'it' && ld.isAccessibleForFree === true && ld.url === site, 'dati strutturati');
+  ok(/^data:image\/svg\+xml,/.test(d.querySelector('link[rel="icon"]').getAttribute('href')), 'favicon incorporata');
+  ok(/comuni italiani/.test(d.querySelector('.about').textContent) && /gioco di geografia/.test(d.querySelector('.about').textContent), 'testo visibile');
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
   dom.window.close();
 }
