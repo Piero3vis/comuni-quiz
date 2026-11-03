@@ -10,7 +10,7 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
 - Side panel grouped by region and province, with a progress bar per region.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
-- Achievements: milestones (including 420 and 666), quarter/half/complete per province and region,
+- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region,
   the whole coast and each regional coast, minor islands, and walking routes (cammini).
 - Light/dark theme button in the top bar (automatic → light → dark), remembered in `localStorage` (`comuniQuizTheme`).
 - Progress is saved in the browser (`localStorage`, key `comuniQuizV1`).

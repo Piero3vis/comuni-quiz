@@ -25,6 +25,7 @@ Qualche aiuto:
 - Un elenco laterale per regione e provincia, con l’avanzamento di ciascuna.
 - Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), tutti i comuni della costa,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
+  E qualche obiettivo segreto da scoprire.
 - Tema chiaro e scuro.
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 
