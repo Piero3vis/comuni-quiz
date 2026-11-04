@@ -10,7 +10,8 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
 - Side panel grouped by region and province, with a progress bar per region.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
-- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province,
+- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
+  record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),
   the whole coast and each regional coast, minor islands, and walking routes (cammini).
 - "Persone beccate" score in the top-left corner of the map: residents (ISTAT, 1 January 2025) of the comuni found;
   milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population.

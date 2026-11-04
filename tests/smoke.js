@@ -59,6 +59,17 @@ async function run(label, htmlFile, useFetch){
   const pops = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).pop;
   const popShown = $('pop').textContent, popExpected = [...names.keys()].filter(i => w.document.querySelector('#regs li[data-i="'+i+'"]')).reduce((a,i)=>a+pops[i],0);
   console.log(' persone beccate:', popShown);
+  const recRows = () => [...$('achlist').querySelectorAll('.ai')].filter(e => /Il (più|meno) /.test(e.textContent)).map(e => [...e.children].map(c => c.textContent).join(' = '));
+  const rec0 = recRows();
+  ['Predoi', 'Lampedusa e Linosa', 'Atrani', 'Morterone'].forEach(type);
+  const rec1 = recRows();
+  console.log(' records:', rec1.join(' | '));
+  // capoluoghi: si trovano tutti scrivendone i nomi
+  const caps = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).cap;
+  const capBefore = (achText().match(/Tutti i capoluoghi\s*(\d+\/\d+)/)||[])[1];
+  caps.forEach(i => type(names[i].split('/')[0]));
+  const capAfter = (achText().match(/(🔒|🏛️) Tutti i capoluoghi\s*(\d+\/\d+)/)||[]).slice(1).join(' ');
+  console.log(' capoluoghi:', capBefore, '->', capAfter);
   console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d+\/\d+/)||['?'])[0]).join(' -> '));
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
@@ -77,6 +88,10 @@ async function run(label, htmlFile, useFetch){
   ok(tour0 === '🔒 6/' + provs.length && italy0 === '🔒 5/20', 'esplorazione: contatori iniziali');
   ok(italyAfter === '🇮🇹 20/20' && /Esplorazione\s*2\/2/.test(achText()), 'giro d’Italia sbloccato');
   ok(/^🔒/.test(tourBefore) && tourAfter === '🧭 ' + provs.length + '/' + provs.length, 'giro delle province sbloccato');
+  // prima: Roma (più grande e più popoloso), Lampedusa (più a sud, già scritta) e Bardonecchia (più a ovest, tra i primi 420)
+  ok(rec0.length === 8 && rec0.filter(r => /^🔒/.test(r)).length === 4 && rec0.includes('🏙️ Il più popoloso = Roma') && rec0.includes('🗺️ Il più grande = Roma') && rec0.includes('🔒 Il più a nord = ?'), 'record nascosti finché non trovati');
+  ok(['⬆️ Il più a nord = Predoi', '⬇️ Il più a sud = Lampedusa e Linosa', '⬅️ Il più a ovest = Bardonecchia', '🔎 Il più piccolo = Atrani', '🏚️ Il meno popoloso = Morterone'].every(r => rec1.includes(r)) && rec1.filter(r => /^🔒/.test(r)).length === 1, 'record: nord, sud, ovest, piccolo, meno popoloso');
+  ok(/^\d+\/119$/.test(capBefore) && capAfter === '🏛️ 119/119' && /Capoluoghi\s*1\/1/.test(achText()), 'capoluoghi');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
   // licenza dei dati e privacy nel footer
   const foot = d.querySelector('.foot'), links = [...foot.querySelectorAll('a')].map(a=>a.href);
