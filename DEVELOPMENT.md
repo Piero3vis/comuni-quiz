@@ -12,6 +12,8 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
 - Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province,
   the whole coast and each regional coast, minor islands, and walking routes (cammini).
+- "Persone beccate" score in the top-left corner of the map: residents (ISTAT, 1 January 2025) of the comuni found;
+  milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population.
 - Light/dark theme button in the top bar (automatic → light → dark), remembered in `localStorage` (`comuniQuizTheme`).
 - Progress is saved in the browser (`localStorage`, key `comuniQuizV1`).
 
@@ -28,8 +30,10 @@ index.html            page skeleton
 style.css             styles (light/dark theme via CSS variables)
 app.js                all the logic: loading, canvas map, quiz, side panel, achievements
 data/map.json         generated map data (see CLAUDE.md for the format)
+data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
 data/groups.json      hand-edited groups: islands and cammini, listed by comune name
 scripts/build_data.py regenerates data/map.json from the open data sources
+scripts/build_extra.py         regenerates data/extra.json (ISTAT population 2025, capoluoghi flag, records)
 scripts/build_single_file.py   builds dist/quiz.html (CSS, JS and data inlined)
 scripts/check_istat.py         compares comuni and provinces with the current ISTAT list
 openspec/             OpenSpec specs and change proposals (spec-driven workflow)
@@ -47,6 +51,11 @@ pip install -r requirements.txt     # shapely
 python3 scripts/build_data.py       # needs Node.js (uses npx mapshaper); downloads ~50 MB into scripts/cache/
 ```
 The output is deterministic: running it on the same sources reproduces the committed `data/map.json` exactly.
+
+**Rebuild the ISTAT data** (population, capoluoghi, records; stdlib only, needs internet). Run it again after every `build_data.py`:
+```bash
+python3 scripts/build_extra.py      # -> data/extra.json; prints capoluoghi and records to eyeball
+```
 
 **Single file** (handy for sharing or for hosts that take one HTML file):
 ```bash

@@ -26,6 +26,7 @@ Qualche aiuto:
 - Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), almeno un comune in ogni regione e in ogni provincia, tutti i comuni della costa,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
   E qualche obiettivo segreto da scoprire.
+- Il punteggio delle “persone beccate”: quanti abitanti hanno i comuni che hai trovato (dati ISTAT).
 - Tema chiaro e scuro.
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 

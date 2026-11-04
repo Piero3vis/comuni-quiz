@@ -56,7 +56,10 @@ async function run(label, htmlFile, useFetch){
   provs.forEach(p => { const i = map.p.indexOf(p); if(!$('achlist').textContent.includes('🧭')) type(names[i]); });
   const tourAfter = tourRow(), italyAfter = italyRow();
   console.log(' province tour:', tour0, '->', tourBefore, '->', tourAfter, '| italy:', italy0, '->', italyAfter);
-  console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d\/\d/)||['?'])[0]).join(' -> '));
+  const pops = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).pop;
+  const popShown = $('pop').textContent, popExpected = [...names.keys()].filter(i => w.document.querySelector('#regs li[data-i="'+i+'"]')).reduce((a,i)=>a+pops[i],0);
+  console.log(' persone beccate:', popShown);
+  console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d+\/\d+/)||['?'])[0]).join(' -> '));
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
   ok($('tot').textContent === '7896', 'totale comuni');
@@ -66,8 +69,11 @@ async function run(label, htmlFile, useFetch){
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
   ok(/Segreti\s*0\/2/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length === 2, 'segreti nascosti prima di 69');
+  // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
+  ok(/👥 Un italiano su cento/.test(sec60) && /🔒 Un italiano su dieci/.test(sec60), 'persone beccate: 1% sì, 10% no');
   ok(/Segreti\s*1\/2/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
   ok(/Segreti\s*2\/2/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
+  ok(popShown === popExpected.toLocaleString('it-IT') && popExpected > 0, 'persone beccate (' + popShown + ' invece di ' + popExpected + ')');
   ok(tour0 === '🔒 6/' + provs.length && italy0 === '🔒 5/20', 'esplorazione: contatori iniziali');
   ok(italyAfter === '🇮🇹 20/20' && /Esplorazione\s*2\/2/.test(achText()), 'giro d’Italia sbloccato');
   ok(/^🔒/.test(tourBefore) && tourAfter === '🧭 ' + provs.length + '/' + provs.length, 'giro delle province sbloccato');
