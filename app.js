@@ -182,11 +182,18 @@ const RECT = { nord:'il comune più a nord d’Italia', sud:'il comune più a su
 const RT = regTot.map(T=>[Math.ceil(T*.25),Math.ceil(T*.5)]);
 const openAch = new Set();
 const CAM = D.cam, camOf = new Map(); CAM.forEach((g,gi)=>g[1].forEach(i=>{ if(!camOf.has(i)) camOf.set(i,[]); camOf.get(i).push(gi); }));
+// Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
+const CH = [['raffica','⚡','Raffica','10 comuni in un minuto']], earned = new Set(), burst = [];
 const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },2800); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); earned.forEach(id=>unlocked.add(id)); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); }
+// Raffica: 10 comuni trovati negli ultimi 60 secondi (orologio reale, solo risposte durante il gioco)
+function burstCheck(n){
+  const now = Date.now(); for(let j=0;j<n;j++) burst.push(now); if(burst.length>10) burst.splice(0, burst.length-10);
+  if(burst.length===10 && now-burst[0]<=60000 && !earned.has('raffica')){ earned.add('raffica'); unlocked.add('raffica'); toast('⚡','Raffica: 10 comuni in un minuto!'); }
+}
 function achCheck(i){
   for(const [n,l] of MS){ const id = 'm'+n; if(foundCount>=n && !unlocked.has(id)){ unlocked.add(id); toast('🏆',l+' ('+n+')'); } }
   for(const [n,,ic,t] of SEC){ const id = 's'+n; if(foundCount>=n && !unlocked.has(id)){ unlocked.add(id); toast(ic,t); } }
@@ -210,11 +217,12 @@ function achCheck(i){
 $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.dataset && el.dataset.a){ el.open ? openAch.add(el.dataset.a) : openAch.delete(el.dataset.a); } }, true);
 function renderAch(){
   const ids = [...unlocked], ps = ids.filter(x=>x.startsWith('p:')).map(x=>x.slice(2)).sort((a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it')), rs = ids.filter(x=>x.startsWith('r:')).map(x=>+x.slice(2)), np = NP;
-  $('achc').textContent = unlocked.size+'/'+(MS.length+SEC.length+PPS.length+D.regs.length+np+CMS.length+coastRegTot.filter(x=>x>0).length+2+1+REC.length+ISL.length+Object.keys(PT).length*2+D.regs.length*2+CAM.length);
+  $('achc').textContent = unlocked.size+'/'+(MS.length+SEC.length+PPS.length+D.regs.length+np+CMS.length+coastRegTot.filter(x=>x>0).length+2+1+REC.length+CH.length+ISL.length+Object.keys(PT).length*2+D.regs.length*2+CAM.length);
   $('achlist').innerHTML = '<div class="ah">Traguardi</div>' + MS.map(([n,l])=>{ const u = unlocked.has('m'+n); return `<div class="ai${u?'':' lock'}"><span>${u?'🏆':'🔒'} ${l}</span><span class="c">${n}</span></div>`; }).join('')
     + `<div class="ah">Segreti <span class="c">${SEC.filter(([n])=>unlocked.has('s'+n)).length}/${SEC.length}</span></div>` + SEC.map(([n,l,ic])=>unlocked.has('s'+n) ? `<div class="ai"><span>${ic} ${l}</span><span class="c">${n}</span></div>` : `<div class="ai lock"><span>🔒 ???</span></div>`).join('')
     + `<div class="ah">Persone beccate <span class="c">${fmtN(popFound)}</span></div>` + PPS.map(([q,l,n])=>{ const u = unlocked.has('pp'+q); return `<div class="ai${u?'':' lock'}"><span>${u?'👥':'🔒'} ${l}</span><span class="c">${q}%</span></div>`; }).join('')
     + `<div class="ah">Esplorazione <span class="c">${['e:r','e:p'].filter(x=>unlocked.has(x)).length}/2</span></div>` + [['e:r','🇮🇹','Giro d’Italia',regsTouched(),D.regs.length],['e:p','🧭','Giro delle province',provsTouched(),NP]].map(([id,ic,l,f,t])=>{ const u = unlocked.has(id); return `<div class="ai${u?'':' lock'}"><span>${u?ic:'🔒'} ${l}</span><span class="c">${f}/${t}</span></div>`; }).join('')
+    + `<div class="ah">Sfide <span class="c">${CH.filter(([id])=>unlocked.has(id)).length}/${CH.length}</span></div>` + CH.map(([id,ic,l,d])=>{ const u = unlocked.has(id); return `<div class="ai${u?'':' lock'}"><span>${u?ic:'🔒'} ${l}</span><span class="c">${d}</span></div>`; }).join('')
     + `<div class="ah">Capoluoghi <span class="c">${unlocked.has('cap')?1:0}/1</span></div>` + (u => `<div class="ai${u?'':' lock'}"><span>${u?'🏛️':'🔒'} Tutti i capoluoghi</span><span class="c">${capFound()}/${CAPS.size}</span></div>`)(unlocked.has('cap'))
     + `<div class="ah">Record d’Italia <span class="c">${REC.filter(([k])=>unlocked.has('x:'+k)).length}/${REC.length}</span></div>` + REC.map(([k,ic,l])=>{ const u = unlocked.has('x:'+k); return `<div class="ai${u?'':' lock'}"><span>${u?ic:'🔒'} ${l}</span><span class="c">${u?D.n[D.rec[k]].split('/')[0]:'?'}</span></div>`; }).join('')
     + `<div class="ah">Regioni completate <span class="c">${rs.length}/${D.regs.length}</span></div>` + rs.map(k=>`<div class="ai">🥇 ${D.regs[k].split('/')[0]}</div>`).join('')
@@ -230,8 +238,8 @@ function renderAch(){
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned]})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
   running = true; gaveUp = false; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
@@ -254,7 +262,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];

@@ -34,7 +34,11 @@ async function run(label, htmlFile, useFetch){
   type('roma'); type('roma'); console.log(' dup notice:', d.querySelector('div[style*="--bad"]').textContent);
   console.log(' islands groups text:', (al.match(/Isole minori italiane[^\n]*/)||[''])[0].slice(0,60));
   // omonimi: "castro" vale per Castro (BG) e Castro (LE)
-  const before = +$('cnt').textContent; type('castro'); const afterCastro = +$('cnt').textContent;
+  const raffica = () => (($('achlist').textContent.match(/(🔒|⚡) Raffica/)||[])[1]);
+  const raf0 = raffica();
+  const before = +$('cnt').textContent; type('castro');
+  const raf1 = raffica(), rafSaved = (JSON.parse(w.localStorage.getItem('comuniQuizV1')).a||[]).includes('raffica');
+  console.log(' raffica:', raf0, '->', raf1, '| salvata:', rafSaved); const afterCastro = +$('cnt').textContent;
   type('Castro'); const castroDup = d.querySelector('div[style*="--bad"]').textContent;
   console.log(' castro:', before, '->', afterCastro, '| dup:', castroDup);
   // tema: automatico -> chiaro -> scuro -> automatico
@@ -78,6 +82,7 @@ async function run(label, htmlFile, useFetch){
   ok(errors.length === 0, 'errori JS');
   ok(before === 8, 'conteggio dopo le risposte di prova');
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
+  ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
   ok(/Segreti\s*0\/2/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length === 2, 'segreti nascosti prima di 69');
   // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
@@ -122,16 +127,17 @@ async function runTimer(){
       w.Path2D = class {};
       const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
       w.HTMLCanvasElement.prototype.getContext = ()=>noop;
-      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f: [0, 1], t: 65000 }));
+      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f: [0, 1], t: 65000, a: ['raffica', 'sconosciuta'] }));
     }});
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, $ = id=>w.document.getElementById(id), shown = ()=>$('time').firstChild.textContent;
-  const onLoad = shown();
+  const onLoad = shown(), rafLoaded = /⚡ Raffica/.test($('achlist').textContent) && !/sconosciuta/.test($('achlist').textContent);
   $('go').click(); await new Promise(r=>setTimeout(r,1200)); const running = shown();
   $('go').click(); const saved = JSON.parse(w.localStorage.getItem('comuniQuizV1')).t;
   await new Promise(r=>setTimeout(r,700)); const paused = shown();
   console.log('timer: load', onLoad, '| running', running, '| paused', paused, '| saved', saved);
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (timer): ' + msg); process.exitCode = 1; } };
+  ok(rafLoaded, 'raffica ripristinata dal salvataggio');
   ok(onLoad === '0:01:05', 'tempo salvato mostrato al caricamento');
   ok(running === '0:01:06', 'il timer riparte dal tempo salvato');
   ok(saved >= 66000 && saved < 68000, 'tempo salvato in pausa');
