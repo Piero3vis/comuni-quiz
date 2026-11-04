@@ -38,7 +38,7 @@ choice in `localStorage['comuniQuizTheme']` (removed for automatic), separate fr
 ## Achievements
 Derived from the state, never stored: `achInit()` computes the unlocked set silently on load, `achCheck(i)` adds new ones and queues toasts.
 Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked), `p:<ACR>` province complete, `r:<k>` region complete, `p25/p50:<ACR>` and `r25/r50:<k>` quarter/half,
-`c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
+`e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 
 ## Conventions

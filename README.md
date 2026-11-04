@@ -23,7 +23,7 @@ Qualche aiuto:
 ## Cosa c’è nel gioco
 - Tutti i comuni d’Italia su un’unica mappa, con i confini di province e regioni.
 - Un elenco laterale per regione e provincia, con l’avanzamento di ciascuna.
-- Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), tutti i comuni della costa,
+- Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), almeno un comune in ogni regione e in ogni provincia, tutti i comuni della costa,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
   E qualche obiettivo segreto da scoprire.
 - Tema chiaro e scuro.
