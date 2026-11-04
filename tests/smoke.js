@@ -74,6 +74,15 @@ async function run(label, htmlFile, useFetch){
   caps.forEach(i => type(names[i].split('/')[0]));
   const capAfter = (achText().match(/(🔒|🏛️) Tutti i capoluoghi\s*(\d+\/\d+)/)||[]).slice(1).join(' ');
   console.log(' capoluoghi:', capBefore, '->', capAfter);
+  // comuni piccoli: rarità, borghi, tesori di provincia
+  const PMAX = Math.max(...pops), rar = pops.map(x => Math.max(1, Math.round(10*Math.log10(PMAX/x))));
+  const foundIdx = () => [...names.keys()].filter(i => w.document.querySelector('#regs li[data-i="'+i+'"]'));
+  const tesori = [...new Set(map.p)].map(p => map.p.reduce((b, q, i) => q === p && (b < 0 || pops[i] < pops[b]) ? i : b, -1));
+  [...names.keys()].filter(i => pops[i] < 100).forEach(i => type(names[i].split('/')[0]));
+  tesori.forEach(i => type(names[i].split('/')[0]));
+  const fi = foundIdx(), rarShown = $('rar').textContent, rarExpected = fi.reduce((a,i)=>a+rar[i],0).toLocaleString('it-IT');
+  const small = achText(), borghi = fi.filter(i => pops[i] < 1000).length;
+  console.log(' rarità:', rarShown, '| borghi:', borghi, '| tesori:', (small.match(/Tesori di provincia\s*\d+\/\d+/)||['?'])[0]);
   console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d+\/\d+/)||['?'])[0]).join(' -> '));
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
@@ -97,6 +106,9 @@ async function run(label, htmlFile, useFetch){
   ok(rec0.length === 8 && rec0.filter(r => /^🔒/.test(r)).length === 4 && rec0.includes('🏙️ Il più popoloso = Roma') && rec0.includes('🗺️ Il più grande = Roma') && rec0.includes('🔒 Il più a nord = ?'), 'record nascosti finché non trovati');
   ok(['⬆️ Il più a nord = Predoi', '⬇️ Il più a sud = Lampedusa e Linosa', '⬅️ Il più a ovest = Bardonecchia', '🔎 Il più piccolo = Atrani', '🏚️ Il meno popoloso = Morterone'].every(r => rec1.includes(r)) && rec1.filter(r => /^🔒/.test(r)).length === 1, 'record: nord, sud, ovest, piccolo, meno popoloso');
   ok(/^\d+\/119$/.test(capBefore) && capAfter === '🏛️ 119/119' && /Capoluoghi\s*1\/1/.test(achText()), 'capoluoghi');
+  ok(rarShown === rarExpected, 'punti rarità (' + rarShown + ' invece di ' + rarExpected + ')');
+  ok(small.includes('Borghi (sotto ' + (1000).toLocaleString('it-IT') + ' ab.) ' + borghi + '/' + (2023).toLocaleString('it-IT')) && /🔬 Tutti i microcomuni/.test(small), 'borghi e microcomuni');
+  ok(/Tesori di provincia\s*110\/110/.test(small) && /🗝️ Tutti i tesori/.test(small) && /Lecco: Morterone/.test(small), 'tesori di provincia');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
   // licenza dei dati e privacy nel footer
   const foot = d.querySelector('.foot'), links = [...foot.querySelectorAll('a')].map(a=>a.href);

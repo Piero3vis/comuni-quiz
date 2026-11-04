@@ -16,7 +16,9 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
   record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),
   the whole coast and each regional coast, minor islands, and walking routes (cammini).
 - "Persone beccate" score in the top-left corner of the map: residents (ISTAT, 1 January 2025) of the comuni found;
-  milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population.
+  milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population. Next to it, "punti rarità": small comuni are worth more (log scale).
+- Small comuni: borghi/paesini/microcomuni achievements (under 1000/500/100 inhabitants), a "comune raro" toast under 100,
+  and provincial treasures (the least populated comune of each province).
 - Light/dark theme button in the top bar (automatic → light → dark), remembered in `localStorage` (`comuniQuizTheme`).
 - Progress is saved in the browser (`localStorage`, key `comuniQuizV1`).
 

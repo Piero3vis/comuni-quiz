@@ -27,6 +27,7 @@ Qualche aiuto:
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
   E qualche obiettivo segreto da scoprire.
 - Il punteggio delle “persone beccate”: quanti abitanti hanno i comuni che hai trovato (dati ISTAT).
+- I punti rarità: più il comune è piccolo, più vale. E obiettivi per i borghi, i microcomuni e il comune più piccolo di ogni provincia.
 - Tema chiaro e scuro.
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 

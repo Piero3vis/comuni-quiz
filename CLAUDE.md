@@ -32,7 +32,7 @@ Rerun it after regenerating `map.json`.
 - Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.
   `looseMap`/`lk()` is the fallback that also drops connecting words (di, del, della, nell, ...). Typing a name fills every comune with that name
   (homonyms: both Castro, etc.; covered by `tests/smoke.js`).
-- State: `found[]` (Uint8Array), `foundCount`, `popFound` ("persone beccate", shown as `#pop` top-left on the map), `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
+- State: `found[]` (Uint8Array), `foundCount`, `popFound` ("persone beccate", `#pop`) and `rarFound` ("punti rarità", `#rar`: `RAR[i] = max(1, round(10·log10(maxPop/pop)))`), both top-left on the map, `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
 - Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids], g: 1 if given up }`.
   Game over (`over()`: given up or all found) → `showOver()`; `#go` becomes "Ricomincia", which removes `comuniQuizV1` and reloads. Always wrapped in try/catch.
 - Provinces: `PN` maps sigla to display name, `CM` lists ISTAT metropolitan cities, `provLabel(p)` gives "Città metropolitana di …" / "Provincia di …" for toasts.
@@ -46,7 +46,7 @@ choice in `localStorage['comuniQuizTheme']` (removed for automatic), separate fr
 ## Achievements
 Derived from the state, never stored, except challenges (`CH`, e.g. `raffica`: 10 comuni within 60 s, checked by `burstCheck()`), whose ids are saved in `a` and restored into `earned`: `achInit()` computes the unlocked set silently on load, `achCheck(i)` adds new ones and queues toasts.
 Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked), `pp<q>` population milestone (`PPS`: q% of residents, on `popFound`), `p:<ACR>` province complete, `r:<k>` region complete, `p25/p50:<ACR>` and `r25/r50:<k>` quarter/half,
-`e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `cap` all capoluoghi, `x:<key>` record comune (`REC`, keys of `rec`), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
+`e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `cap` all capoluoghi, `b<limit>:<n>` borghi (`BG`: comuni under 1000/500/100 inhabitants), `t<n>` provincial treasures (`TES`: least populated comune per province), `x:<key>` record comune (`REC`, keys of `rec`), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 
 ## Conventions
