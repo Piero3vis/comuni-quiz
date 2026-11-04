@@ -33,7 +33,8 @@ Rerun it after regenerating `map.json`.
   `looseMap`/`lk()` is the fallback that also drops connecting words (di, del, della, nell, ...). Typing a name fills every comune with that name
   (homonyms: both Castro, etc.; covered by `tests/smoke.js`).
 - State: `found[]` (Uint8Array), `foundCount`, `popFound` ("persone beccate", shown as `#pop` top-left on the map), `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
-- Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids] }`. Always wrapped in try/catch.
+- Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids], g: 1 if given up }`.
+  Game over (`over()`: given up or all found) → `showOver()`; `#go` becomes "Ricomincia", which removes `comuniQuizV1` and reloads. Always wrapped in try/catch.
 - Provinces: `PN` maps sigla to display name, `CM` lists ISTAT metropolitan cities, `provLabel(p)` gives "Città metropolitana di …" / "Provincia di …" for toasts.
   `scripts/check_istat.py` checks `map.json`, `PN` and `CM` against ISTAT's current list.
 

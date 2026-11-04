@@ -144,4 +144,36 @@ async function runTimer(){
   ok(paused === running, 'il timer resta fermo in pausa');
   dom.window.close();
 }
-(async()=>{ await runTimer(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// resa: mostra tutti i comuni, resta valida dopo il ricaricamento, "Ricomincia" cancella la partita
+async function runGiveUp(){
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8');
+  const open = async saved => {
+    const errors = [];
+    const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+      beforeParse(w){
+        w.Path2D = class {};
+        const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+        w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
+        w.addEventListener('error', e=>errors.push(e.message));
+        w.localStorage.clear(); if(saved) w.localStorage.setItem('comuniQuizV1', saved);
+      }});
+    await new Promise(r=>setTimeout(r,1500));
+    const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
+    const state = () => [$('go').textContent, $('go').disabled, $('giveup').disabled, $('inp').disabled, d.querySelectorAll('#regs li').length, d.querySelectorAll('#regs li.miss').length].join(',');
+    return { w, $, state, errors, dom };
+  };
+  let p = await open();
+  p.$('go').click(); ['roma', 'milano', 'napoli'].forEach(n => { p.$('inp').value = n; p.$('inp').dispatchEvent(new p.w.Event('input')); });
+  p.$('giveup').click();
+  const after = p.state(), saved = p.w.localStorage.getItem('comuniQuizV1'); p.dom.window.close();
+  p = await open(saved); const reload = p.state();
+  p.$('go').click(); const cleared = p.w.localStorage.getItem('comuniQuizV1');
+  console.log('resa:', after, '| ricaricata:', reload, '| dopo Ricomincia:', cleared);
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (resa): ' + msg); process.exitCode = 1; } };
+  ok(after === 'Ricomincia,false,true,true,7896,7893', 'dopo la resa: tutti i comuni in elenco e pulsante Ricomincia');
+  ok(JSON.parse(saved).g === 1 && reload === after, 'la resa resta dopo il ricaricamento');
+  ok(cleared === null, 'Ricomincia cancella la partita salvata');
+  ok(p.errors.length === 0, 'errori JS');
+  p.dom.window.close();
+}
+(async()=>{ await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

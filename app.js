@@ -72,7 +72,7 @@ function render(){
   const showAll = gaveUp;
   for(let i=0;i<N;i++){
     if(found[i]) ctx.fillStyle = PAL[D.r[i]];
-    else if(showAll) ctx.fillStyle = PAL[D.r[i]] + '55';
+    else if(showAll) ctx.fillStyle = PAL[D.r[i]] + '80';
     else ctx.fillStyle = unf;
     ctx.fill(paths[i]); ctx.stroke(paths[i]);
   }
@@ -139,6 +139,7 @@ function zoomTo(i){
 // ---- quiz ----
 const regCount = new Array(D.regs.length).fill(0), regTot = new Array(D.regs.length).fill(0), regLists = D.regs.map(()=>[]);
 D.r.forEach(r=>regTot[r]++);
+const regAll = D.regs.map(()=>[]); D.r.forEach((r,i)=>regAll[r].push(i));
 function buildSide(){
   $('regs').innerHTML = D.regs.map((r,k)=>`<details class="reg" id="rg${k}"><summary><span class="dot" style="background:${PAL[k]}"></span>${r.split('/')[0]}<span class="c" id="rc${k}">0/${regTot[k]}</span><span class="rbar"><i id="rb${k}" style="background:${PAL[k]}"></i></span></summary><div id="rl${k}"></div></details>`).join('');
 }
@@ -151,12 +152,12 @@ const regProvs = D.regs.map(()=>new Set()); D.r.forEach((r,i)=>regProvs[r].add(D
 const openProv = new Set();
 function updateReg(k){
   $('rc'+k).textContent = regCount[k]+'/'+regTot[k]; $('rb'+k).style.width = (100*regCount[k]/regTot[k])+'%';
-  const by = {}; regLists[k].forEach(i => (by[D.p[i]] = by[D.p[i]]||[]).push(i));
+  const by = {}; (gaveUp ? regAll[k] : regLists[k]).forEach(i => (by[D.p[i]] = by[D.p[i]]||[]).push(i));
   const provs = [...regProvs[k]].sort((a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'));
   $('rl'+k).innerHTML = provs.map(p => {
-    const arr = by[p]||[], nm = PN[p]||p, cnt = arr.length+'/'+provTot[p];
+    const arr = by[p]||[], nm = PN[p]||p, cnt = (provFound[p]||0)+'/'+provTot[p];
     if(!arr.length) return `<div class="prov0"><span>${nm}</span><span class="c">${cnt}</span></div>`;
-    const lis = arr.slice().sort((a,b)=>D.n[a].localeCompare(D.n[b],'it')).map(i=>`<li data-i="${i}">${D.n[i].split('/')[0]}</li>`).join('');
+    const lis = arr.slice().sort((a,b)=>D.n[a].localeCompare(D.n[b],'it')).map(i=>`<li data-i="${i}"${found[i]?'':' class="miss"'}>${D.n[i].split('/')[0]}</li>`).join('');
     return `<details class="prov" data-p="${p}"${openProv.has(p)?' open':''}><summary><span>${nm}</span><span class="c">${cnt}</span></summary><ul>${lis}</ul></details>`;
   }).join('');
 }
@@ -238,15 +239,20 @@ function renderAch(){
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned]})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(gaveUp ? {g:1} : {})})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
-  running = true; gaveUp = false; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
+  running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
 }
 function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').disabled = true; $('go').textContent = 'Riprendi'; }
-function finish(){ tick(); running = false; clearInterval(timer); $('inp').disabled = true; $('go').disabled = true; $('giveup').disabled = true; $('go').textContent = foundCount===N?'Completato!':'Finito'; save(); draw(); }
-$('go').onclick = ()=>{ running ? pause() : start(); };
+// Partita finita (resa o tutti trovati): input fermo, il pulsante principale diventa "Ricomincia"
+const over = () => gaveUp || foundCount===N;
+function showOver(){ $('inp').disabled = true; $('inp').placeholder = gaveUp ? 'Ti sei arreso: ecco tutti i comuni. Premi Ricomincia per una nuova partita.' : 'Hai trovato tutti i comuni! Premi Ricomincia per una nuova partita.'; $('giveup').disabled = true; $('go').disabled = false; $('go').textContent = 'Ricomincia'; if(gaveUp) D.regs.forEach((_,k)=>updateReg(k)); draw(); }
+function finish(){ tick(); running = false; clearInterval(timer); save(); showOver(); if(gaveUp) toast('🏳️','Hai trovato '+fmtN(foundCount)+' comuni su '+fmtN(N)+' in '+fmt(elapsed)); }
+// Ricomincia: cancella solo la partita (comuniQuizV1), il tema resta; la pagina si ricarica da zero
+function restart(){ if(!confirm('Ricominciare da zero? Comuni trovati, tempo e sfide verranno cancellati.')) return; try{ localStorage.removeItem('comuniQuizV1'); }catch(e){} location.reload(); }
+$('go').onclick = ()=>{ over() ? restart() : running ? pause() : start(); };
 addEventListener('pagehide', ()=>{ if(running){ tick(); save(); } });
 $('giveup').onclick = ()=>{ if(confirm('Vuoi arrenderti? Verranno mostrati tutti i comuni mancanti.')){ gaveUp = true; finish(); } };
 const dupEl = document.createElement('div'); dupEl.style.cssText = 'position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--bad);border-radius:10px;padding:6px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .25s;pointer-events:none;z-index:6;max-width:80%;text-align:center'; box.appendChild(dupEl);
@@ -276,6 +282,6 @@ $('theme').onclick = ()=>{
 if(window.matchMedia){ const mq = matchMedia('(prefers-color-scheme: dark)'); (mq.addEventListener ? mq.addEventListener('change', draw) : mq.addListener(draw)); }
 showTheme();
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();
-if(foundCount>0){ $('go').textContent = 'Riprendi'; }
+if(over()) showOver(); else if(foundCount>0){ $('go').textContent = 'Riprendi'; }
 window.addEventListener('resize',resize); resize();
 })();

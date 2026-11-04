@@ -32,7 +32,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .reg .c{margin-left:auto;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums;font-size:13px}
 .reg ul{margin:2px 0 6px 18px;padding:0;list-style:none;font-size:13px;color:var(--muted)}
-.reg li{cursor:pointer;padding:1px 0}.reg li:hover{color:var(--text)}
+.reg li{cursor:pointer;padding:1px 0}.reg li.miss{font-style:italic;opacity:.6}.reg li:hover{color:var(--text)}
 .reg .prov summary{font-weight:400;font-size:13px;padding:2px 0 2px 14px}.reg .prov ul{margin:2px 0 4px 32px}.prov0{display:flex;padding:2px 0 2px 14px;font-size:13px;color:var(--muted)}.prov0 .c{margin-left:auto;font-variant-numeric:tabular-nums}
 .ah{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:8px 0 3px;display:flex}.ah .c{margin-left:auto}.ai{display:flex;font-size:13px;padding:1px 0 1px 14px;gap:6px}.ai.lock{color:var(--muted)}.ai .c{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
 .reg>summary{flex-wrap:wrap}.rbar{flex:0 0 100%;height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin:0 0 3px}.rbar i{display:block;height:100%;width:0;transition:width .3s}

@@ -9,6 +9,7 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Comuni that share a name (Castro, Samone, Livo, Peglio, San Teodoro) are all filled by one guess.
 - Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
 - Side panel grouped by region and province, with a progress bar per region.
+- Giving up shows every comune (map and side list) and is saved; "Ricomincia" clears the game and starts over.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
 - Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
   the "Raffica" challenge (10 comuni in one minute, saved with the progress),
