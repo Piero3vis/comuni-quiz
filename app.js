@@ -332,6 +332,9 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => { const on = x===b; x.setAttribute('aria-selected', on); $(x.getAttribute('aria-controls')).hidden = !on; });
 });
 showTheme();
+// spiegazione dei punti rarità: tooltip col mouse, avviso al clic (anche da telefono)
+const rarInfo = () => { if(!toastQ.some(t => t[0]==='💎')) toast('💎', 'Punti rarità: ' + $('rarbox').title); };
+$('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); rarInfo(); } };
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();
 if(over()) showOver(); else if(foundCount>0){ $('go').textContent = 'Riprendi'; }
 window.addEventListener('resize',resize); resize();

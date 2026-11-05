@@ -24,6 +24,7 @@ async function run(label, htmlFile, useFetch){
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
   console.log(label, 'tot=', $('tot').textContent, 'regs=', d.querySelectorAll('#regs details.reg').length, 'ach=', $('achc').textContent);
   const time0 = $('time').firstChild.textContent;
+  $('rarbox').click(); const rarToast = d.body.textContent.includes('💎 Punti rarità: Più un comune è piccolo');
   $('go').click();
   const inp = $('inp'); const type = v=>{ inp.value = v; inp.dispatchEvent(new w.Event('input')); };
   type('vodo di cadore'); console.log(' after vodo di cadore:', $('cnt').textContent);
@@ -121,7 +122,8 @@ async function run(label, htmlFile, useFetch){
   ok(rec0.length === 8 && rec0.filter(r => /^🔒/.test(r)).length === 4 && rec0.includes('🏙️ Il più popoloso = Roma') && rec0.includes('🗺️ Il più grande = Roma') && rec0.includes('🔒 Il più a nord = ?'), 'record nascosti finché non trovati');
   ok(['⬆️ Il più a nord = Predoi', '⬇️ Il più a sud = Lampedusa e Linosa', '⬅️ Il più a ovest = Bardonecchia', '🔎 Il più piccolo = Atrani', '🏚️ Il meno popoloso = Morterone'].every(r => rec1.includes(r)) && rec1.filter(r => /^🔒/.test(r)).length === 1, 'record: nord, sud, ovest, piccolo, meno popoloso');
   ok(/^\d+\/119$/.test(capBefore) && capAfter === '🏛️ 119/119' && /Capoluoghi\s*1\/1/.test(achText()), 'capoluoghi');
-  ok(rarShown === rarExpected, 'punti rarità (' + rarShown + ' invece di ' + rarExpected + ')');
+  ok(rarToast && /Morterone \(32 abitanti\) 49/.test($('rarbox').title), 'spiegazione dei punti rarità');
+  ok(rarShown === rarExpected,'punti rarità (' + rarShown + ' invece di ' + rarExpected + ')');
   ok(small.includes('Borghi (sotto ' + (1000).toLocaleString('it-IT') + ' ab.)') && small.includes(borghi + '/' + (2023).toLocaleString('it-IT') + ' borghi trovati') && /🔬 Tutti i microcomuni/.test(small), 'borghi e microcomuni');
   ok(/Tesori di provincia\s*3\/3/.test(small) && small.includes('110/110 trovati') && /🗝️ Tutti i tesori/.test(small) && /Lecco: Morterone/.test(small), 'tesori di provincia');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
