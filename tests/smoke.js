@@ -57,7 +57,7 @@ async function run(label, htmlFile, useFetch){
   fillTo(420); const sec420 = achText();
   // giro delle province: un comune per ciascuna provincia
   const provs = [...new Set(map.p)], tourBefore = tourRow();
-  provs.forEach(p => { const i = map.p.indexOf(p); if(!$('achlist').textContent.includes('🧭')) type(names[i]); });
+  provs.forEach(p => { const i = map.p.indexOf(p); if(!tourRow().startsWith('🧭')) type(names[i]); });
   const tourAfter = tourRow(), italyAfter = italyRow();
   console.log(' province tour:', tour0, '->', tourBefore, '->', tourAfter, '| italy:', italy0, '->', italyAfter);
   const pops = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).pop;
@@ -84,11 +84,26 @@ async function run(label, htmlFile, useFetch){
   const small = achText(), borghi = fi.filter(i => pops[i] < 1000).length;
   console.log(' rarità:', rarShown, '| borghi:', borghi, '| tesori:', (small.match(/Tesori di provincia\s*\d+\/\d+/)||['?'])[0]);
   console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d+\/\d+/)||['?'])[0]).join(' -> '));
+  // pannello laterale: schede, filtro dei traguardi, ordinamento delle regioni
+  const tabs0 = $('paneA').hidden && !$('paneR').hidden; $('tabA').click();
+  const tabs1 = !$('paneA').hidden && $('paneR').hidden && $('tabA').getAttribute('aria-selected') === 'true'; $('tabR').click();
+  const filt = f => { d.querySelector('#achfilt [data-f="' + f + '"]').click(); return $('achlist').querySelectorAll('.ai').length; };
+  const nAll = filt('all'), nDone = filt('done'), nTodo = filt('todo'); filt('all');
+  const [achN, achT] = [+$('achn').textContent, +$('acht').textContent];
+  const order = () => [...d.querySelectorAll('#regs > .reg')].sort((a,b) => a.style.order - b.style.order).map(e => e.querySelector('.rn').textContent);
+  const sortBy = s => { d.querySelector('#regsort [data-s="' + s + '"]').click(); return order(); };
+  const pctOf = n => { const e = [...d.querySelectorAll('#regs > .reg')].find(x => x.querySelector('.rn').textContent === n); return parseInt(e.querySelector('.pc').textContent) || 0; };
+  const byPct = sortBy('pct'), byMiss = sortBy('miss'), byAz = sortBy('az');
+  console.log(' side: tabs', tabs0, tabs1, '| traguardi', nDone, '+', nTodo, '=', nAll, '(', achN, '/', achT, ') | % first:', byPct[0], '| az first:', byAz[0]);
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
   ok($('tot').textContent === '7896', 'totale comuni');
   ok(time0 === '0:00:00', 'timer a zero al caricamento (era ' + time0 + ')');
   ok(errors.length === 0, 'errori JS');
+  ok(tabs0 && tabs1 && !$('paneR').hidden, 'schede Regioni / Traguardi');
+  ok(nDone + nTodo === nAll && nAll === achT && nDone === achN && nDone > 0 && nTodo > 0, 'filtro traguardi: sbloccati + da fare = tutti');
+  ok(byAz[0] === 'Abruzzo' && byAz.join() === [...byAz].sort((a,b) => a.localeCompare(b,'it')).join(), 'regioni in ordine alfabetico');
+  ok(byPct.every((n,j) => j === 0 || pctOf(byPct[j-1]) >= pctOf(n)) && byMiss.length === 20, 'regioni per percentuale');
   ok(before === 8, 'conteggio dopo le risposte di prova');
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
@@ -107,8 +122,8 @@ async function run(label, htmlFile, useFetch){
   ok(['⬆️ Il più a nord = Predoi', '⬇️ Il più a sud = Lampedusa e Linosa', '⬅️ Il più a ovest = Bardonecchia', '🔎 Il più piccolo = Atrani', '🏚️ Il meno popoloso = Morterone'].every(r => rec1.includes(r)) && rec1.filter(r => /^🔒/.test(r)).length === 1, 'record: nord, sud, ovest, piccolo, meno popoloso');
   ok(/^\d+\/119$/.test(capBefore) && capAfter === '🏛️ 119/119' && /Capoluoghi\s*1\/1/.test(achText()), 'capoluoghi');
   ok(rarShown === rarExpected, 'punti rarità (' + rarShown + ' invece di ' + rarExpected + ')');
-  ok(small.includes('Borghi (sotto ' + (1000).toLocaleString('it-IT') + ' ab.) ' + borghi + '/' + (2023).toLocaleString('it-IT')) && /🔬 Tutti i microcomuni/.test(small), 'borghi e microcomuni');
-  ok(/Tesori di provincia\s*110\/110/.test(small) && /🗝️ Tutti i tesori/.test(small) && /Lecco: Morterone/.test(small), 'tesori di provincia');
+  ok(small.includes('Borghi (sotto ' + (1000).toLocaleString('it-IT') + ' ab.)') && small.includes(borghi + '/' + (2023).toLocaleString('it-IT') + ' borghi trovati') && /🔬 Tutti i microcomuni/.test(small), 'borghi e microcomuni');
+  ok(/Tesori di provincia\s*3\/3/.test(small) && small.includes('110/110 trovati') && /🗝️ Tutti i tesori/.test(small) && /Lecco: Morterone/.test(small), 'tesori di provincia');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
   // licenza dei dati e privacy nel footer
   const foot = d.querySelector('.foot'), links = [...foot.querySelectorAll('a')].map(a=>a.href);

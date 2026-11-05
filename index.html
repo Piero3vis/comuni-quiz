@@ -34,8 +34,18 @@
       <div class="score"><div>👥 <span id="pop">0</span><small>persone beccate</small></div><div>💎 <span id="rar">0</span><small>punti rarità</small></div></div>
       <div class="zoom"><button id="zi" aria-label="Ingrandisci">+</button><button id="zo" aria-label="Riduci">−</button><button id="zr" aria-label="Reimposta" style="font-size:13px">⌂</button></div>
     </div>
-    <div class="side"><details class="reg" id="achbox"><summary>🏆 Traguardi <span class="c" id="achc"></span></summary><div id="achlist"></div></details><h2 style="margin-top:12px">Per regione</h2><div id="regs"></div>
-      <div class="msg">Accetta nomi con o senza accenti e apostrofi. In Alto Adige vale anche il nome tedesco. Se più comuni hanno lo stesso nome, si colorano tutti. Il progresso viene salvato in questo browser.</div>
+    <div class="side">
+      <div class="tabs" role="tablist"><button role="tab" id="tabR" aria-controls="paneR" aria-selected="true">Regioni</button><button role="tab" id="tabA" aria-controls="paneA" aria-selected="false">🏆 Traguardi <span class="c" id="achc"></span></button></div>
+      <div id="paneR" role="tabpanel" aria-labelledby="tabR">
+        <div class="seg" id="regsort" role="group" aria-label="Ordina le regioni"><span>Ordina</span><button data-s="az" aria-pressed="true">A-Z</button><button data-s="pct" aria-pressed="false">%</button><button data-s="miss" aria-pressed="false">Mancanti</button></div>
+        <div id="regs"></div>
+        <div class="msg">Accetta nomi con o senza accenti e apostrofi. In Alto Adige vale anche il nome tedesco. Se più comuni hanno lo stesso nome, si colorano tutti. Il progresso viene salvato in questo browser.</div>
+      </div>
+      <div id="paneA" role="tabpanel" aria-labelledby="tabA" hidden>
+        <div class="achsum"><div>🏆 <b id="achn">0</b> / <span id="acht">0</span> sbloccati</div><span class="tbar"><i id="achbar"></i></span></div>
+        <div class="seg" id="achfilt" role="group" aria-label="Mostra i traguardi"><button data-f="all" aria-pressed="true">Tutti</button><button data-f="done" aria-pressed="false">Sbloccati</button><button data-f="todo" aria-pressed="false">Da fare</button></div>
+        <div id="achlist"></div>
+      </div>
     </div>
   </div>
 </div>

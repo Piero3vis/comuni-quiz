@@ -49,6 +49,11 @@ Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked)
 `e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `cap` all capoluoghi, `b<limit>:<n>` borghi (`BG`: comuni under 1000/500/100 inhabitants), `t<n>` provincial treasures (`TES`: least populated comune per province), `x:<key>` record comune (`REC`, keys of `rec`), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino. Because nothing is persisted, reordering groups is safe.
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 
+## Side panel
+Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes one `<details class="reg" id="rg<k>">` per region, `updateReg(k)` fills percentage (`pct()`: floor, "<1%", "100%" only when complete), count, bar and province rows;
+`sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c}], more?}`,
+`renderAch()` draws the total, the filter (`achFilter`: `all`, `done`, `todo`) and one `<details class="cat" data-a>` per category; `openAch` keeps them open across re-renders. New achievements go in `achCats()`.
+
 ## Conventions
 - Keep it dependency-free (no framework, no bundler). Theme colours live in CSS variables with a dark-mode override.
 - Do not move the camera on guesses except through `ensureVisible()` (pan only if the new comune is entirely off screen).

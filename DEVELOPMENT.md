@@ -8,7 +8,8 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
   small connecting words are optional ("Vodo di Cadore" finds Vodo Cadore, "Reggio Emilia" finds Reggio nell'Emilia).
 - Comuni that share a name (Castro, Samone, Livo, Peglio, San Teodoro) are all filled by one guess.
 - Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
-- Side panel grouped by region and province, with a progress bar per region.
+- Side panel with two tabs. "Regioni": regions with percentage, found/total and a bar, sortable A-Z, by % or by comuni missing; provinces with a small bar.
+  "Traguardi": total unlocked with a bar, filter (all, unlocked, to do), one collapsible category per group with its own bar.
 - Giving up shows every comune (map and side list) and is saved; "Ricomincia" clears the game and starts over.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
 - Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
