@@ -8,10 +8,18 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
   small connecting words are optional ("Vodo di Cadore" finds Vodo Cadore, "Reggio Emilia" finds Reggio nell'Emilia).
 - Comuni that share a name (Castro, Samone, Livo, Peglio, San Teodoro) are all filled by one guess.
 - Duplicate guesses are flagged. The map pans only when a newly found comune is completely off screen.
-- Side panel grouped by region and province, with a progress bar per region.
+- Side panel with two tabs. "Regioni": regions with percentage, found/total and a bar, sortable A-Z, by % or by comuni missing; provinces with a small bar.
+  "Traguardi": total unlocked with a bar, filter (all, unlocked, to do), one collapsible category per group with its own bar.
+- Giving up shows every comune (map and side list) and is saved; "Ricomincia" clears the game and starts over.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
-- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region,
+- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
+  the "Raffica" challenge (10 comuni in one minute, saved with the progress),
+  record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),
   the whole coast and each regional coast, minor islands, and walking routes (cammini).
+- "Persone beccate" score in the top-left corner of the map: residents (ISTAT, 1 January 2025) of the comuni found;
+  milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population. Next to it, "punti rarità": small comuni are worth more (log scale); hover or click 💎 for a short explanation.
+- Small comuni: borghi/paesini/microcomuni achievements (under 1000/500/100 inhabitants), a "comune raro" toast under 100,
+  and provincial treasures (the least populated comune of each province).
 - Light/dark theme button in the top bar (automatic → light → dark), remembered in `localStorage` (`comuniQuizTheme`).
 - Progress is saved in the browser (`localStorage`, key `comuniQuizV1`).
 
@@ -28,8 +36,10 @@ index.html            page skeleton
 style.css             styles (light/dark theme via CSS variables)
 app.js                all the logic: loading, canvas map, quiz, side panel, achievements
 data/map.json         generated map data (see CLAUDE.md for the format)
+data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
 data/groups.json      hand-edited groups: islands and cammini, listed by comune name
 scripts/build_data.py regenerates data/map.json from the open data sources
+scripts/build_extra.py         regenerates data/extra.json (ISTAT population 2025, capoluoghi flag, records)
 scripts/build_single_file.py   builds dist/quiz.html (CSS, JS and data inlined)
 scripts/check_istat.py         compares comuni and provinces with the current ISTAT list
 openspec/             OpenSpec specs and change proposals (spec-driven workflow)
@@ -47,6 +57,11 @@ pip install -r requirements.txt     # shapely
 python3 scripts/build_data.py       # needs Node.js (uses npx mapshaper); downloads ~50 MB into scripts/cache/
 ```
 The output is deterministic: running it on the same sources reproduces the committed `data/map.json` exactly.
+
+**Rebuild the ISTAT data** (population, capoluoghi, records; stdlib only, needs internet). Run it again after every `build_data.py`:
+```bash
+python3 scripts/build_extra.py      # -> data/extra.json; prints capoluoghi and records to eyeball
+```
 
 **Single file** (handy for sharing or for hosts that take one HTML file):
 ```bash

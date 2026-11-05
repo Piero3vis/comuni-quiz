@@ -24,6 +24,7 @@ async function run(label, htmlFile, useFetch){
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
   console.log(label, 'tot=', $('tot').textContent, 'regs=', d.querySelectorAll('#regs details.reg').length, 'ach=', $('achc').textContent);
   const time0 = $('time').firstChild.textContent;
+  $('rarbox').click(); const rarToast = d.body.textContent.includes('💎 Punti rarità: Più un comune è piccolo');
   $('go').click();
   const inp = $('inp'); const type = v=>{ inp.value = v; inp.dispatchEvent(new w.Event('input')); };
   type('vodo di cadore'); console.log(' after vodo di cadore:', $('cnt').textContent);
@@ -34,7 +35,11 @@ async function run(label, htmlFile, useFetch){
   type('roma'); type('roma'); console.log(' dup notice:', d.querySelector('div[style*="--bad"]').textContent);
   console.log(' islands groups text:', (al.match(/Isole minori italiane[^\n]*/)||[''])[0].slice(0,60));
   // omonimi: "castro" vale per Castro (BG) e Castro (LE)
-  const before = +$('cnt').textContent; type('castro'); const afterCastro = +$('cnt').textContent;
+  const raffica = () => (($('achlist').textContent.match(/(🔒|⚡) Raffica/)||[])[1]);
+  const raf0 = raffica();
+  const before = +$('cnt').textContent; type('castro');
+  const raf1 = raffica(), rafSaved = (JSON.parse(w.localStorage.getItem('comuniQuizV1')).a||[]).includes('raffica');
+  console.log(' raffica:', raf0, '->', raf1, '| salvata:', rafSaved); const afterCastro = +$('cnt').textContent;
   type('Castro'); const castroDup = d.querySelector('div[style*="--bad"]').textContent;
   console.log(' castro:', before, '->', afterCastro, '| dup:', castroDup);
   // tema: automatico -> chiaro -> scuro -> automatico
@@ -42,24 +47,85 @@ async function run(label, htmlFile, useFetch){
   for(let k=0;k<3;k++){ $('theme').click(); themes.push((docEl.dataset.theme||'auto') + ':' + (w.localStorage.getItem('comuniQuizTheme')||'-') + ':' + $('theme').title); }
   console.log(' theme cycle:', themes.join(' | '));
   // traguardi segreti: nascosti fino a 69 e 420 comuni
-  const names = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')).n;
+  const map = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')), names = map.n;
   let ni = 0; const fillTo = n => { while(+$('cnt').textContent < n && ni < names.length) type(names[ni++]); };
   const achText = () => $('achlist').textContent;
+  const tourRow = (re = /(🔒|🧭) Giro delle province\s*(\d+\/\d+)/) => { const m = achText().match(re); return m ? m[1]+' '+m[2] : '?'; };
+  const italyRow = () => tourRow(/(🔒|🇮🇹) Giro d’Italia\s*(\d+\/\d+)/);
+  const tour0 = tourRow(), italy0 = italyRow();
   fillTo(60); const sec60 = achText();
   fillTo(69); const sec69 = achText();
   fillTo(420); const sec420 = achText();
-  console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d\/\d/)||['?'])[0]).join(' -> '));
+  // giro delle province: un comune per ciascuna provincia
+  const provs = [...new Set(map.p)], tourBefore = tourRow();
+  provs.forEach(p => { const i = map.p.indexOf(p); if(!tourRow().startsWith('🧭')) type(names[i]); });
+  const tourAfter = tourRow(), italyAfter = italyRow();
+  console.log(' province tour:', tour0, '->', tourBefore, '->', tourAfter, '| italy:', italy0, '->', italyAfter);
+  const pops = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).pop;
+  const popShown = $('pop').textContent, popExpected = [...names.keys()].filter(i => w.document.querySelector('#regs li[data-i="'+i+'"]')).reduce((a,i)=>a+pops[i],0);
+  console.log(' persone beccate:', popShown);
+  const recRows = () => [...$('achlist').querySelectorAll('.ai')].filter(e => /Il (più|meno) /.test(e.textContent)).map(e => [...e.children].map(c => c.textContent).join(' = '));
+  const rec0 = recRows();
+  ['Predoi', 'Lampedusa e Linosa', 'Atrani', 'Morterone'].forEach(type);
+  const rec1 = recRows();
+  console.log(' records:', rec1.join(' | '));
+  // capoluoghi: si trovano tutti scrivendone i nomi
+  const caps = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).cap;
+  const capBefore = (achText().match(/Tutti i capoluoghi\s*(\d+\/\d+)/)||[])[1];
+  caps.forEach(i => type(names[i].split('/')[0]));
+  const capAfter = (achText().match(/(🔒|🏛️) Tutti i capoluoghi\s*(\d+\/\d+)/)||[]).slice(1).join(' ');
+  console.log(' capoluoghi:', capBefore, '->', capAfter);
+  // comuni piccoli: rarità, borghi, tesori di provincia
+  const PMAX = Math.max(...pops), rar = pops.map(x => Math.max(1, Math.round(10*Math.log10(PMAX/x))));
+  const foundIdx = () => [...names.keys()].filter(i => w.document.querySelector('#regs li[data-i="'+i+'"]'));
+  const tesori = [...new Set(map.p)].map(p => map.p.reduce((b, q, i) => q === p && (b < 0 || pops[i] < pops[b]) ? i : b, -1));
+  [...names.keys()].filter(i => pops[i] < 100).forEach(i => type(names[i].split('/')[0]));
+  tesori.forEach(i => type(names[i].split('/')[0]));
+  const fi = foundIdx(), rarShown = $('rar').textContent, rarExpected = fi.reduce((a,i)=>a+rar[i],0).toLocaleString('it-IT');
+  const small = achText(), borghi = fi.filter(i => pops[i] < 1000).length;
+  console.log(' rarità:', rarShown, '| borghi:', borghi, '| tesori:', (small.match(/Tesori di provincia\s*\d+\/\d+/)||['?'])[0]);
+  console.log(' secrets:', [sec60, sec69, sec420].map(t => (t.match(/Segreti\s*\d+\/\d+/)||['?'])[0]).join(' -> '));
+  // pannello laterale: schede, filtro dei traguardi, ordinamento delle regioni
+  const tabs0 = $('paneA').hidden && !$('paneR').hidden; $('tabA').click();
+  const tabs1 = !$('paneA').hidden && $('paneR').hidden && $('tabA').getAttribute('aria-selected') === 'true'; $('tabR').click();
+  const filt = f => { d.querySelector('#achfilt [data-f="' + f + '"]').click(); return $('achlist').querySelectorAll('.ai').length; };
+  const nAll = filt('all'), nDone = filt('done'), nTodo = filt('todo'); filt('all');
+  const [achN, achT] = [+$('achn').textContent, +$('acht').textContent];
+  const order = () => [...d.querySelectorAll('#regs > .reg')].sort((a,b) => a.style.order - b.style.order).map(e => e.querySelector('.rn').textContent);
+  const sortBy = s => { d.querySelector('#regsort [data-s="' + s + '"]').click(); return order(); };
+  const pctOf = n => { const e = [...d.querySelectorAll('#regs > .reg')].find(x => x.querySelector('.rn').textContent === n); return parseInt(e.querySelector('.pc').textContent) || 0; };
+  const byPct = sortBy('pct'), byMiss = sortBy('miss'), byAz = sortBy('az');
+  console.log(' side: tabs', tabs0, tabs1, '| traguardi', nDone, '+', nTodo, '=', nAll, '(', achN, '/', achT, ') | % first:', byPct[0], '| az first:', byAz[0]);
   console.log(' errors:', errors.length ? errors : 'none');
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (' + label + '): ' + msg); process.exitCode = 1; } };
   ok($('tot').textContent === '7896', 'totale comuni');
   ok(time0 === '0:00:00', 'timer a zero al caricamento (era ' + time0 + ')');
   ok(errors.length === 0, 'errori JS');
+  ok(tabs0 && tabs1 && !$('paneR').hidden, 'schede Regioni / Traguardi');
+  ok(nDone + nTodo === nAll && nAll === achT && nDone === achN && nDone > 0 && nTodo > 0, 'filtro traguardi: sbloccati + da fare = tutti');
+  ok(byAz[0] === 'Abruzzo' && byAz.join() === [...byAz].sort((a,b) => a.localeCompare(b,'it')).join(), 'regioni in ordine alfabetico');
+  ok(byPct.every((n,j) => j === 0 || pctOf(byPct[j-1]) >= pctOf(n)) && byMiss.length === 20, 'regioni per percentuale');
   ok(before === 8, 'conteggio dopo le risposte di prova');
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
+  ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
   ok(/Segreti\s*0\/2/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length === 2, 'segreti nascosti prima di 69');
+  // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
+  ok(/👥 Un italiano su cento/.test(sec60) && /🔒 Un italiano su dieci/.test(sec60), 'persone beccate: 1% sì, 10% no');
   ok(/Segreti\s*1\/2/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
   ok(/Segreti\s*2\/2/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
+  ok(popShown === popExpected.toLocaleString('it-IT') && popExpected > 0, 'persone beccate (' + popShown + ' invece di ' + popExpected + ')');
+  ok(tour0 === '🔒 6/' + provs.length && italy0 === '🔒 5/20', 'esplorazione: contatori iniziali');
+  ok(italyAfter === '🇮🇹 20/20' && /Esplorazione\s*2\/2/.test(achText()), 'giro d’Italia sbloccato');
+  ok(/^🔒/.test(tourBefore) && tourAfter === '🧭 ' + provs.length + '/' + provs.length, 'giro delle province sbloccato');
+  // prima: Roma (più grande e più popoloso), Lampedusa (più a sud, già scritta) e Bardonecchia (più a ovest, tra i primi 420)
+  ok(rec0.length === 8 && rec0.filter(r => /^🔒/.test(r)).length === 4 && rec0.includes('🏙️ Il più popoloso = Roma') && rec0.includes('🗺️ Il più grande = Roma') && rec0.includes('🔒 Il più a nord = ?'), 'record nascosti finché non trovati');
+  ok(['⬆️ Il più a nord = Predoi', '⬇️ Il più a sud = Lampedusa e Linosa', '⬅️ Il più a ovest = Bardonecchia', '🔎 Il più piccolo = Atrani', '🏚️ Il meno popoloso = Morterone'].every(r => rec1.includes(r)) && rec1.filter(r => /^🔒/.test(r)).length === 1, 'record: nord, sud, ovest, piccolo, meno popoloso');
+  ok(/^\d+\/119$/.test(capBefore) && capAfter === '🏛️ 119/119' && /Capoluoghi\s*1\/1/.test(achText()), 'capoluoghi');
+  ok(rarToast && /Morterone \(32 abitanti\) 49/.test($('rarbox').title), 'spiegazione dei punti rarità');
+  ok(rarShown === rarExpected,'punti rarità (' + rarShown + ' invece di ' + rarExpected + ')');
+  ok(small.includes('Borghi (sotto ' + (1000).toLocaleString('it-IT') + ' ab.)') && small.includes(borghi + '/' + (2023).toLocaleString('it-IT') + ' borghi trovati') && /🔬 Tutti i microcomuni/.test(small), 'borghi e microcomuni');
+  ok(/Tesori di provincia\s*3\/3/.test(small) && small.includes('110/110 trovati') && /🗝️ Tutti i tesori/.test(small) && /Lecco: Morterone/.test(small), 'tesori di provincia');
   ok(themes.join('|') === 'light:light:Tema: chiaro|dark:dark:Tema: scuro|auto:-:Tema: automatico', 'ciclo del tema');
   // licenza dei dati e privacy nel footer
   const foot = d.querySelector('.foot'), links = [...foot.querySelectorAll('a')].map(a=>a.href);
@@ -90,20 +156,53 @@ async function runTimer(){
       w.Path2D = class {};
       const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
       w.HTMLCanvasElement.prototype.getContext = ()=>noop;
-      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f: [0, 1], t: 65000 }));
+      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f: [0, 1], t: 65000, a: ['raffica', 'sconosciuta'] }));
     }});
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, $ = id=>w.document.getElementById(id), shown = ()=>$('time').firstChild.textContent;
-  const onLoad = shown();
+  const onLoad = shown(), rafLoaded = /⚡ Raffica/.test($('achlist').textContent) && !/sconosciuta/.test($('achlist').textContent);
   $('go').click(); await new Promise(r=>setTimeout(r,1200)); const running = shown();
   $('go').click(); const saved = JSON.parse(w.localStorage.getItem('comuniQuizV1')).t;
   await new Promise(r=>setTimeout(r,700)); const paused = shown();
   console.log('timer: load', onLoad, '| running', running, '| paused', paused, '| saved', saved);
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (timer): ' + msg); process.exitCode = 1; } };
+  ok(rafLoaded, 'raffica ripristinata dal salvataggio');
   ok(onLoad === '0:01:05', 'tempo salvato mostrato al caricamento');
   ok(running === '0:01:06', 'il timer riparte dal tempo salvato');
   ok(saved >= 66000 && saved < 68000, 'tempo salvato in pausa');
   ok(paused === running, 'il timer resta fermo in pausa');
   dom.window.close();
 }
-(async()=>{ await runTimer(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// resa: mostra tutti i comuni, resta valida dopo il ricaricamento, "Ricomincia" cancella la partita
+async function runGiveUp(){
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8');
+  const open = async saved => {
+    const errors = [];
+    const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+      beforeParse(w){
+        w.Path2D = class {};
+        const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+        w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
+        w.addEventListener('error', e=>errors.push(e.message));
+        w.localStorage.clear(); if(saved) w.localStorage.setItem('comuniQuizV1', saved);
+      }});
+    await new Promise(r=>setTimeout(r,1500));
+    const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
+    const state = () => [$('go').textContent, $('go').disabled, $('giveup').disabled, $('inp').disabled, d.querySelectorAll('#regs li').length, d.querySelectorAll('#regs li.miss').length].join(',');
+    return { w, $, state, errors, dom };
+  };
+  let p = await open();
+  p.$('go').click(); ['roma', 'milano', 'napoli'].forEach(n => { p.$('inp').value = n; p.$('inp').dispatchEvent(new p.w.Event('input')); });
+  p.$('giveup').click();
+  const after = p.state(), saved = p.w.localStorage.getItem('comuniQuizV1'); p.dom.window.close();
+  p = await open(saved); const reload = p.state();
+  p.$('go').click(); const cleared = p.w.localStorage.getItem('comuniQuizV1');
+  console.log('resa:', after, '| ricaricata:', reload, '| dopo Ricomincia:', cleared);
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (resa): ' + msg); process.exitCode = 1; } };
+  ok(after === 'Ricomincia,false,true,true,7896,7893', 'dopo la resa: tutti i comuni in elenco e pulsante Ricomincia');
+  ok(JSON.parse(saved).g === 1 && reload === after, 'la resa resta dopo il ricaricamento');
+  ok(cleared === null, 'Ricomincia cancella la partita salvata');
+  ok(p.errors.length === 0, 'errori JS');
+  p.dom.window.close();
+}
+(async()=>{ await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

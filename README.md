@@ -22,10 +22,12 @@ Qualche aiuto:
 
 ## Cosa c’è nel gioco
 - Tutti i comuni d’Italia su un’unica mappa, con i confini di province e regioni.
-- Un elenco laterale per regione e provincia, con l’avanzamento di ciascuna.
-- Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), tutti i comuni della costa,
+- Un pannello laterale con due schede: le regioni (con percentuale e barra, ordinabili per nome, percentuale o comuni mancanti) e le loro province, e i traguardi divisi per categoria, con un filtro per vedere quelli sbloccati o da fare.
+- Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), almeno un comune in ogni regione e in ogni provincia, tutti i capoluoghi, i comuni da record (il più a nord, il più piccolo, il meno popoloso…), la sfida “Raffica” (10 comuni in un minuto), tutti i comuni della costa,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre) e i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…).
   E qualche obiettivo segreto da scoprire.
+- Il punteggio delle “persone beccate”: quanti abitanti hanno i comuni che hai trovato (dati ISTAT).
+- I punti rarità: più il comune è piccolo, più vale. E obiettivi per i borghi, i microcomuni e il comune più piccolo di ogni provincia.
 - Tema chiaro e scuro.
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 
