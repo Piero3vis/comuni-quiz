@@ -69,6 +69,16 @@ async function run(label, htmlFile, useFetch){
   ['Predoi', 'Lampedusa e Linosa', 'Atrani', 'Morterone'].forEach(type);
   const rec1 = recRows();
   console.log(' records:', rec1.join(' | '));
+  // storia, repubbliche marinare, confini
+  const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
+  const mar0 = row(/Le quattro repubbliche/);
+  ['Amalfi', 'Genova', 'Pisa', 'Venezia'].forEach(type);
+  const mar1 = row(/Le quattro repubbliche/), mar2 = row(/Non erano solo quattro/);
+  type('San Giustino'); const cosp = row(/Repubblica di Cospaia/);
+  const confRows = ['la Francia', 'la Svizzera', 'l’Austria', 'la Slovenia', 'San Marino', 'il Vaticano'].map(s => (row(new RegExp('Tutto il confine con ' + s)).match(/\d+\/\d+$/) || ['?'])[0].split('/')[1]);
+  ['Livo (CO)', 'Ventimiglia', 'Como', 'Brennero', 'Gorizia', 'Rimini'].forEach(n => type(n.replace(/ \(..\)$/, '')));
+  const giro = row(/Giro delle frontiere/);
+  console.log(' storia:', mar0.slice(0, 2), '->', mar1, '|', mar2.slice(0, 2), '|', cosp.slice(0, 60), '| confini', confRows.join(','), '|', giro);
   // capoluoghi: si trovano tutti scrivendone i nomi
   const caps = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).cap;
   const capBefore = (achText().match(/Tutti i capoluoghi\s*(\d+\/\d+)/)||[])[1];
@@ -101,6 +111,9 @@ async function run(label, htmlFile, useFetch){
   ok($('tot').textContent === '7896', 'totale comuni');
   ok(time0 === '0:00:00', 'timer a zero al caricamento (era ' + time0 + ')');
   ok(errors.length === 0, 'errori JS');
+  ok(/^🔒/.test(mar0) && /^⚓ Le quattro repubbliche marinarei quattro stemmi/.test(mar1) && /^🔒 Non erano solo quattro0\/3$/.test(mar2), 'repubbliche marinare: le quattro, la nota delle altre nascosta');
+  ok(/^📜 Repubblica di Cospaiadal 1441/.test(cosp), 'Cospaia sbloccata da San Giustino, con la nota');
+  ok(confRows.join() === '39,87,27,25,7,1' && /^🛂 Giro delle frontiere/.test(giro), 'comuni di confine e giro delle frontiere');
   ok(tabs0 && tabs1 && !$('paneR').hidden, 'schede Regioni / Traguardi');
   ok(nDone + nTodo === nAll && nAll === achT && nDone === achN && nDone > 0 && nTodo > 0, 'filtro traguardi: sbloccati + da fare = tutti');
   ok(byAz[0] === 'Abruzzo' && byAz.join() === [...byAz].sort((a,b) => a.localeCompare(b,'it')).join(), 'regioni in ordine alfabetico');
