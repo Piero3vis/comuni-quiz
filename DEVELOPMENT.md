@@ -15,7 +15,8 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
   the "Raffica" challenge (10 comuni in one minute, saved with the progress),
   record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),
-  the whole coast and each regional coast, minor islands, and walking routes (cammini).
+  the whole coast and each regional coast, minor islands, walking routes (cammini),
+  history (capitals of Italy, Cospaia, Seborga), maritime republics (the famous four and the others) and the comuni on each foreign border.
 - "Persone beccate" score in the top-left corner of the map: residents (ISTAT, 1 January 2025) of the comuni found;
   milestones at 1%, 10%, 25%, 50%, 75% and 100% of the population. Next to it, "punti rarità": small comuni are worth more (log scale); hover or click 💎 for a short explanation.
 - Small comuni: borghi/paesini/microcomuni achievements (under 1000/500/100 inhabitants), a "comune raro" toast under 100,
@@ -37,11 +38,12 @@ style.css             styles (light/dark theme via CSS variables)
 app.js                all the logic: loading, canvas map, quiz, side panel, achievements
 data/map.json         generated map data (see CLAUDE.md for the format)
 data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
-data/groups.json      hand-edited groups: islands and cammini, listed by comune name
+data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics (by hand), borders (scripts/border_comuni.py)
 scripts/build_data.py regenerates data/map.json from the open data sources
 scripts/build_extra.py         regenerates data/extra.json (ISTAT population 2025, capoluoghi flag, records)
 scripts/build_single_file.py   builds dist/quiz.html (CSS, JS and data inlined)
 scripts/check_istat.py         compares comuni and provinces with the current ISTAT list
+scripts/border_comuni.py       comuni on each foreign border (shapely), writes "confini" in data/groups.json
 openspec/             OpenSpec specs and change proposals (spec-driven workflow)
 tests/smoke.js        jsdom smoke test (npm test)
 ```
@@ -100,7 +102,7 @@ Note that saved progress belongs to the exact address the page is served from: a
 - Municipal boundaries: © ISTAT, via [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy), licensed
   [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (licence checked on 2026-11-02). Simplified to 4%, reprojected and quantised,
   so the footer says "semplificati e modificati". CC BY requires the credit, the licence link and the change notice: keep them in the footer.
-- State borders (used only to compute the coast): [Natural Earth](https://www.naturalearthdata.com/), public domain.
+- State borders (used to compute the coast and the border comuni): [Natural Earth](https://www.naturalearthdata.com/), public domain.
 
 ## Known limitations
 - Provinces follow ISTAT 2026, including the Sardinian layout in force since 1 January 2026 (Città metropolitana di Sassari, Gallura Nord-Est Sardegna,

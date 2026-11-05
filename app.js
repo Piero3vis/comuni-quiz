@@ -24,19 +24,25 @@ async function loadData() {
 function withGroups(map, groups) {
   const byName = new Map();
   map.n.forEach((nm, i) => { if (!byName.has(nm)) byName.set(nm, []); byName.get(nm).push(i); });
+  // "Nome" oppure, per i nomi doppi, "Nome (SIGLA)"
   const lookup = nm => {
-    const a = byName.get(nm);
+    const m = /^(.*) \(([A-Z]{2})\)$/.exec(nm);
+    const a = m ? (byName.get(m[1]) || []).filter(i => map.p[i] === m[2]) : byName.get(nm);
     if (!a || a.length !== 1) throw new Error('Nome comune non risolvibile: ' + nm);
     return a[0];
   };
+  // ogni gruppo diventa [nome, indici ordinati, nota]
   const resolve = list => {
-    const parsed = list.map(g => ({ name: g.name, union: !!g.union, set: new Set((g.comuni || []).map(lookup)) }));
+    const parsed = list.map(g => ({ name: g.name, nota: g.nota || '', union: !!g.union, set: new Set((g.comuni || []).map(lookup)) }));
     const all = new Set();
     parsed.filter(g => !g.union).forEach(g => g.set.forEach(i => all.add(i)));
-    return parsed.map(g => [g.name, [...(g.union ? new Set([...g.set, ...all]) : g.set)].sort((a, b) => a - b)]);
+    return parsed.map(g => [g.name, [...(g.union ? new Set([...g.set, ...all]) : g.set)].sort((a, b) => a - b), g.nota]);
   };
   map.isl = resolve(groups.isole);
   map.cam = resolve(groups.cammini);
+  map.conf = resolve(groups.confini);
+  map.mar = resolve(groups.marinare);
+  map.sto = resolve(groups.storia);
   return map;
 }
 
@@ -202,13 +208,22 @@ const TS = [10,50,TES.size], tesFound = () => [...TES.keys()].filter(i=>found[i]
 const RT = regTot.map(T=>[Math.ceil(T*.25),Math.ceil(T*.5)]);
 const openAch = new Set();
 const CAM = D.cam, camOf = new Map(); CAM.forEach((g,gi)=>g[1].forEach(i=>{ if(!camOf.has(i)) camOf.set(i,[]); camOf.get(i).push(gi); }));
+// Gruppi a tema da groups.json (confini, repubbliche marinare, storia): id <pre>:<gi>, sbloccati quando il gruppo è completo
+const CONF = D.conf, CONFA = { 'Francia':'la Francia', 'Svizzera':'la Svizzera', 'Austria':'l’Austria', 'Slovenia':'la Slovenia', 'Città del Vaticano':'il Vaticano' };
+const confTouched = () => CONF.filter(g=>g[1].some(i=>found[i])).length;
+const TG = [
+  { pre:'f', ic:'🛂', list: CONF, label: g => 'Tutto il confine con '+(CONFA[g[0]]||g[0]) },
+  { pre:'mr', ic:'⚓', list: D.mar, label: g => g[0] },
+  { pre:'h', ic:'📜', list: D.sto, label: g => g[0] },
+];
+const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
 const CH = [['raffica','⚡','Raffica','10 comuni in un minuto']], earned = new Set(), burst = [];
 const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
-function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },2800); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); }
+function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); }
 // Raffica: 10 comuni trovati negli ultimi 60 secondi (orologio reale, solo risposte durante il gioco)
 function burstCheck(n){
   const now = Date.now(); for(let j=0;j<n;j++) burst.push(now); if(burst.length>10) burst.splice(0, burst.length-10);
@@ -224,6 +239,8 @@ function achCheck(i){
   }
   (islOf.get(i)||[]).forEach(gi=>{ if(!unlocked.has('i:'+gi) && islDone(ISL[gi])){ unlocked.add('i:'+gi); toast('🏝️','Isole: '+ISL[gi][0]+' al completo!'); } });
   (camOf.get(i)||[]).forEach(gi=>{ if(!unlocked.has('w:'+gi) && islDone(CAM[gi])){ unlocked.add('w:'+gi); toast('🥾','Cammino completato: '+CAM[gi][0]); } });
+  (tgOf.get(i)||[]).forEach(([t,gi])=>{ const g = t.list[gi], id = t.pre+':'+gi; if(!unlocked.has(id) && islDone(g)){ unlocked.add(id); toast(t.ic, t.label(g)+(g[2] ? ': '+g[2] : '!')); } });
+  if(CONF.some(g=>g[1].includes(i)) && !unlocked.has('f:giro') && confTouched()===CONF.length){ unlocked.add('f:giro'); toast('🛂','Giro delle frontiere: un comune al confine con ogni Stato vicino!'); }
   const p = D.p[i], k = D.r[i];
   if(PT[p]){ const f = provFound[p]; [['p25',0,'un quarto'],['p50',1,'metà']].forEach(([s,x,l])=>{ const id = s+':'+p; if(f>=PT[p][x] && !unlocked.has(id)){ unlocked.add(id); toast('📍',provLabel(p)+': '+l+' dei comuni'); } }); }
   { const f = regCount[k]; [['r25',0,'un quarto'],['r50',1,'metà']].forEach(([s,x,l])=>{ const id = s+':'+k; if(f>=RT[k][x] && !unlocked.has(id)){ unlocked.add(id); toast('🗺️',D.regs[k].split('/')[0]+': '+l+' dei comuni'); } }); }
@@ -242,7 +259,8 @@ $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.datase
 const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.regs[k].split('/')[0];
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 function achCats(){
-  const has = id => unlocked.has(id), it = (id,ic,l,c) => ({ u: has(id), ic, l, c });
+  const has = id => unlocked.has(id), it = (id,ic,l,c,d) => ({ u: has(id), ic, l, c, d });
+  const tg = (t,g,gi) => it(t.pre+':'+gi, t.ic, t.label(g), islFound(g)+'/'+g[1].length, g[2]);
   const tf = tesFound();
   return [
     { k:'m', ic:'🏆', t:'Traguardi', items: MS.map(([n,l])=>it('m'+n,'🏆',l,fmtN(n))) },
@@ -259,6 +277,9 @@ function achCats(){
     { k:'k', ic:'🌊', t:'Coste regionali', items: REGK.filter(k=>coastRegTot[k]>0).map(k=>it('k:'+k,'🌊',regName(k),coastRegFound[k]+'/'+coastRegTot[k])) },
     { k:'i', ic:'🏝️', t:'Isole', items: ISL.map((g,gi)=>it('i:'+gi,'🏝️',g[0],islFound(g)+'/'+g[1].length)) },
     { k:'w', ic:'🥾', t:'Cammini', items: CAM.map((g,gi)=>it('w:'+gi,'🥾',g[0],islFound(g)+'/'+g[1].length)) },
+    { k:'h', ic:'📜', t:'Storia', items: TG[2].list.map((g,gi)=>tg(TG[2],g,gi)) },
+    { k:'mr', ic:'⚓', t:'Repubbliche marinare', items: TG[1].list.map((g,gi)=>tg(TG[1],g,gi)) },
+    { k:'f', ic:'🛂', t:'Confini', items: [it('f:giro','🛂','Giro delle frontiere',confTouched()+'/'+CONF.length,'un comune al confine con ogni Stato vicino')].concat(CONF.map((g,gi)=>tg(TG[0],g,gi))) },
     { k:'r', ic:'🥇', t:'Regioni completate', items: REGK.map(k=>it('r:'+k,'🥇',regName(k),regCount[k]+'/'+regTot[k])) },
     { k:'p', ic:'🏅', t:'Province completate', items: PROVS.map(p=>it('p:'+p,'🏅',PN[p]||p,(provFound[p]||0)+'/'+provTot[p])) },
     { k:'r25', ic:'🗺️', t:'Regioni: un quarto', items: REGK.map(k=>it('r25:'+k,'🗺️',regName(k),regCount[k]+'/'+RT[k][0])) },
@@ -276,7 +297,8 @@ function renderAch(){
   $('achlist').innerHTML = cats.map(c=>{
     const u = c.items.filter(x=>x.u).length, n = c.items.length, items = c.items.filter(show);
     if(!items.length) return '';
-    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"><span>${x.u?x.ic:'🔒'} ${x.l}</span><span class="c">${x.c}</span></div>`).join('');
+    // la nota (aneddoto) si vede solo a traguardo sbloccato: per alcuni svelerebbe la risposta
+    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"><span>${x.u?x.ic:'🔒'} ${x.l}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
     return `<details class="cat${u===n?' full':''}" data-a="${c.k}"${openAch.has(c.k)?' open':''}><summary><span class="ci">${c.ic}</span><span class="ct">${c.t}</span><span class="c">${u}/${n}</span><span class="mbar"><i style="width:${100*u/n}%"></i></span></summary>`
       + (c.info ? `<div class="info">${c.info}</div>` : '') + rows + (c.more||'') + `</details>`;
   }).join('') || '<div class="empty">Nessun traguardo qui, per ora.</div>';
