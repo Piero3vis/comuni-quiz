@@ -218,4 +218,34 @@ async function runGiveUp(){
   ok(p.errors.length === 0, 'errori JS');
   p.dom.window.close();
 }
-(async()=>{ await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// curiosità: nessun testo contiene il nome del comune; il riquadro del clic mostra il menu chiuso (indizio prima, curiosità dopo)
+async function runFacts(){
+  const map = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')), facts = JSON.parse(fs.readFileSync(path.join(root, 'data/facts.json'), 'utf8'));
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (curiosità): ' + msg); process.exitCode = 1; } };
+  const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const leaks = Object.entries(facts).filter(([nm, t]) => nm.replace(/ \([A-Z]{2}\)$/, '').split('/').some(part => norm(t).includes(norm(part))));
+  ok(leaks.length === 0, 'il nome compare nella curiosità: ' + leaks.map(x => x[0]).join(', '));
+  ok(Object.values(facts).every(t => t.length <= 200 && !/'/.test(t)), 'curiosità brevi, con l’apostrofo tipografico');
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8'), errors = [];
+  const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+    beforeParse(w){
+      w.Path2D = class { constructor(s){ this.s = s; } };
+      const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? (p => !!p && p.s === w.hit) : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+      w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.HTMLElement.prototype.setPointerCapture = ()=>{};
+      w.addEventListener('error', e=>errors.push(e.message)); w.localStorage.clear();
+    }});
+  await new Promise(r=>setTimeout(r,1500));
+  const w = dom.window, d = w.document, $ = id=>d.getElementById(id), cv = $('cv');
+  const click = nm => { w.hit = map.d[map.n.indexOf(nm)]; ['pointerdown','pointerup'].forEach(t => cv.dispatchEvent(new w.MouseEvent(t, { clientX: 100, clientY: 100 }))); return [...d.querySelectorAll('#mapbox > div')].find(el => el.style.display === 'block' && el.querySelector('#reveal, b')); };
+  let box = click('Elva'); const before = box && box.querySelector('details.fact');
+  const hint = before && !before.open && before.querySelector('summary').textContent === '💡 Indizio: una curiosità' && before.querySelector('p').textContent === facts['Elva'];
+  $('go').click(); $('inp').value = 'elva'; $('inp').dispatchEvent(new w.Event('input'));
+  box = click('Elva'); const after = box && box.querySelector('details.fact');
+  const shown = after && !after.open && after.querySelector('summary').textContent === '💡 Curiosità' && /abitanti/.test(box.textContent);
+  box = click('Milano'); const none = box && !box.querySelector('details.fact');
+  console.log('curiosità:', Object.keys(facts).length, '| indizio:', !!hint, '| dopo:', !!shown, '| senza:', !!none);
+  ok(hint, 'indizio chiuso per un comune non trovato'); ok(shown, 'curiosità chiusa sotto abitanti e rarità'); ok(none, 'nessun menu senza curiosità');
+  ok(errors.length === 0, 'errori JS: ' + errors.join('; '));
+  dom.window.close();
+}
+(async()=>{ await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

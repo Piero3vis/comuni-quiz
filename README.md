@@ -17,7 +17,7 @@ Qualche aiuto:
 - **Le parole piccole si possono saltare**: “Reggio Emilia” trova Reggio nell’Emilia.
 - **In Alto Adige valgono anche i nomi tedeschi**: “Bozen” trova Bolzano.
 - **Comuni con lo stesso nome** (per esempio i due Castro, in Lombardia e in Puglia) si colorano insieme.
-- **Sei bloccato?** Clicca su un comune ancora vuoto: vedi l’iniziale e il numero di lettere, e se vuoi anche la soluzione.
+- **Sei bloccato?** Clicca su un comune ancora vuoto: vedi l’iniziale e il numero di lettere, e se vuoi anche la soluzione. Per alcuni comuni piccoli o curiosi c’è anche un indizio: una curiosità, che resta da leggere anche dopo averlo trovato.
 - **Mappa**: trascina per spostarti, usa la rotella o due dita per lo zoom.
 
 ## Cosa c’è nel gioco
