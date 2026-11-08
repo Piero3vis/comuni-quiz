@@ -1,27 +1,29 @@
 // Quiz: tutti i comuni d'Italia
-// Carica data/map.json + data/groups.json + data/extra.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
+// Carica data/map.json + data/groups.json + data/extra.json + data/facts.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
 
 async function loadData() {
-  let map, groups, extra;
+  let map, groups, extra, facts;
   const inline = document.getElementById('data');
   if (inline) {
-    ({ map, groups, extra } = JSON.parse(inline.textContent));
+    ({ map, groups, extra, facts } = JSON.parse(inline.textContent));
   } else {
-    [map, groups, extra] = await Promise.all([
+    [map, groups, extra, facts] = await Promise.all([
       fetch('data/map.json').then(r => r.json()),
       fetch('data/groups.json').then(r => r.json()),
       fetch('data/extra.json').then(r => r.json()),
+      fetch('data/facts.json').then(r => r.json()),
     ]);
   }
   // extra.json (scripts/build_extra.py): popolazione, capoluoghi e comuni da record, con gli indici di map.json
   if (extra.pop.length !== map.n.length) throw new Error('data/extra.json non allineato a map.json: rigenerarlo');
   Object.assign(map, extra);
-  return withGroups(map, groups);
+  return withGroups(map, groups, facts);
 }
 
 // Trasforma i gruppi (isole, cammini) da nomi di comuni a indici.
 // Un gruppo con "union": true contiene tutti i comuni degli altri gruppi della lista (piu' gli eventuali "comuni" extra).
-function withGroups(map, groups) {
+// Anche le curiosita' (facts.json, { "Nome": "testo" }) usano i nomi: diventano map.fact, una Map indice -> testo.
+function withGroups(map, groups, facts) {
   const byName = new Map();
   map.n.forEach((nm, i) => { if (!byName.has(nm)) byName.set(nm, []); byName.get(nm).push(i); });
   // "Nome" oppure, per i nomi doppi, "Nome (SIGLA)"
@@ -43,6 +45,7 @@ function withGroups(map, groups) {
   map.conf = resolve(groups.confini);
   map.mar = resolve(groups.marinare);
   map.sto = resolve(groups.storia);
+  map.fact = new Map(Object.entries(facts).map(([nm, t]) => [lookup(nm), t]));
   return map;
 }
 
@@ -128,10 +131,15 @@ function clickAt(x,y){
   hideInfo(); const i = pick(x,y); if(i<0) return;
   const base = D.n[i].split('/')[0], reg = D.regs[D.r[i]].split('/')[0], letters = base.replace(/[^A-Za-z\u00C0-\u00FF]/g,'').length;
   flash = i; draw();
-  if(found[i]||gaveUp){ info.innerHTML = '<b>'+D.n[i]+'</b> ('+D.p[i]+') · '+reg+'<div style="color:var(--muted)">👥 '+fmtN(D.pop[i])+' abitanti · 💎 '+RAR[i]+' punti rarità</div>'; }
+  const known = found[i]||gaveUp, fact = D.fact.get(i);
+  if(known){ info.innerHTML = '<b>'+D.n[i]+'</b> ('+D.p[i]+') · '+reg+'<div style="color:var(--muted)">👥 '+fmtN(D.pop[i])+' abitanti · 💎 '+RAR[i]+' punti rarità</div>'; }
   else { info.innerHTML = '<div style="color:var(--muted)">'+reg+' · '+D.p[i]+'</div><div id="infoMain">Non ancora trovato · inizia con «'+base[0]+'» · '+letters+' lettere</div><button id="reveal" style="margin-top:6px;padding:4px 10px">Rivela nome</button>'; info.querySelector('#reveal').onclick = ()=>{ info.querySelector('#infoMain').innerHTML = '<b>'+base+'</b>'; info.querySelector('#reveal').remove(); }; }
-  info.style.display = 'block'; info.style.left = Math.max(6,Math.min(x+12,W-250))+'px'; info.style.top = Math.max(6,Math.min(y+12,H-120))+'px';
+  // curiosità chiusa in un menu: prima di indovinare fa da indizio (il testo non contiene il nome), dopo resta da leggere
+  if(fact){ const det = document.createElement('details'); det.className = 'fact'; det.innerHTML = '<summary>'+(known ? '💡 Curiosità' : '💡 Indizio: una curiosità')+'</summary><p></p>'; det.querySelector('p').textContent = fact; det.ontoggle = ()=>placeInfo(x,y); info.appendChild(det); }
+  info.style.display = 'block'; placeInfo(x,y);
 }
+// il riquadro resta dentro la mappa anche quando la curiosità si apre
+function placeInfo(x,y){ info.style.left = Math.max(6,Math.min(x+12,W-info.offsetWidth-6))+'px'; info.style.top = Math.max(6,Math.min(y+12,H-info.offsetHeight-6))+'px'; }
 function zoomTo(i){
   const c = document.createElement('canvas').getContext('2d'); // bbox via path sampling
   const s = D.d[i]; const nums = s.split(/[Mlz ]+/).filter(Boolean).map(Number); let x=0,y=0,mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9, first = true;

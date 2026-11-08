@@ -70,3 +70,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .msg{margin-top:10px;color:var(--muted);font-size:13px}
 .about{max-width:1280px;margin:0 auto;padding:4px 14px 0;font-size:13px;color:var(--muted)}.about h2{font-size:14px;margin:0 0 4px;color:var(--text)}.about p{margin:0;max-width:75ch}
 .foot{max-width:1280px;margin:0 auto;padding:6px 14px 18px;font-size:12px;color:var(--muted)}.foot a{color:inherit}
+/* curiosità nel riquadro del comune */
+.fact{margin-top:6px;border-top:1px solid var(--line);padding-top:5px}
+.fact summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:12px}
+.fact p{margin:4px 0 0;font-size:12.5px;line-height:1.35}

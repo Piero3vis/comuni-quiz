@@ -39,6 +39,7 @@ app.js                all the logic: loading, canvas map, quiz, side panel, achi
 data/map.json         generated map data (see CLAUDE.md for the format)
 data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
 data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics (by hand), borders (scripts/border_comuni.py)
+data/facts.json       short curiosità by comune name, shown in the map box (as a clue before the comune is found)
 scripts/build_data.py regenerates data/map.json from the open data sources
 scripts/build_extra.py         regenerates data/extra.json (ISTAT population 2025, capoluoghi flag, records)
 scripts/build_single_file.py   builds dist/quiz.html (CSS, JS and data inlined)
@@ -52,6 +53,9 @@ tests/smoke.js        jsdom smoke test (npm test)
 **Add a cammino or an island group**: edit `data/groups.json`, adding `{ "name": "...", "comuni": ["Comune 1", "Comune 2"] }`.
 Names must match `data/map.json` exactly and be unique (the page throws a clear error otherwise).
 Put new items before the last entry of the list: the last one has `"union": true` and automatically contains every other group.
+
+**Add a curiosità**: add `"Comune": "testo"` to `data/facts.json` (`"Nome (SIGLA)"` for duplicated names). Check it on a source, keep it under 200 characters,
+use the typographic apostrophe and never write the comune's name (it is shown as a clue): `npm test` checks the last three.
 
 **Rebuild the map data** (only if you change simplification, projection or the coast rules):
 ```bash
