@@ -15,4 +15,4 @@
 ## 4. Docs and verification
 
 - [x] 4.1 DEVELOPMENT.md ("Add a curiosità"), CLAUDE.md (format)
-- [ ] 4.2 `openspec validate --strict`; tests pass locally and on the pull request
+- [x] 4.2 `openspec validate --strict`; tests pass locally and on the pull request (PR #7, run 43063887326)
