@@ -48,7 +48,7 @@ Texts never contain the comune's name or a `/` part (checked by `tests/smoke.js`
   `looseMap`/`lk()` is the fallback that also drops connecting words (di, del, della, nell, ...). Typing a name fills every comune with that name
   (homonyms: both Castro, etc.; covered by `tests/smoke.js`).
 - State: `found[]` (Uint8Array), `foundCount`, `popFound` ("persone beccate", `#pop`) and `rarFound` ("punti rarità", `#rar`: `RAR[i] = max(1, round(10·log10(maxPop/pop)))`), both top-left on the map, `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
-- Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids], gr: [Giro region, region mask] while a Giro run is on, g: 1 if given up }`.
+- Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids], tr: { giro, giroP: [last unit, [units]] } while a run is on (old gr still read), g: 1 if given up }`.
   Game over (`over()`: given up or all found) → `showOver()`; `#go` becomes "Ricomincia", which removes `comuniQuizV1` and reloads. Always wrapped in try/catch.
 - Provinces: `PN` maps sigla to display name, `CM` lists ISTAT metropolitan cities, `provLabel(p)` gives "Città metropolitana di …" / "Provincia di …" for toasts.
   `scripts/check_istat.py` checks `map.json`, `PN` and `CM` against ISTAT's current list.
@@ -59,17 +59,19 @@ choice in `localStorage['comuniQuizTheme']` (removed for automatic), separate fr
 `render()` reads colours from CSS variables, so call `draw()` after any theme change (button and `matchMedia` listener do).
 
 ## Achievements
-Derived from the state, never stored, except challenges (`CH`: `raffica`, 10 comuni within 60 s, checked by `burstCheck()`; `giro`, see below), whose ids are saved in `a` and restored into `earned`: `achInit()` computes the unlocked set silently on load, `achCheck(i)` adds new ones and queues toasts.
+Derived from the state, never stored, except challenges (`CH`: `raffica`, 10 comuni within 60 s, checked by `burstCheck()`; `giro`, `giroP`, see below), whose ids are saved in `a` and restored into `earned`: `achInit()` computes the unlocked set silently on load, `achCheck(i)` adds new ones and queues toasts.
 Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked), `pp<q>` population milestone (`PPS`: q% of residents, on `popFound`), `p:<ACR>` province complete, `r:<k>` region complete, `p25/p50:<ACR>` and `r25/r50:<k>` quarter/half,
 `e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `cap` all capoluoghi, `b<limit>:<n>` borghi (`BG`: comuni under 1000/500/100 inhabitants), `t<n>` provincial treasures (`TES`: least populated comune per province), `x:<key>` record comune (`REC`, keys of `rec`), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino, `h:<gi>` / `mr:<gi>` / `f:<gi>` history, maritime republic and border groups (`TG`), `f:giro` one comune on every foreign border. Because nothing is persisted, reordering groups is safe.
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 Geography (from `geo.json`), updated in `addFound()` so a reload rebuilds them: `cc:<xy>` "Da costa a costa" (`CC`, sea letters `LTIACS`): union-find `ccP` over found inland comuni, `ccM` sea bitmask of found coastal neighbours, `ccE` one example comune per sea, `ccDone` id → [from, to];
-`walk` "Italia a piedi": union-find `wkP` over found peninsula non-capoluogo comuni (`allowed()`), `wkM` region bitmask, `wkBest` best region count.
-`giro` "Giro d’Italia a tappe" depends on the order of guesses: `giroStep(added)` in the input handler (not on load); `gr = [last region or -1, region bitmask]`, saved as `comuniQuizV1.gr`.
+`walk` "Italia a piedi": union-find `wkP` over found peninsula comuni (`MAIN`, capoluoghi included), `wkM` region bitmask, `wkBest`/`wkBestM` best region count and mask.
+`giro` / `giroP` "Giro d’Italia a tappe" / "Giro delle province a tappe" depend on the order of guesses: `TOURS` (unit = region index or province sigla, `adj` = `RADJ` / `PADJ`, `total` 18 / 93),
+`tourStep(t, added)` in the input handler (not on load); state `t.last` (or null) and `t.seen` (Set), saved as `comuniQuizV1.tr = { giro: [last, [units]], giroP: [...] }` (an old `gr: [region, mask]` is still read).
+Stages must be `allowed()` (peninsula, not capoluogo). `tourStatus(t)` writes the panel status; `missing()` lists up to 8 names, otherwise counts.
 
 ## Side panel
 Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes one `<details class="reg" id="rg<k>">` per region, `updateReg(k)` fills percentage (`pct()`: floor, "<1%", "100%" only when complete), count, bar and province rows;
-`sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c}], more?}`,
+`sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c, d?, h?, s?}], more?}` (`d` detail shown once unlocked, `h` rule and `s` status always shown, used by challenges),
 `renderAch()` draws the total, the filter (`achFilter`: `all`, `done`, `todo`) and one `<details class="cat" data-a>` per category; `openAch` keeps them open across re-renders. New achievements go in `achCats()`.
 
 ## Conventions

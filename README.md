@@ -25,8 +25,9 @@ Qualche aiuto:
 - Un pannello laterale con due schede: le regioni (con percentuale e barra, ordinabili per nome, percentuale o comuni mancanti) e le loro province, e i traguardi divisi per categoria, con un filtro per vedere quelli sbloccati o da fare.
 - Obiettivi da sbloccare: traguardi di comuni trovati, province e regioni complete (o a metà), almeno un comune in ogni regione e in ogni provincia, tutti i capoluoghi, i comuni da record (il più a nord, il più piccolo, il meno popoloso…), la sfida “Raffica” (10 comuni in un minuto), tutti i comuni della costa,
   le traversate “da costa a costa” (dal Tirreno all’Adriatico, dall’Adriatico allo Ionio… attraversando l’entroterra),
-  il “Giro d’Italia a tappe” (tutte le regioni della penisola di fila, passando sempre in una regione confinante, senza capoluoghi né isole)
-  e la super-sfida “Italia a piedi” (una catena di comuni confinanti attraverso tutte le regioni della penisola),
+  il “Giro d’Italia a tappe” (tutte le regioni della penisola di fila, passando sempre in una regione confinante, senza capoluoghi né isole; si parte da qualsiasi regione e si può tornare indietro),
+  il “Giro delle province a tappe” (lo stesso, provincia per provincia: tutte le 93 della penisola)
+  e la super-sfida “Italia a piedi” (una catena di comuni confinanti, capoluoghi compresi, attraverso tutte le regioni della penisola). Nel pannello ogni sfida spiega la regola e mostra a che punto sei e dove puoi andare,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre), i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…),
   le capitali d’Italia, la Repubblica di Cospaia, il Principato di Seborga, le repubbliche marinare (non erano solo quattro) e i comuni di confine con ogni Stato vicino.
   E qualche obiettivo segreto da scoprire.
