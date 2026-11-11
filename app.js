@@ -300,16 +300,35 @@ const TG = [
 ];
 const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
-const CH = [['raffica','⚡','Raffica','10 comuni in un minuto'],['giro','🚴','Giro d’Italia a tappe',''],['giroP','🚲','Giro delle province a tappe','']], earned = new Set(), burst = [];
+// Sfide a tempo: n comuni (che passano ok, raggruppati per key) entro ms di tempo di gioco; record personale salvato in comuniQuizV1.rb
+const MIN = 60000, initial = i => norm(D.n[i].split('/')[0])[0];
+const TIMED = [
+  { id:'raffica', ic:'⚡', l:'Raffica', n:10, ms:MIN },
+  { id:'raffica20', ic:'🔥', l:'Raffica doppia', n:20, ms:MIN },
+  { id:'t50', ic:'⏱️', l:'Cinquanta in cinque', n:50, ms:5*MIN },
+  { id:'t100', ic:'💯', l:'Cento in cinque', n:100, ms:5*MIN },
+  { id:'t250', ic:'🏃', l:'Mezza maratona', n:250, ms:15*MIN },
+  { id:'t500', ic:'🏅', l:'Maratona', n:500, ms:30*MIN },
+  { id:'tcap', ic:'🎯', l:'Raffica di capoluoghi', n:10, ms:MIN, ok: i => CAPS.has(i), what:'capoluoghi di provincia' },
+  { id:'tborg', ic:'🌾', l:'Raffica di borghi', n:10, ms:5*MIN, ok: i => D.pop[i] < 1000, what:'comuni sotto i 1.000 abitanti' },
+  { id:'tlet', ic:'🔤', l:'Stessa lettera', n:10, ms:MIN, key: initial, what:'comuni con la stessa iniziale' },
+].map(c => Object.assign(c, { q: new Map(), best: 0, span: c.ms===MIN ? 'un minuto' : (c.ms/MIN)+' minuti' }));
+const CH = TIMED.map(c=>[c.id]).concat([['giro'],['giroP']]), earned = new Set();
 const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
 function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
-// Raffica: 10 comuni trovati negli ultimi 60 secondi (orologio reale, solo risposte durante il gioco)
-function burstCheck(n){
-  const now = Date.now(); for(let j=0;j<n;j++) burst.push(now); if(burst.length>10) burst.splice(0, burst.length-10);
-  if(burst.length===10 && now-burst[0]<=60000 && !earned.has('raffica')){ earned.add('raffica'); unlocked.add('raffica'); toast('⚡','Raffica: 10 comuni in un minuto!'); }
+// finestra mobile per ogni sfida (e gruppo): tempo di gioco, così una pausa non conta; gli omonimi contano uno per uno
+function timedCheck(added){
+  const now = Date.now()-t0;
+  TIMED.forEach(c=>added.forEach(i=>{
+    if(c.ok && !c.ok(i)) return;
+    const k = c.key ? c.key(i) : '', q = c.q.get(k) || []; c.q.set(k, q);
+    q.push(now); while(now-q[0] > c.ms) q.shift();
+    c.best = Math.max(c.best, q.length);
+    if(q.length >= c.n && !earned.has(c.id)){ earned.add(c.id); unlocked.add(c.id); toast(c.ic, c.l+': '+c.n+' '+(c.what||'comuni')+' in '+c.span+'!'); }
+  }));
 }
 function achCheck(i){
   for(const [n,l] of MS){ const id = 'm'+n; if(foundCount>=n && !unlocked.has(id)){ unlocked.add(id); toast('🏆',l+' ('+n+')'); } }
@@ -353,9 +372,10 @@ function achCats(){
     { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l:'???', c:'' }) },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
-    { k:'ch', ic:'⚡', t:'Sfide', info: 'Nelle sfide conta come e in che ordine trovi i comuni. I giri in corso si salvano con la partita.',
+    { k:'tm', ic:'⏱️', t:'A tempo', info: 'Conta il tempo di gioco: in pausa l’orologio si ferma. Un nome con più comuni (Castro) li conta tutti.',
+      items: TIMED.map(c => Object.assign(it(c.id,c.ic,c.l,''), { h: 'Trova '+c.n+' '+(c.what||'comuni')+' in '+c.span+'.', s: c.best ? 'Il tuo record: '+c.best+' in '+c.span+'.' : 'Nessun tentativo per ora.' })) },
+    { k:'ch', ic:'🚶', t:'Sfide', info: TOURS_ON ? 'Nelle sfide conta come e in che ordine trovi i comuni. I giri in corso si salvano con la partita.' : 'Nelle sfide conta come sono collegati tra loro i comuni che trovi.',
       items: [
-        Object.assign(it('raffica','⚡','Raffica',''), { h: 'Trova 10 comuni in meno di un minuto.' }),
         ...TOURS.map(t => Object.assign(it(t.id,t.ic,t.l,t.seen.size+'/'+t.total), { s: tourStatus(t), h: t.id==='giro'
           ? 'Parti da una regione qualsiasi della penisola. Ogni comune deve stare nella stessa regione del precedente o in una confinante; puoi tornare in regioni già toccate. Un capoluogo, un comune delle isole o un salto in una regione non confinante interrompono il giro.'
           : 'Come il Giro d’Italia a tappe, ma per province: tutte le '+t.total+' della penisola, ogni comune nella stessa provincia del precedente o in una confinante.' })),
@@ -406,8 +426,8 @@ document.querySelectorAll('#achfilt button').forEach(b => b.onclick = () => { ac
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); $('rar').textContent = fmtN(rarFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TOURS_ON ? (TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}) : trKept ? { tr: trKept } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); if(!TOURS_ON && Object.keys(tr).length) trKept = tr; TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TIMED.some(c=>c.best) ? { rb: Object.fromEntries(TIMED.filter(c=>c.best).map(c=>[c.id, c.best])) } : {}), ...(TOURS_ON ? (TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}) : trKept ? { tr: trKept } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); if(!TOURS_ON && Object.keys(tr).length) trKept = tr; TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); const rb = s.rb || {}; TIMED.forEach(c=>{ if(Number.isInteger(rb[c.id]) && rb[c.id]>0) c.best = rb[c.id]; }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
@@ -435,7 +455,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); timedCheck(added); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];
