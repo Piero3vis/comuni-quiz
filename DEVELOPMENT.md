@@ -61,8 +61,10 @@ tests/smoke.js        jsdom smoke test (npm test)
 Names must match `data/map.json` exactly and be unique (the page throws a clear error otherwise).
 Put new items before the last entry of the list: the last one has `"union": true` and automatically contains every other group.
 
-**Add a curiosità**: add `"Comune": "testo"` to `data/facts.json` (`"Nome (SIGLA)"` for duplicated names). Check it on a source, keep it under 200 characters,
-use the typographic apostrophe and never write the comune's name (it is shown as a clue): `npm test` checks the last three.
+**Add a curiosità**: add `"Comune": { "testo": "…", "fonte": "https://…" }` to `data/facts.json` (`"Nome (SIGLA)"` for duplicated names), keeping the file in alphabetical order.
+Goal: at least one per province, never a capoluogo, preferably comuni of 1,000–20,000 residents. `fonte` is one page that supports the whole text (prefer the comune's it.wikipedia page);
+if a claim needs a second page, drop the claim. Keep it under 200 characters, use the typographic apostrophe, avoid numbers that change every year and never write the comune's name
+or a word containing it (e.g. "Adriatico" for Adria): it is shown as a clue. `npm test` checks source, capoluoghi, name, length and apostrophe, and prints which provinces still have none.
 
 **Rebuild the map data** (only if you change simplification, projection or the coast rules):
 ```bash
