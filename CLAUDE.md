@@ -81,6 +81,8 @@ Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes
 - Italian user-facing strings. Typographic apostrophe in prose, straight quotes in code.
 - The footer must keep the CC BY 4.0 attribution (ISTAT, openpolis link, licence link, "semplificati e modificati") and the "Nessun cookie" note.
   No cookies, analytics or external resources: only `dist/quiz.html` is published (as `index.html`).
+- Support link: the only external links are ordinary `<a>` elements: the attribution links and the Ko-fi support link (`#support` in the footer, `#supportSide` in the side panel, whose `href` `app.js` copies from the footer: change the URL in `index.html` only, plus `.github/FUNDING.yml`).
+  Both open in a new tab with `rel="noopener noreferrer"`. No Ko-fi widget, button script, iframe or image; never in toasts, popups or triggered by game events; nothing locked behind it (`tests/smoke.js` checks all of this).
 - Search tags (title, description, canonical, Open Graph, JSON-LD, inline SVG favicon) and the `.about` text live in `index.html`.
   They hard-code the site URL and the 7.896 count: update them if either changes (e.g. after the 2026 mergers); `tests/smoke.js` checks that the URLs agree.
 

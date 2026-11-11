@@ -2,3 +2,7 @@ node_modules/
 scripts/cache/
 dist/
 __pycache__/
+
+# patch locali e metadati di Windows
+*.patch
+*:Zone.Identifier

@@ -116,6 +116,9 @@ Recommended: in Settings → Branches, protect `main` and require the "test" che
 Privacy: no cookies, no analytics, nothing is sent anywhere; progress and theme stay in the browser's `localStorage`
 (the footer says so). Adding analytics later would need a consent banner.
 
+Support link: a plain link to https://ko-fi.com/diocastoro in the footer and at the bottom of the side panel (no widget, so the privacy promise holds).
+Forks should replace the URL in `index.html` and `.github/FUNDING.yml`. The `publishing` requirement (single file has no external resources, only ordinary links) covers it: the footer and the side-panel support link are ordinary `<a>` elements.
+
 Note that saved progress belongs to the exact address the page is served from: a new URL or domain starts empty.
 
 ## Data and credits
