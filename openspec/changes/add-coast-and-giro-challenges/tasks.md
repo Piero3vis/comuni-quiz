@@ -15,4 +15,4 @@
 
 - [x] 3.1 Smoke test: geo data (Bologna neighbours, reference seas, islands), a Tirreno–Adriatico chain, a coastal-only Leuca walk that stays locked, Giro (continue, jump, capoluogo, full tour, reload), Italia a piedi progress and completion
 - [x] 3.2 README (players), DEVELOPMENT.md, CLAUDE.md
-- [ ] 3.3 `openspec validate add-coast-and-giro-challenges --strict`; tests pass locally and on the pull request
+- [x] 3.3 `openspec validate add-coast-and-giro-challenges --strict`; tests pass locally and on the pull request (PR #4, run 43041910820)
