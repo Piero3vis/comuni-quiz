@@ -40,7 +40,7 @@ geometry from openpolis + Natural Earth, plus `EXTRA` for very short borders, ch
 
 ## Curiosità (`data/facts.json`)
 `{ "Nome": "testo" }` (same naming as groups, `"Livo (CO)"` for duplicates), resolved by `withGroups()` into `D.fact` (Map index → text), embedded by `build_single_file.py`.
-Shown only in the click box (`clickAt()`) as a closed `<details class="fact">`: "💡 Indizio: una curiosità" before the comune is found, "💡 Curiosità" under residents/rarity after.
+Shown as a toast "💡 Curiosità su <nome>: …" when the comune is found (end of `achCheck(i)`, live guesses only) and in the click box (`clickAt()`) as a closed `<details class="fact">`: "💡 Indizio: una curiosità" before the comune is found, "💡 Curiosità" under residents/rarity after.
 Texts never contain the comune's name or a `/` part (checked by `tests/smoke.js`), are checked on a source (mostly it.wikipedia) and avoid yearly numbers. `placeInfo()` keeps the box inside the map.
 
 ## Quiz logic
@@ -64,14 +64,14 @@ Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked)
 `e:r`/`e:p` at least one comune in every region/province ("Giro d’Italia", "Giro delle province"), `cap` all capoluoghi, `b<limit>:<n>` borghi (`BG`: comuni under 1000/500/100 inhabitants), `t<n>` provincial treasures (`TES`: least populated comune per province), `x:<key>` record comune (`REC`, keys of `rec`), `c<n>` coast milestone, `k:<k>` regional coast, `i:<gi>` island group, `w:<gi>` cammino, `h:<gi>` / `mr:<gi>` / `f:<gi>` history, maritime republic and border groups (`TG`), `f:giro` one comune on every foreign border. Because nothing is persisted, reordering groups is safe.
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 Geography (from `geo.json`), updated in `addFound()` so a reload rebuilds them: `cc:<xy>` "Da costa a costa" (`CC`, sea letters `LTIACS`): union-find `ccP` over found inland comuni, `ccM` sea bitmask of found coastal neighbours, `ccE` one example comune per sea, `ccDone` id → [from, to];
-`walk` "Italia a piedi": union-find `wkP` over found peninsula comuni (`MAIN`, capoluoghi included), `wkM` region bitmask, `wkBest`/`wkBestM` best region count and mask.
+`walk` "Italia a piedi": union-find `wkP` over found peninsula comuni (`MAIN`, capoluoghi included), `wkM` region bitmask, `wkBest`/`wkBestM` best region count and mask; it weighs `WALKW` (10) in the total.
 `giro` / `giroP` "Giro d’Italia a tappe" / "Giro delle province a tappe" depend on the order of guesses: `TOURS` (unit = region index or province sigla, `adj` = `RADJ` / `PADJ`, `total` 18 / 93),
 `tourStep(t, added)` in the input handler (not on load); state `t.last` (or null) and `t.seen` (Set), saved as `comuniQuizV1.tr = { giro: [last, [units]], giroP: [...] }` (an old `gr: [region, mask]` is still read).
 Stages must be `allowed()` (peninsula, not capoluogo). `tourStatus(t)` writes the panel status; `missing()` lists up to 8 names, otherwise counts.
 
 ## Side panel
 Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes one `<details class="reg" id="rg<k>">` per region, `updateReg(k)` fills percentage (`pct()`: floor, "<1%", "100%" only when complete), count, bar and province rows;
-`sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c, d?, h?, s?}], more?}` (`d` detail shown once unlocked, `h` rule and `s` status always shown, used by challenges),
+`sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c, d?, h?, s?}], more?}` (`d` detail shown once unlocked, `h` rule and `s` status always shown, used by challenges; `w` weight in the header total and bar, default 1, rendered as `data-w`),
 `renderAch()` draws the total, the filter (`achFilter`: `all`, `done`, `todo`) and one `<details class="cat" data-a>` per category; `openAch` keeps them open across re-renders. New achievements go in `achCats()`.
 
 ## Conventions

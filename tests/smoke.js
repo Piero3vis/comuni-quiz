@@ -98,7 +98,8 @@ async function run(label, htmlFile, useFetch){
   // pannello laterale: schede, filtro dei traguardi, ordinamento delle regioni
   const tabs0 = $('paneA').hidden && !$('paneR').hidden; $('tabA').click();
   const tabs1 = !$('paneA').hidden && $('paneR').hidden && $('tabA').getAttribute('aria-selected') === 'true'; $('tabR').click();
-  const filt = f => { d.querySelector('#achfilt [data-f="' + f + '"]').click(); return $('achlist').querySelectorAll('.ai').length; };
+  // righe pesate: Italia a piedi vale data-w obiettivi
+  const filt = f => { d.querySelector('#achfilt [data-f="' + f + '"]').click(); return [...$('achlist').querySelectorAll('.ai')].reduce((a, e) => a + (+e.dataset.w || 1), 0); };
   const nAll = filt('all'), nDone = filt('done'), nTodo = filt('todo'); filt('all');
   const [achN, achT] = [+$('achn').textContent, +$('acht').textContent];
   const order = () => [...d.querySelectorAll('#regs > .reg')].sort((a,b) => a.style.order - b.style.order).map(e => e.querySelector('.rn').textContent);
@@ -287,7 +288,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚶) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -307,6 +308,13 @@ async function runChallenges(){
   ok(/^⛵ Tirreno – Adriatico/.test(crossTA) && ta.slice(1, -1).every(i => !co.has(i)), 'Tirreno – Adriatico attraverso l’entroterra');
   ok(p.toasts.some(t => /^⛵ Da costa a costa: Tirreno – Adriatico, da .+ a .+!$/.test(t)), 'avviso da costa a costa');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+  // curiosità: avviso quando si trova un comune che ne ha una, nessun avviso per gli altri
+  const facts = read('data/facts.json');
+  p = await open(); p.type(idx('Elva')); p.type(idx('Milano')); await p.settle();
+  const factToast = p.toasts.find(t => t.startsWith('💡')) || '-';
+  console.log('curiosità sullo schermo:', factToast.slice(0, 60), '| totale', p.toasts.filter(t => t.startsWith('💡')).length);
+  ok(factToast === '💡 Curiosità su Elva: ' + facts['Elva'] && p.toasts.filter(t => t.startsWith('💡')).length === 1, 'avviso con la curiosità solo per Elva');
+  p.dom.window.close();
   // 2. Giro d’Italia a tappe
   const RADJ = map.regs.map(() => new Set()); NB.forEach((a, i) => a.forEach(j => { if (!ins.has(i) && !ins.has(j) && map.r[i] !== map.r[j]) RADJ[map.r[i]].add(map.r[j]); }));
   const R = nm => map.regs.indexOf(nm), used = new Set();
@@ -360,11 +368,14 @@ async function runChallenges(){
   mainRegs.forEach(k => { const path2 = bfs([...walk], allowed, i => map.r[i] === k); path2.forEach(i => walk.add(i)); });
   let half = null; [...walk].forEach((i, s, all) => { p.type(i); if (s === Math.floor(all.length / 2)) half = walkRow(); });
   const walkDone = walkRow(); await p.settle();
+  const okRows = [...p.$('achlist').querySelectorAll('.ai.ok')], wRow = okRows.find(e => /^🚶 Italia a piedi/.test(e.textContent));
+  const weighted = okRows.reduce((a, e) => a + (+e.dataset.w || 1), 0) === +p.$('achn').textContent && +p.$('acht').textContent === p.$('achlist').querySelectorAll('.ai').length + 9;
   console.log('italia a piedi: via capoluogo', viaCapSt, '| a metà', half.slice(-5), '| fine', walkDone.slice(-5), '(', walk.size, 'comuni )');
   ok(walk0 === 'Nessuna catena per ora.' && /i capoluoghi valgono, le isole no/.test(viaCap), 'regola di Italia a piedi');
   ok(/^🔒 Italia a piedi.*2\/18$/s.test(viaCap) && /^La catena più lunga tocca 2\/18 regioni\. Mancano 16 regioni\.$/.test(viaCapSt), 'un capoluogo unisce due catene');
   ok(/^🔒 Italia a piedi.*\d+\/18$/s.test(half) && /^🚶 Italia a piedi.*18\/18$/s.test(walkDone), 'catena attraverso le 18 regioni');
   ok(p.toasts.some(t => /^🚶 Italia a piedi: /.test(t)), 'avviso Italia a piedi');
+  ok(wRow && wRow.dataset.w === '10' && /Vale 10 obiettivi/.test(wRow.textContent) && weighted, 'Italia a piedi vale 10 nel totale');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
 }
 (async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
