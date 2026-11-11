@@ -17,4 +17,4 @@
 
 - [x] 4.1 Smoke test: next-stage hint (Friuli → Friuli, Veneto), old `gr` save, province run (continue, jump, reload), capoluogo now joins chains
 - [x] 4.2 README, DEVELOPMENT.md, CLAUDE.md
-- [ ] 4.3 `openspec validate --strict`; tests pass locally and on the pull request
+- [x] 4.3 `openspec validate --strict`; tests pass locally and on the pull request (PR #5, run 43052471669)
