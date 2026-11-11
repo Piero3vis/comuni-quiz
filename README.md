@@ -17,7 +17,7 @@ Qualche aiuto:
 - **Le parole piccole si possono saltare**: “Reggio Emilia” trova Reggio nell’Emilia.
 - **In Alto Adige valgono anche i nomi tedeschi**: “Bozen” trova Bolzano.
 - **Comuni con lo stesso nome** (per esempio i due Castro, in Lombardia e in Puglia) si colorano insieme.
-- **Sei bloccato?** Clicca su un comune ancora vuoto: vedi l’iniziale e il numero di lettere, e se vuoi anche la soluzione. Per alcuni comuni piccoli o curiosi c’è anche un indizio: una curiosità, che resta da leggere anche dopo averlo trovato.
+- **Sei bloccato?** Clicca su un comune ancora vuoto: vedi l’iniziale e il numero di lettere, e se vuoi anche la soluzione. Per alcuni comuni piccoli o curiosi c’è anche un indizio: una curiosità, che resta da leggere anche dopo averlo trovato. Quando trovi uno di questi comuni, la curiosità compare anche sullo schermo.
 - **Mappa**: trascina per spostarti, usa la rotella o due dita per lo zoom.
 
 ## Cosa c’è nel gioco
@@ -27,7 +27,7 @@ Qualche aiuto:
   le traversate “da costa a costa” (dal Tirreno all’Adriatico, dall’Adriatico allo Ionio… attraversando l’entroterra),
   il “Giro d’Italia a tappe” (tutte le regioni della penisola di fila, passando sempre in una regione confinante, senza capoluoghi né isole; si parte da qualsiasi regione e si può tornare indietro),
   il “Giro delle province a tappe” (lo stesso, provincia per provincia: tutte le 93 della penisola)
-  e la super-sfida “Italia a piedi” (una catena di comuni confinanti, capoluoghi compresi, attraverso tutte le regioni della penisola). Nel pannello ogni sfida spiega la regola e mostra a che punto sei e dove puoi andare,
+  e la super-sfida “Italia a piedi” (una catena di comuni confinanti, capoluoghi compresi, attraverso tutte le regioni della penisola: vale 10 obiettivi). Nel pannello ogni sfida spiega la regola e mostra a che punto sei e dove puoi andare,
   le isole minori (Eolie, Elba, Ischia, isole pontine e altre), i cammini a piedi (Via Francigena, Via degli Dei, Via di Francesco, Cammino di San Benedetto…),
   le capitali d’Italia, la Repubblica di Cospaia, il Principato di Seborga, le repubbliche marinare (non erano solo quattro) e i comuni di confine con ogni Stato vicino.
   E qualche obiettivo segreto da scoprire.

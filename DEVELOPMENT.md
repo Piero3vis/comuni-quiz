@@ -17,7 +17,7 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
   "Da costa a costa" (9 sea pairs: two coastal comuni on different seas joined by found inland comuni that border each other),
   the "Giro d'Italia a tappe" challenge (all 18 regions of the peninsula in one run of guesses, each in the same or a bordering region; capoluoghi and islands end the run; saved with the progress),
   the "Giro delle province a tappe" challenge (the same rule for the 93 provinces of the peninsula)
-  and the "Italia a piedi" super-challenge (one chain of bordering found comuni, capoluoghi included, touching all 18 regions of the peninsula).
+  and the "Italia a piedi" super-challenge (one chain of bordering found comuni, capoluoghi included, touching all 18 regions of the peninsula; it counts as 10 in the achievements total).
   Each challenge row shows its rule and a live status (last stage, where the next one can go, what is missing),
   record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),
   the whole coast and each regional coast, minor islands, walking routes (cammini),
@@ -45,7 +45,7 @@ data/map.json         generated map data (see CLAUDE.md for the format)
 data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
 data/geo.json         generated from map.json: neighbouring comuni, sea of each coastal comune, island comuni
 data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics (by hand), borders (scripts/border_comuni.py)
-data/facts.json       short curiosità by comune name, shown in the map box (as a clue before the comune is found)
+data/facts.json       short curiosità by comune name, shown in the map box (as a clue before the comune is found) and as a toast when the comune is found
 scripts/build_data.py regenerates data/map.json from the open data sources
 scripts/build_extra.py         regenerates data/extra.json (ISTAT population 2025, capoluoghi flag, records)
 scripts/build_geo.py           regenerates data/geo.json from data/map.json (stdlib only)

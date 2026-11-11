@@ -231,7 +231,8 @@ function coastStep(i){
 }
 // Italia a piedi: gruppi di comuni della penisola trovati e confinanti, capoluoghi compresi (union-find wkP), con le regioni toccate (wkM);
 // wkBest/wkBestM: regioni del gruppo migliore
-const wkP = new Int32Array(N).fill(-1), wkM = new Int32Array(N); let wkBest = 0, wkBestM = 0;
+// vale WALKW obiettivi nel totale (è di gran lunga il più difficile)
+const wkP = new Int32Array(N).fill(-1), wkM = new Int32Array(N), WALKW = 10; let wkBest = 0, wkBestM = 0;
 function walkStep(i){
   if(!MAIN[i]) return; wkP[i] = i; wkM[i] = 1<<D.r[i];
   NB[i].forEach(j=>{ if(wkP[j]>=0){ const b = find(wkP,j); if(b!==i){ wkP[b] = i; wkM[i] |= wkM[b]; } } });
@@ -332,6 +333,8 @@ function achCheck(i){
   if(provFound[p]===1 && provsTouched()===NP && !unlocked.has('e:p')){ unlocked.add('e:p'); toast('🧭','Giro delle province: almeno un comune in ogni provincia!'); }
   if(provFound[p]===provTot[p] && !unlocked.has('p:'+p)){ unlocked.add('p:'+p); toast('🏅',provLabel(p)+' completata!'); }
   if(regCount[k]===regTot[k] && !unlocked.has('r:'+k)){ unlocked.add('r:'+k); toast('🥇',D.regs[k].split('/')[0]+' completata!'); }
+  // curiosità del comune appena trovato (solo risposte durante il gioco: achCheck non gira al caricamento)
+  if(D.fact.has(i)) toast('💡','Curiosità su '+regName0(i)+': '+D.fact.get(i));
 }
 $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.dataset && el.dataset.a){ el.open ? openAch.add(el.dataset.a) : openAch.delete(el.dataset.a); } }, true);
 // Traguardi per categoria: ogni voce è { u: sbloccato, ic: icona, l: nome, c: testo a destra }; il totale è la somma delle voci
@@ -352,7 +355,7 @@ function achCats(){
         ...TOURS.map(t => Object.assign(it(t.id,t.ic,t.l,t.seen.size+'/'+t.total), { s: tourStatus(t), h: t.id==='giro'
           ? 'Parti da una regione qualsiasi della penisola. Ogni comune deve stare nella stessa regione del precedente o in una confinante; puoi tornare in regioni già toccate. Un capoluogo, un comune delle isole o un salto in una regione non confinante interrompono il giro.'
           : 'Come il Giro d’Italia a tappe, ma per province: tutte le '+t.total+' della penisola, ogni comune nella stessa provincia del precedente o in una confinante.' })),
-        Object.assign(it('walk','🚶','Italia a piedi',wkBest+'/'+MREGN), { h: 'Trova comuni confinanti tra loro fino a formare una catena che tocca tutte le '+MREGN+' regioni della penisola. L’ordine non conta; i capoluoghi valgono, le isole no.',
+        Object.assign(it('walk','🚶','Italia a piedi',wkBest+'/'+MREGN), { w: WALKW, h: 'Vale '+WALKW+' obiettivi. Trova comuni confinanti tra loro fino a formare una catena che tocca tutte le '+MREGN+' regioni della penisola. L’ordine non conta; i capoluoghi valgono, le isole no.',
           s: wkBest ? 'La catena più lunga tocca '+wkBest+'/'+MREGN+' regioni.'+(wkBest<MREGN ? ' '+missing(REGK.filter(k=>MAIN_REG.has(k) && !(wkBestM>>k&1)).map(rn), 'regioni') : '') : 'Nessuna catena per ora.' }),
       ] },
     { k:'cc', ic:'⛵', t:'Da costa a costa', info: 'Come si fa: trova un comune sulla costa del primo mare, poi uno o più comuni dell’entroterra confinanti uno con l’altro, fino a un comune sulla costa del secondo mare. Lungo la costa non vale; l’ordine non conta.',
@@ -380,14 +383,16 @@ function achCats(){
 const regName0 = i => D.n[i].split('/')[0];
 let achFilter = 'all';
 function renderAch(){
-  const cats = achCats(), all = cats.flatMap(c=>c.items), done = all.filter(x=>x.u).length;
-  $('achc').textContent = done+'/'+all.length; $('achn').textContent = done; $('acht').textContent = all.length; $('achbar').style.width = (100*done/all.length)+'%';
+  // ogni obiettivo vale 1, tranne quelli con un peso w (Italia a piedi); i conteggi delle categorie restano numeri di voci
+  const cats = achCats(), all = cats.flatMap(c=>c.items), wt = x => x.w || 1;
+  const done = all.filter(x=>x.u).reduce((a,x)=>a+wt(x),0), tot = all.reduce((a,x)=>a+wt(x),0);
+  $('achc').textContent = done+'/'+tot; $('achn').textContent = done; $('acht').textContent = tot; $('achbar').style.width = (100*done/tot)+'%';
   const show = x => achFilter==='all' || (achFilter==='done') === x.u;
   $('achlist').innerHTML = cats.map(c=>{
     const u = c.items.filter(x=>x.u).length, n = c.items.length, items = c.items.filter(show);
     if(!items.length) return '';
     // la nota (aneddoto) si vede solo a traguardo sbloccato: per alcuni svelerebbe la risposta
-    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"><span>${x.u?x.ic:'🔒'} ${x.l}${x.h ? `<small>${x.h}</small>` : ''}${x.s ? `<small class="st">${x.s}</small>` : ''}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
+    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"${x.w ? ` data-w="${x.w}"` : ''}><span>${x.u?x.ic:'🔒'} ${x.l}${x.h ? `<small>${x.h}</small>` : ''}${x.s ? `<small class="st">${x.s}</small>` : ''}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
     return `<details class="cat${u===n?' full':''}" data-a="${c.k}"${openAch.has(c.k)?' open':''}><summary><span class="ci">${c.ic}</span><span class="ct">${c.t}</span><span class="c">${u}/${n}</span><span class="mbar"><i style="width:${100*u/n}%"></i></span></summary>`
       + (c.info ? `<div class="info">${c.info}</div>` : '') + rows + (c.more||'') + `</details>`;
   }).join('') || '<div class="empty">Nessun traguardo qui, per ora.</div>';
