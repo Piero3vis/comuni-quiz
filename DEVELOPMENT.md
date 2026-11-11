@@ -15,8 +15,8 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
 - Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
   the "Raffica" challenge (10 comuni in one minute, saved with the progress),
   "Da costa a costa" (9 sea pairs: two coastal comuni on different seas joined by found inland comuni that border each other),
-  the "Giro d'Italia a tappe" challenge (all 18 regions of the peninsula in one run of guesses, each in the same or a bordering region; capoluoghi and islands end the run; saved with the progress),
-  the "Giro delle province a tappe" challenge (the same rule for the 93 provinces of the peninsula)
+  the "Giro d'Italia a tappe" challenge (paused, see below; all 18 regions of the peninsula in one run of guesses, each in the same or a bordering region; capoluoghi and islands end the run; saved with the progress),
+  the "Giro delle province a tappe" challenge (the same rule for the 93 provinces of the peninsula; also paused: `TOURS_ON = false` in `app.js` hides both until a longer name can be typed without the shorter prefix name, e.g. Castro in Castrocaro Terme, being taken first and breaking the run)
   and the "Italia a piedi" super-challenge (one chain of bordering found comuni, capoluoghi included, touching all 18 regions of the peninsula; it counts as 10 in the achievements total).
   Each challenge row shows its rule and a live status (last stage, where the next one can go, what is missing),
   record comuni (northernmost, southernmost, easternmost, westernmost, largest, smallest, most and least populated; names hidden until found),

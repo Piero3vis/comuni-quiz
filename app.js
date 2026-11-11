@@ -244,10 +244,14 @@ function walkStep(i){
 const allowed = i => MAIN[i] && !CAPS.has(i);
 const PADJ = {}; NB.forEach((a,i)=>a.forEach(j=>{ if(MAIN[i] && MAIN[j] && D.p[i]!==D.p[j]) (PADJ[D.p[i]] = PADJ[D.p[i]] || new Set()).add(D.p[j]); }));
 const MPROVN = new Set(D.p.filter((_,i)=>MAIN[i])).size;
+// In pausa finché scrivendo un nome più lungo (Castrocaro Terme) si prende prima quello più corto (Castro), che interrompe il giro:
+// con TOURS_ON = false i giri non si vedono e non contano, ma un giro salvato (tr) e gli id giro/giroP restano nel salvataggio
+const TOURS_ON = false;
 const TOURS = [
   { id:'giro', ic:'🚴', l:'Giro d’Italia a tappe', unit: i => D.r[i], adj: k => RADJ[k], total: MREGN, name: rn, many:'regioni', every: 1, breakAt: 3 },
   { id:'giroP', ic:'🚲', l:'Giro delle province a tappe', unit: i => D.p[i], adj: q => PADJ[q], total: MPROVN, name: q => PN[q]||q, many:'province', every: 10, breakAt: 5 },
-].map(t => Object.assign(t, { last: null, seen: new Set() }));
+].filter(() => TOURS_ON).map(t => Object.assign(t, { last: null, seen: new Set() }));
+let trKept = null;   // con i giri spenti: il valore tr letto dal salvataggio, riscritto così com'è
 function tourStep(t, added){
   const ok = added.filter(allowed);
   const next = t.last===null ? [] : ok.filter(i => t.unit(i)===t.last || t.adj(t.last).has(t.unit(i)));
@@ -402,8 +406,8 @@ document.querySelectorAll('#achfilt button').forEach(b => b.onclick = () => { ac
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); $('rar').textContent = fmtN(rarFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TOURS_ON ? (TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}) : trKept ? { tr: trKept } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); if(!TOURS_ON && Object.keys(tr).length) trKept = tr; TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
