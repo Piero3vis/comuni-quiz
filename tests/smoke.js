@@ -307,7 +307,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -386,9 +386,33 @@ async function runChallenges(){
     const sfide = [...p.$('achlist').querySelectorAll('details[data-a="ch"] .ai')].map(e => e.textContent);
     p.type(pick(R('Veneto'))); const kept = JSON.parse(p.saved());
     console.log('giri in pausa:', sfide.map(t => t.slice(0, 18)).join(' | '), '| tr salvato:', JSON.stringify(kept.tr));
-    ok(sfide.length === 2 && /Raffica/.test(sfide[0]) && /Italia a piedi/.test(sfide[1]), 'giri nascosti nelle sfide');
+    ok(sfide.length === 1 && /Italia a piedi/.test(sfide[0]), 'giri nascosti nelle sfide');
     ok(JSON.stringify(kept.tr) === JSON.stringify(tr0) && kept.a.includes('giro') && kept.f.length === 1, 'giro salvato e id giro conservati');
     ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+  }
+  // 5. sfide a tempo: 20 comuni con iniziali diverse (al massimo 2 per lettera), poi 10 con la B, poi 10 capoluoghi; il record resta dopo il ricaricamento
+  {
+    p = await open();
+    const ini = i => norm(map.n[i].split('/')[0])[0], perL = new Map(), mixed = [], bs = [], capL = [], seen = new Set();
+    const free = i => uniq(i) && !seen.has(i);
+    for (let i = 0; i < N && mixed.length < 20; i++) if (free(i) && !caps.has(i) && ini(i) !== 'b' && (perL.get(ini(i)) || 0) < 2) { perL.set(ini(i), (perL.get(ini(i)) || 0) + 1); mixed.push(i); seen.add(i); }
+    for (let i = 0; i < N && bs.length < 10; i++) if (free(i) && !caps.has(i) && ini(i) === 'b') { bs.push(i); seen.add(i); }
+    for (const i of caps) { if (capL.length < 10 && free(i)) { capL.push(i); seen.add(i); } }
+    const T = { raf: /^(🔒|⚡) Raffica/, raf20: /^(🔒|🔥) Raffica doppia/, let: /^(🔒|🔤) Stessa lettera/, cap: /^(🔒|🎯) Raffica di capoluoghi/, t50: /^(🔒|⏱️) Cinquanta in cinque/ };
+    const rec0 = p.st(T.raf), cat = p.d.querySelector('#achlist details[data-a="tm"]'), nRows = cat ? cat.querySelectorAll('.ai').length : 0;
+    mixed.forEach(p.type); const after20 = [p.row(T.raf), p.row(T.raf20), p.row(T.let)].map(r => [...r][0]);
+    bs.forEach(p.type); const letDone = p.row(T.let);
+    capL.forEach(p.type); const capDone = p.row(T.cap), t50 = p.st(T.t50); await p.settle();
+    const saved = JSON.parse(p.saved()), tToasts = p.toasts, tErr = p.errors; p.dom.window.close();
+    p = await open(JSON.stringify(saved)); const recLoaded = p.st(T.raf20), rafLoaded = p.row(T.raf); p.dom.window.close();
+    console.log('a tempo:', nRows, 'sfide |', rec0, '| dopo 20:', after20.join(' '), '|', letDone.slice(0, 2), capDone.slice(0, 2), '|', t50, '| rb', JSON.stringify(saved.rb), '| ricaricato:', recLoaded);
+    ok(nRows === 9 && rec0 === 'Nessun tentativo per ora.' && /Trova 10 comuni in un minuto\./.test(rafLoaded), 'categoria A tempo con 9 sfide e regola');
+    ok(after20[0] === '⚡' && after20[1] === '🔥' && after20[2] === '🔒', '20 comuni veloci: Raffica e Raffica doppia, ma non Stessa lettera');
+    ok(/^🔤 Stessa lettera/.test(letDone) && /^🎯 Raffica di capoluoghi/.test(capDone), 'Stessa lettera e Raffica di capoluoghi');
+    ok(t50 === 'Il tuo record: 40 in 5 minuti.' && saved.rb.raffica === 40 && saved.rb.tlet === 10 && saved.rb.tcap === 10 && ['raffica', 'raffica20', 'tlet', 'tcap'].every(id => saved.a.includes(id)), 'record e sfide salvati');
+    ok(recLoaded === 'Il tuo record: 40 in un minuto.' && /^⚡ Raffica/.test(rafLoaded), 'record ripristinato dopo il ricaricamento');
+    ok(['⚡ Raffica: 10 comuni in un minuto!', '🔥 Raffica doppia: 20 comuni in un minuto!', '🔤 Stessa lettera: 10 comuni con la stessa iniziale in un minuto!', '🎯 Raffica di capoluoghi: 10 capoluoghi di provincia in un minuto!'].every(t => tToasts.includes(t)), 'avvisi delle sfide a tempo');
+    ok(tErr.length === 0, 'errori JS: ' + tErr.join('; '));
   }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
   p = await open();
