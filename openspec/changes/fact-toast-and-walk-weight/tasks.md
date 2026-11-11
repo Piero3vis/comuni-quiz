@@ -11,4 +11,4 @@
 
 - [x] 3.1 Smoke test: Elva toast, no toast for Milano, weighted total (+9), walk completion adds 10
 - [x] 3.2 README, DEVELOPMENT.md, CLAUDE.md
-- [ ] 3.3 `openspec validate --strict`; tests pass locally and on the pull request
+- [x] 3.3 `openspec validate --strict`; tests pass locally and on the pull request (PR #6, run 43059087384)
