@@ -1,22 +1,26 @@
 // Quiz: tutti i comuni d'Italia
-// Carica data/map.json + data/groups.json + data/extra.json + data/facts.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
+// Carica data/map.json + data/groups.json + data/extra.json + data/facts.json + data/geo.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
 
 async function loadData() {
-  let map, groups, extra, facts;
+  let map, groups, extra, facts, geo;
   const inline = document.getElementById('data');
   if (inline) {
-    ({ map, groups, extra, facts } = JSON.parse(inline.textContent));
+    ({ map, groups, extra, facts, geo } = JSON.parse(inline.textContent));
   } else {
-    [map, groups, extra, facts] = await Promise.all([
+    [map, groups, extra, facts, geo] = await Promise.all([
       fetch('data/map.json').then(r => r.json()),
       fetch('data/groups.json').then(r => r.json()),
       fetch('data/extra.json').then(r => r.json()),
       fetch('data/facts.json').then(r => r.json()),
+      fetch('data/geo.json').then(r => r.json()),
     ]);
   }
   // extra.json (scripts/build_extra.py): popolazione, capoluoghi e comuni da record, con gli indici di map.json
   if (extra.pop.length !== map.n.length) throw new Error('data/extra.json non allineato a map.json: rigenerarlo');
   Object.assign(map, extra);
+  // geo.json (scripts/build_geo.py): confinanti (nb), mare dei comuni costieri (sea, seas), comuni delle isole (ins)
+  if (geo.sea.length !== map.n.length) throw new Error('data/geo.json non allineato a map.json: rigenerarlo');
+  Object.assign(map, geo);
   return withGroups(map, groups, facts);
 }
 
@@ -188,7 +192,7 @@ const REGK0 = D.regs.map((_,k)=>k);
 document.querySelectorAll('#regsort button').forEach(b => b.onclick = () => { regSort = b.dataset.s; document.querySelectorAll('#regsort button').forEach(x => x.setAttribute('aria-pressed', x===b)); sortRegs(); });
 $('regs').addEventListener('toggle', e => { const el = e.target; if(el.classList && el.classList.contains('prov')){ el.open ? openProv.add(el.dataset.p) : openProv.delete(el.dataset.p); } }, true);
 $('regs').addEventListener('click',e=>{ const li = e.target.closest('li'); if(li){ const i = +li.dataset.i; flash = i; draw(); setTimeout(()=>{ flash=-1; draw(); },1800); } });
-function addFound(i){ if(found[i]) return false; found[i] = 1; foundCount++; const k = D.r[i]; regCount[k]++; regLists[k].push(i); provFound[D.p[i]] = (provFound[D.p[i]]||0)+1; popFound += D.pop[i]; rarFound += RAR[i]; BG.forEach((b,j)=>{ if(D.pop[i]<b.lim) bgFound[j]++; }); if(CO.has(i)){ coastFound++; coastRegFound[D.r[i]]++; } return true; }
+function addFound(i){ if(found[i]) return false; found[i] = 1; foundCount++; const k = D.r[i]; regCount[k]++; regLists[k].push(i); provFound[D.p[i]] = (provFound[D.p[i]]||0)+1; popFound += D.pop[i]; rarFound += RAR[i]; BG.forEach((b,j)=>{ if(D.pop[i]<b.lim) bgFound[j]++; }); if(CO.has(i)){ coastFound++; coastRegFound[D.r[i]]++; } coastStep(i); walkStep(i); return true; }
 const provFound = {}; let popFound = 0, rarFound = 0;
 // Rarità: più il comune è piccolo più punti vale, 10·log10(abitanti di Roma / abitanti), almeno 1 (Roma 1, Milano 3, metà dei comuni oltre 31, Morterone 49)
 const PMAX = Math.max(...D.pop), RAR = D.pop.map(x => Math.max(1, Math.round(10*Math.log10(PMAX/x)))); const POP = D.pop.reduce((a,b)=>a+b,0), fmtN = n => n.toLocaleString('it-IT');
@@ -205,6 +209,51 @@ const PT = {}; Object.keys(provTot).forEach(p=>{ const T = provTot[p]; if(T>=4) 
 const NP = Object.keys(provTot).length, provsTouched = () => Object.keys(provFound).length, regsTouched = () => regCount.filter(x=>x>0).length;
 // Capoluoghi (anche co-capoluoghi) e comuni da record, da data/extra.json
 const CAPS = new Set(D.cap), capFound = () => D.cap.filter(i=>found[i]).length;
+// ---- geografia (data/geo.json) ----
+// NB[i]: comuni confinanti; MAIN[i]: comune della penisola (non su un'isola); RADJ[k]: regioni confinanti sulla penisola; MREGN: regioni della penisola (18)
+const NB = D.n.map(()=>[]); D.nb.forEach((ds,i)=>ds.forEach(dj=>{ NB[i].push(i+dj); NB[i+dj].push(i); }));
+const INS = new Set(D.ins), MAIN = D.n.map((_,i)=>!INS.has(i)), rn = k => D.regs[k].split('/')[0];
+const RADJ = D.regs.map(()=>new Set()); NB.forEach((a,i)=>a.forEach(j=>{ if(MAIN[i] && MAIN[j] && D.r[i]!==D.r[j]) RADJ[D.r[i]].add(D.r[j]); }));
+const MREGN = new Set(D.r.filter((_,i)=>MAIN[i])).size, bits = x => { let c = 0; while(x){ x &= x-1; c++; } return c; };
+const find = (P,x) => { while(P[x]!==x){ P[x] = P[P[x]]; x = P[x]; } return x; };
+// Da costa a costa: gruppi di comuni dell'entroterra trovati e confinanti (union-find ccP); per ogni gruppo i mari raggiunti
+// da un comune costiero trovato che lo tocca (ccM, bit per mare) e un esempio di comune per mare (ccE). Si ricava dai comuni trovati.
+const SEAL = 'LTIACS', CC = [['T','A'],['A','I'],['I','T'],['L','A'],['L','T'],['L','I'],['T','C'],['I','C'],['T','S']].map(([a,b])=>{ const x = SEAL.indexOf(a), y = SEAL.indexOf(b); return { id:'cc:'+a+b, x, y, l: D.seas[x]+' – '+D.seas[y] }; });
+const ccP = new Int32Array(N).fill(-1), ccM = new Int32Array(N), ccE = new Map(), ccDone = new Map();
+function ccAdd(r,s,i){ ccM[r] |= 1<<s; const e = ccE.get(r); if(e[s]<0) e[s] = i; }
+function ccUnion(a,b){ a = find(ccP,a); b = find(ccP,b); if(a===b) return a; ccP[b] = a; ccM[a] |= ccM[b]; const ea = ccE.get(a), eb = ccE.get(b); ea.forEach((v,k)=>{ if(v<0) ea[k] = eb[k]; }); ccE.delete(b); return a; }
+function ccTouch(r){ CC.forEach(c=>{ if(!ccDone.has(c.id) && (ccM[r]>>c.x&1) && (ccM[r]>>c.y&1)) ccDone.set(c.id, [ccE.get(r)[c.x], ccE.get(r)[c.y]]); }); }
+function coastStep(i){
+  if(CO.has(i)){ NB[i].forEach(j=>{ if(ccP[j]>=0){ const r = find(ccP,j); ccAdd(r,D.sea[i],i); ccTouch(r); } }); return; }
+  ccP[i] = i; ccE.set(i, D.seas.map(()=>-1)); let r = i;
+  NB[i].forEach(j=>{ if(ccP[j]>=0) r = ccUnion(r,j); else if(found[j] && CO.has(j)) ccAdd(find(ccP,r),D.sea[j],j); });
+  ccTouch(find(ccP,r));
+}
+// Italia a piedi: gruppi di comuni della penisola trovati e confinanti, senza capoluoghi (union-find wkP), con le regioni toccate (wkM)
+const wkP = new Int32Array(N).fill(-1), wkM = new Int32Array(N); let wkBest = 0;
+const allowed = i => MAIN[i] && !CAPS.has(i);
+function walkStep(i){
+  if(!allowed(i)) return; wkP[i] = i; wkM[i] = 1<<D.r[i];
+  NB[i].forEach(j=>{ if(wkP[j]>=0){ const b = find(wkP,j); if(b!==i){ wkP[b] = i; wkM[i] |= wkM[b]; } } });
+  wkBest = Math.max(wkBest, bits(wkM[i]));
+}
+// Giro d’Italia a tappe: conta l'ordine delle risposte. gr = [regione dell'ultima tappa o -1, regioni toccate (bit)], salvato in comuniQuizV1.gr
+let gr = [-1, 0];
+function giroStep(added){
+  const ok = added.filter(allowed), [c, v] = gr;
+  const next = c<0 ? [] : ok.filter(i => D.r[i]===c || RADJ[c].has(D.r[i]));
+  const i = next.find(j => !(v>>D.r[j]&1)) ?? next[0];
+  if(i !== undefined){
+    const k = D.r[i], nv = v | 1<<k, n = bits(nv); gr = [k, nv];
+    if(nv === v) return;
+    if(n === MREGN){ if(!earned.has('giro')){ earned.add('giro'); unlocked.add('giro'); toast('🚴','Giro d’Italia a tappe: tutte le '+MREGN+' regioni della penisola, senza salti!'); } }
+    else if(n >= 2) toast('🚴','Giro a tappe: '+rn(k)+', '+n+'/'+MREGN+' regioni');
+    return;
+  }
+  const n = bits(v);
+  if(n >= 3){ const j = ok[0] ?? added[0], why = ok.length ? 'da '+rn(c)+' a '+rn(D.r[j])+' è un salto' : regName0(j)+(CAPS.has(j) ? ' è un capoluogo' : ' è su un’isola'); toast('🚴','Giro interrotto dopo '+n+' regioni: '+why); }
+  gr = ok.length ? [D.r[ok[0]], 1<<D.r[ok[0]]] : [-1, 0];
+}
 const REC = [['nord','⬆️','Il più a nord'],['sud','⬇️','Il più a sud'],['est','➡️','Il più a est'],['ovest','⬅️','Il più a ovest'],['grande','🗺️','Il più grande'],['piccolo','🔎','Il più piccolo'],['popoloso','🏙️','Il più popoloso'],['spopolato','🏚️','Il meno popoloso']];
 const RECT = { nord:'il comune più a nord d’Italia', sud:'il comune più a sud d’Italia', est:'il comune più a est d’Italia', ovest:'il comune più a ovest d’Italia', grande:'il comune più grande d’Italia', piccolo:'il comune più piccolo d’Italia', popoloso:'il comune più popoloso d’Italia', spopolato:'il comune meno popoloso d’Italia' };
 // Borghi: comuni sotto una soglia di abitanti; id b<soglia>:<quanti> (0 = tutti)
@@ -226,12 +275,12 @@ const TG = [
 ];
 const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
-const CH = [['raffica','⚡','Raffica','10 comuni in un minuto']], earned = new Set(), burst = [];
+const CH = [['raffica','⚡','Raffica','10 comuni in un minuto'],['giro','🚴','Giro d’Italia a tappe','']], earned = new Set(), burst = [];
 const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
 // Raffica: 10 comuni trovati negli ultimi 60 secondi (orologio reale, solo risposte durante il gioco)
 function burstCheck(n){
   const now = Date.now(); for(let j=0;j<n;j++) burst.push(now); if(burst.length>10) burst.splice(0, burst.length-10);
@@ -256,6 +305,8 @@ function achCheck(i){
   BG.forEach((b,j)=>{ if(D.pop[i]<b.lim) b.steps.forEach(n=>{ const id = 'b'+b.lim+':'+n; if(bgFound[j]>=n && !unlocked.has(id)){ unlocked.add(id); toast(b.ic, (n===b.tot ? 'Tutti i '+fmtN(n)+' '+b.l : fmtN(n)+' '+b.l)+' trovati (comuni sotto i '+fmtN(b.lim)+' abitanti)'); } }); });
   if(TES.has(i)){ toast('🗝️','Tesoro: '+D.n[i].split('/')[0]+' è il comune meno popoloso della '+provLabel(D.p[i])); const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n && !unlocked.has('t'+n)){ unlocked.add('t'+n); toast('🗝️', n===TES.size ? 'Tutti i tesori di provincia!' : n+' tesori di provincia'); } }); }
   if(CAPS.has(i) && !unlocked.has('cap') && capFound()===CAPS.size){ unlocked.add('cap'); toast('🏛️','Tutti i '+CAPS.size+' capoluoghi trovati!'); }
+  ccDone.forEach(([a,b],id)=>{ if(!unlocked.has(id)){ unlocked.add(id); toast('⛵','Da costa a costa: '+CC.find(c=>c.id===id).l+', da '+regName0(a)+' a '+regName0(b)+'!'); } });
+  if(wkBest===MREGN && !unlocked.has('walk')){ unlocked.add('walk'); toast('🚶','Italia a piedi: una catena di comuni confinanti attraverso tutte le '+MREGN+' regioni della penisola!'); }
   REC.forEach(([kk,ic])=>{ if(D.rec[kk]===i && !unlocked.has('x:'+kk)){ unlocked.add('x:'+kk); toast(ic,'Record: '+D.n[i].split('/')[0]+' è '+RECT[kk]+'!'); } });
   if(regCount[k]===1 && regsTouched()===D.regs.length && !unlocked.has('e:r')){ unlocked.add('e:r'); toast('🇮🇹','Giro d’Italia: almeno un comune in ogni regione!'); }
   if(provFound[p]===1 && provsTouched()===NP && !unlocked.has('e:p')){ unlocked.add('e:p'); toast('🧭','Giro delle province: almeno un comune in ogni provincia!'); }
@@ -275,7 +326,12 @@ function achCats(){
     { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l:'???', c:'' }) },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
-    { k:'ch', ic:'⚡', t:'Sfide', items: CH.map(([id,ic,l,d])=>it(id,ic,l,d)) },
+    { k:'ch', ic:'⚡', t:'Sfide', info: '🚴 <b>Giro d’Italia a tappe</b>: tutte le '+MREGN+' regioni della penisola di fila, ogni comune nella stessa regione del precedente o in una confinante; capoluoghi e isole interrompono il giro. '
+        + (gr[0]>=0 ? 'Giro in corso: '+bits(gr[1])+'/'+MREGN+' regioni, ultima tappa in '+rn(gr[0])+'.' : 'Nessun giro in corso.')
+        + '<br>🚶 <b>Italia a piedi</b>: una catena di comuni trovati e confinanti, senza capoluoghi, che tocca tutte le '+MREGN+' regioni della penisola.',
+      items: [it('raffica','⚡','Raffica','10 comuni in un minuto'), it('giro','🚴','Giro d’Italia a tappe',bits(gr[1])+'/'+MREGN), it('walk','🚶','Italia a piedi',wkBest+'/'+MREGN)] },
+    { k:'cc', ic:'⛵', t:'Da costa a costa', info: 'Due comuni costieri su mari diversi, uniti via terra da almeno un comune dell’entroterra: tutti trovati e confinanti tra loro.',
+      items: CC.map(c=>{ const r = ccDone.get(c.id); return it(c.id,'⛵',c.l,'',r ? 'da '+regName0(r[0])+' a '+regName0(r[1]) : ''); }) },
     { k:'cap', ic:'🏛️', t:'Capoluoghi', items: [it('cap','🏛️','Tutti i capoluoghi',capFound()+'/'+CAPS.size)] },
     { k:'x', ic:'📌', t:'Record d’Italia', items: REC.map(([k,ic,l])=>it('x:'+k,ic,l,has('x:'+k) ? regName0(D.rec[k]) : '?')) },
     ...BG.map((b,j)=>({ k:'b'+b.lim, ic:b.ic, t:b.t+' (sotto '+fmtN(b.lim)+' ab.)', info: bgFound[j]+'/'+fmtN(b.tot)+' '+b.l+' trovati', items: b.steps.map(n=>it('b'+b.lim+':'+n,b.ic,n===b.tot ? 'Tutti i '+b.l : fmtN(n)+' '+b.l,fmtN(n))) })),
@@ -316,8 +372,8 @@ document.querySelectorAll('#achfilt button').forEach(b => b.onclick = () => { ac
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); $('rar').textContent = fmtN(rarFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(gaveUp ? {g:1} : {})})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(gr[0]>=0 ? {gr} : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; if(Array.isArray(s.gr) && D.regs[s.gr[0]] && s.gr[1]>0) gr = [s.gr[0]|0, s.gr[1]|0]; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
@@ -345,7 +401,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); giroStep(added); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];

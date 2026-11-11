@@ -248,4 +248,104 @@ async function runFacts(){
   ok(errors.length === 0, 'errori JS: ' + errors.join('; '));
   dom.window.close();
 }
-(async()=>{ await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// geografia: confinanti, mari, isole (data/geo.json); da costa a costa, Giro d’Italia a tappe, Italia a piedi
+async function runChallenges(){
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (sfide geografiche): ' + msg); process.exitCode = 1; } };
+  const read = f => JSON.parse(fs.readFileSync(path.join(root, f), 'utf8'));
+  const map = read('data/map.json'), geo = read('data/geo.json'), caps = new Set(read('data/extra.json').cap), N = map.n.length;
+  const idx = nm => map.n.indexOf(nm), NB = map.n.map(() => []);
+  geo.nb.forEach((ds, i) => ds.forEach(dj => { NB[i].push(i + dj); NB[i + dj].push(i); }));
+  const co = new Set(map.co), ins = new Set(geo.ins), sea = i => geo.seas[geo.sea[i]], reg = i => map.regs[map.r[i]];
+  // dati
+  const bo = NB[idx('Bologna')].map(i => map.n[i]).sort().join(', ');
+  ok(bo === "Anzola dell'Emilia, Calderara di Reno, Casalecchio di Reno, Castel Maggiore, Castenaso, Granarolo dell'Emilia, Pianoro, San Lazzaro di Savena, Sasso Marconi, Zola Predosa", 'confinanti di Bologna: ' + bo);
+  ok(NB[idx('Messina')].every(i => reg(i) === 'Sicilia'), 'Messina non confina con la Calabria');
+  const SEA = { Rimini: 'Adriatico', Gallipoli: 'Ionio', 'Villa San Giovanni': 'Tirreno', 'Reggio di Calabria': 'Ionio', Messina: 'Ionio', Agrigento: 'Canale di Sicilia', Alghero: 'Mar di Sardegna', Olbia: 'Tirreno', Livorno: 'Ligure', Follonica: 'Tirreno' };
+  const badSea = Object.entries(SEA).filter(([nm, s]) => sea(idx(nm)) !== s).map(([nm]) => nm + '=' + sea(idx(nm)));
+  ok(!badSea.length, 'mari di riferimento: ' + badSea.join(', '));
+  ok(map.co.every(i => geo.sea[i] >= 0) && geo.sea.filter(s => s >= 0).length === map.co.length, 'un mare per ogni comune costiero, nessuno per gli altri');
+  ok(['Palermo', 'Cagliari', 'Portoferraio', 'Lipari'].every(nm => ins.has(idx(nm))) && !ins.has(idx("Campione d'Italia")) && !ins.has(idx('Venezia')), 'comuni delle isole');
+  // percorsi calcolati sui dati: nomi senza omonimi, cosi' ogni risposta trova un solo comune
+  const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const keyCount = new Map(); map.n.forEach(nm => new Set(nm.split('/').concat([nm])).forEach(p => keyCount.set(norm(p), (keyCount.get(norm(p)) || 0) + 1)));
+  const uniq = i => map.n[i].split('/').every(p => keyCount.get(norm(p)) === 1), allowed = i => !ins.has(i) && !caps.has(i);
+  const bfs = (from, ok2, isGoal) => { const prev = new Map(from.map(s => [s, -1])), q = [...from]; for (let h = 0; h < q.length; h++) { const u = q[h]; if (isGoal(u)) { const p = []; for (let x = u; x >= 0; x = prev.get(x)) p.unshift(x); return p; } NB[u].forEach(v => { if (!prev.has(v) && ok2(v)) { prev.set(v, u); q.push(v); } }); } return null; };
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8');
+  const open = async saved => {
+    const errors = [], dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+      beforeParse(w){
+        w.Path2D = class {};
+        const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+        w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.addEventListener('error', e=>errors.push(e.message));
+        const st = w.setTimeout.bind(w); w.setTimeout = (f, ms, ...a) => st(f, 0, ...a);   // gli avvisi in coda si mostrano subito
+        w.localStorage.clear(); if (saved) w.localStorage.setItem('comuniQuizV1', saved);
+      }});
+    await new Promise(r=>setTimeout(r,1500));
+    const w = dom.window, d = w.document, $ = id => d.getElementById(id);
+    $('go').click();
+    const type = i => { $('inp').value = map.n[i].split('/')[0]; $('inp').dispatchEvent(new w.Event('input')); };
+    const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
+    const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚶) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    return { w, d, $, type, row, info, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
+  };
+  // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
+  let p = await open();
+  const ga = idx('Gagliano del Capo'), ca = idx('Castrignano del Capo');
+  ok(co.has(ga) && co.has(ca) && NB[ga].includes(ca) && sea(ga) === 'Adriatico' && sea(ca) === 'Ionio', 'Leuca: due comuni costieri confinanti su mari diversi');
+  [ga, ca].forEach(p.type); const leucaCoast = p.row(/Adriatico – Ionio/);
+  // traversata piu' breve: comune costiero sul primo mare, comuni dell'entroterra, comune costiero sul secondo
+  const on = s1 => j => co.has(j) && sea(j) === s1;
+  const cross = (s1, s2) => { const mid = bfs([...map.n.keys()].filter(i => !co.has(i) && NB[i].some(on(s1))), i => !co.has(i), i => NB[i].some(on(s2))); return [NB[mid[0]].find(on(s1)), ...mid, NB[mid[mid.length - 1]].find(on(s2))]; };
+  const ai = cross('Adriatico', 'Ionio'); ai.forEach(p.type); const leucaLand = p.row(/Adriatico – Ionio/);
+  // Tirreno – Adriatico, scritto dall'Adriatico al Tirreno: l'ordine non conta
+  const ta = cross('Tirreno', 'Adriatico');
+  [...ta].reverse().forEach(p.type); const crossTA = p.row(/Tirreno – Adriatico/); await p.settle();
+  console.log('costa a costa: Leuca', leucaCoast.slice(0, 2), '| A-I:', ai.map(i => map.n[i]).join(' > '), leucaLand, '| T-A:', ta.length, 'comuni,', crossTA, '|', p.toasts.filter(t => t.startsWith('⛵')).join(' / '));
+  ok(/^🔒/.test(leucaCoast), 'lungo la costa non vale'); ok(/^⛵ Adriatico – Ionioda /.test(leucaLand), 'via terra vale, con "da … a …"');
+  ok(/^⛵ Tirreno – Adriatico/.test(crossTA) && ta.slice(1, -1).every(i => !co.has(i)), 'Tirreno – Adriatico attraverso l’entroterra');
+  ok(p.toasts.some(t => /^⛵ Da costa a costa: Tirreno – Adriatico, da .+ a .+!$/.test(t)), 'avviso da costa a costa');
+  ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+  // 2. Giro d’Italia a tappe
+  const RADJ = map.regs.map(() => new Set()); NB.forEach((a, i) => a.forEach(j => { if (!ins.has(i) && !ins.has(j) && map.r[i] !== map.r[j]) RADJ[map.r[i]].add(map.r[j]); }));
+  const R = nm => map.regs.indexOf(nm), used = new Set();
+  const pick = k => { const i = map.n.findIndex((_, j) => map.r[j] === k && allowed(j) && uniq(j) && !used.has(j)); used.add(i); return i; };
+  const mainRegs = [...new Set(map.r.filter((_, i) => !ins.has(i)))];
+  const tour = []; (function dfs(k, seen){ seen.add(k); tour.push(k); [...RADJ[k]].sort((a, b) => a - b).forEach(x => { if (!seen.has(x)) { dfs(x, seen); tour.push(k); } }); })(R('Veneto'), new Set());
+  p = await open();
+  const giroRow = () => p.row(/Giro d’Italia a tappe/);
+  [R('Veneto'), R('Emilia-Romagna'), R('Toscana')].forEach(k => p.type(pick(k))); const g3 = p.info();
+  p.type(pick(R('Puglia'))); const jump = p.info(); await p.settle(); const jumpToast = p.toasts.find(t => /Giro interrotto/.test(t)) || '-';
+  p.type(pick(R('Campania'))); p.type(pick(R('Lazio'))); p.type(idx('Latina')); const capo = p.info();
+  let mid = null;
+  tour.forEach((k, s) => { p.type(pick(k)); if (s === 4) mid = { saved: p.saved(), next: tour[5] }; });
+  const giroDone = giroRow(), giroSaved = JSON.parse(p.saved()).a.includes('giro');
+  console.log('giro:', g3.match(/Giro in corso: [^.]*/)[0], '| salto:', jump.match(/Giro in corso: [^.]*/)[0], '|', jumpToast, '| capoluogo:', /Nessun giro in corso/.test(capo), '|', tour.length, 'tappe ->', giroDone);
+  ok(/Giro in corso: 3\/18 regioni, ultima tappa in Toscana/.test(g3), 'tre regioni confinanti di fila');
+  ok(/Giro in corso: 1\/18 regioni, ultima tappa in Puglia/.test(jump) && /^🚴 Giro interrotto dopo 3 regioni: da Toscana a Puglia è un salto$/.test(jumpToast), 'un salto fa ripartire il giro');
+  ok(/Nessun giro in corso/.test(capo), 'un capoluogo interrompe il giro');
+  ok(mainRegs.length === 18 && /^🚴 Giro d’Italia a tappe18\/18/.test(giroDone) && giroSaved, 'giro completo e salvato');
+  ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+  // il giro in corso resta dopo il ricaricamento
+  const midN = JSON.parse(mid.saved).gr; p = await open(mid.saved); const reload = p.info();
+  p.type(pick(mid.next)); const after = p.info(); p.dom.window.close();
+  console.log('giro ricaricato:', reload.match(/Giro in corso: [^.]*/)[0], '->', after.match(/Giro in corso: [^.]*/)[0]);
+  ok(Array.isArray(midN) && /Giro in corso: (\d+)\/18/.exec(reload)[1] === String(midN[1].toString(2).split('1').length - 1), 'giro in corso ripristinato');
+  ok(+/Giro in corso: (\d+)\/18/.exec(after)[1] >= +/Giro in corso: (\d+)\/18/.exec(reload)[1], 'la tappa successiva continua il giro');
+  // 3. Italia a piedi: i capoluoghi non uniscono; poi una catena attraverso le 18 regioni
+  p = await open();
+  const walkRow = () => p.row(/Italia a piedi/);
+  let trio = null;
+  for (const c of caps) { if (ins.has(c)) continue; const ns = NB[c].filter(allowed); for (const a of ns) { const b = ns.find(b => map.r[b] !== map.r[a] && !NB[a].includes(b) && !NB[a].some(x => NB[b].includes(x) && allowed(x))); if (b !== undefined) { trio = [a, c, b]; break; } } if (trio) break; }
+  trio.forEach(p.type); const viaCap = walkRow();
+  const start = trio[0], walk = new Set([start]);
+  mainRegs.forEach(k => { const path2 = bfs([...walk], allowed, i => map.r[i] === k); path2.forEach(i => walk.add(i)); });
+  let half = null; [...walk].forEach((i, s, all) => { p.type(i); if (s === Math.floor(all.length / 2)) half = walkRow(); });
+  const walkDone = walkRow(); await p.settle();
+  console.log('italia a piedi: via capoluogo', viaCap, '| a metà', half, '| fine', walkDone, '(', walk.size, 'comuni )');
+  ok(/^🔒 Italia a piedi1\/18/.test(viaCap), 'un capoluogo non unisce due catene');
+  ok(/^🔒 Italia a piedi\d+\/18/.test(half) && /^🚶 Italia a piedi18\/18/.test(walkDone), 'catena attraverso le 18 regioni');
+  ok(p.toasts.some(t => /^🚶 Italia a piedi: /.test(t)), 'avviso Italia a piedi');
+  ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+}
+(async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

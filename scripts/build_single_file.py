@@ -15,7 +15,8 @@ css = read("style.css")
 js = read("app.js")
 data = json.dumps(
     {"map": json.loads(read("data/map.json")), "groups": json.loads(read("data/groups.json")),
-     "extra": json.loads(read("data/extra.json")), "facts": json.loads(read("data/facts.json"))},
+     "extra": json.loads(read("data/extra.json")), "facts": json.loads(read("data/facts.json")),
+     "geo": json.loads(read("data/geo.json"))},
     ensure_ascii=False, separators=(",", ":"),
 ).replace("</", "<\\/")
 
