@@ -11,4 +11,4 @@
 
 - [x] 3.1 Tour tests only when `TOURS_ON` is true; checks that the rows are hidden and `tr` / `a` survive a guess
 - [x] 3.2 `npm test`, `openspec validate pause-tours --strict`
-- [ ] 3.3 PR and green CI
+- [x] 3.3 PR and green CI
