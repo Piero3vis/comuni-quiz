@@ -286,8 +286,9 @@ async function runChallenges(){
     const type = i => { $('inp').value = map.n[i].split('/')[0]; $('inp').dispatchEvent(new w.Event('input')); };
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
+    const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
     const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚶) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
-    return { w, d, $, type, row, info, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
+    return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
   let p = await open();
@@ -309,42 +310,60 @@ async function runChallenges(){
   // 2. Giro d’Italia a tappe
   const RADJ = map.regs.map(() => new Set()); NB.forEach((a, i) => a.forEach(j => { if (!ins.has(i) && !ins.has(j) && map.r[i] !== map.r[j]) RADJ[map.r[i]].add(map.r[j]); }));
   const R = nm => map.regs.indexOf(nm), used = new Set();
-  const pick = k => { const i = map.n.findIndex((_, j) => map.r[j] === k && allowed(j) && uniq(j) && !used.has(j)); used.add(i); return i; };
+  const pickBy = test => { const i = map.n.findIndex((_, j) => test(j) && allowed(j) && uniq(j) && !used.has(j)); used.add(i); return i; };
+  const pick = k => pickBy(j => map.r[j] === k), pickP = q => pickBy(j => map.p[j] === q);
   const mainRegs = [...new Set(map.r.filter((_, i) => !ins.has(i)))];
   const tour = []; (function dfs(k, seen){ seen.add(k); tour.push(k); [...RADJ[k]].sort((a, b) => a - b).forEach(x => { if (!seen.has(x)) { dfs(x, seen); tour.push(k); } }); })(R('Veneto'), new Set());
   p = await open();
-  const giroRow = () => p.row(/Giro d’Italia a tappe/);
-  [R('Veneto'), R('Emilia-Romagna'), R('Toscana')].forEach(k => p.type(pick(k))); const g3 = p.info();
-  p.type(pick(R('Puglia'))); const jump = p.info(); await p.settle(); const jumpToast = p.toasts.find(t => /Giro interrotto/.test(t)) || '-';
-  p.type(pick(R('Campania'))); p.type(pick(R('Lazio'))); p.type(idx('Latina')); const capo = p.info();
+  const GIRO = /^(🔒|🚴) Giro d’Italia a tappe/, GIROP = /^(🔒|🚲) Giro delle province a tappe/;
+  const n18 = t => (/In corso: (\d+)\/18/.exec(t) || [])[1];
+  const start0 = p.st(GIRO), help = p.row(GIRO);
+  [R('Veneto'), R('Emilia-Romagna'), R('Toscana')].forEach(k => p.type(pick(k))); const g3 = p.st(GIRO);
+  p.type(pick(R('Puglia'))); const jump = p.st(GIRO); await p.settle(); const jumpToast = p.toasts.find(t => /interrotto/.test(t)) || '-';
+  p.type(pick(R('Campania'))); p.type(pick(R('Lazio'))); p.type(idx('Latina')); const capo = p.st(GIRO);
   let mid = null;
-  tour.forEach((k, s) => { p.type(pick(k)); if (s === 4) mid = { saved: p.saved(), next: tour[5] }; });
-  const giroDone = giroRow(), giroSaved = JSON.parse(p.saved()).a.includes('giro');
-  console.log('giro:', g3.match(/Giro in corso: [^.]*/)[0], '| salto:', jump.match(/Giro in corso: [^.]*/)[0], '|', jumpToast, '| capoluogo:', /Nessun giro in corso/.test(capo), '|', tour.length, 'tappe ->', giroDone);
-  ok(/Giro in corso: 3\/18 regioni, ultima tappa in Toscana/.test(g3), 'tre regioni confinanti di fila');
-  ok(/Giro in corso: 1\/18 regioni, ultima tappa in Puglia/.test(jump) && /^🚴 Giro interrotto dopo 3 regioni: da Toscana a Puglia è un salto$/.test(jumpToast), 'un salto fa ripartire il giro');
-  ok(/Nessun giro in corso/.test(capo), 'un capoluogo interrompe il giro');
-  ok(mainRegs.length === 18 && /^🚴 Giro d’Italia a tappe18\/18/.test(giroDone) && giroSaved, 'giro completo e salvato');
+  let near = '';
+  tour.forEach((k, s) => { p.type(pick(k)); if (s === 4) mid = { saved: p.saved(), next: tour[5] }; if (n18(p.st(GIRO)) === '13' && !near) near = p.st(GIRO); });
+  const giroDone = p.row(GIRO), giroSaved = JSON.parse(p.saved()).a.includes('giro');
+  console.log('giro:', start0, '|', g3, '|', jump, '|', jumpToast, '|', capo, '|', tour.length, 'tappe ->', giroDone.slice(0, 26), giroDone.slice(-5));
+  ok(/^Per iniziare: /.test(start0) && /Parti da una regione qualsiasi/.test(help) && /puoi tornare in regioni già toccate/.test(help), 'regola e come iniziare');
+  ok(/^In corso: 3\/18, ultima tappa in Toscana\. Prossima tappa in: Emilia-Romagna, Lazio, Liguria, Marche, Toscana, Umbria\. Mancano 15 regioni\.$/.test(g3), 'tre regioni confinanti di fila, con le prossime tappe');
+  ok(/^In corso: 1\/18, ultima tappa in Puglia/.test(jump) && /^🚴 Giro d’Italia a tappe interrotto dopo 3 regioni: da Toscana a Puglia è un salto$/.test(jumpToast), 'un salto fa ripartire il giro');
+  ok(/^Per iniziare: /.test(capo), 'un capoluogo interrompe il giro');
+  ok(mainRegs.length === 18 && /^🚴 Giro d’Italia a tappe.*18\/18$/s.test(giroDone) && giroSaved, 'giro completo e salvato');
+  ok(/ Mancano: [^,]+(, [^,]+){4}\.$/.test(near), 'con poche regioni mancanti si vede l’elenco: ' + near);
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
-  // il giro in corso resta dopo il ricaricamento
-  const midN = JSON.parse(mid.saved).gr; p = await open(mid.saved); const reload = p.info();
-  p.type(pick(mid.next)); const after = p.info(); p.dom.window.close();
-  console.log('giro ricaricato:', reload.match(/Giro in corso: [^.]*/)[0], '->', after.match(/Giro in corso: [^.]*/)[0]);
-  ok(Array.isArray(midN) && /Giro in corso: (\d+)\/18/.exec(reload)[1] === String(midN[1].toString(2).split('1').length - 1), 'giro in corso ripristinato');
-  ok(+/Giro in corso: (\d+)\/18/.exec(after)[1] >= +/Giro in corso: (\d+)\/18/.exec(reload)[1], 'la tappa successiva continua il giro');
-  // 3. Italia a piedi: i capoluoghi non uniscono; poi una catena attraverso le 18 regioni
+  // il giro in corso resta dopo il ricaricamento (formato tr); un vecchio salvataggio gr si legge ancora
+  const midN = JSON.parse(mid.saved).tr.giro; p = await open(mid.saved); const reload = p.st(GIRO);
+  p.type(pick(mid.next)); const after = p.st(GIRO); p.dom.window.close();
+  const fr = R('Friuli-Venezia Giulia'); p = await open(JSON.stringify({ f: [], t: 0, gr: [fr, 1 << fr] })); const old = p.st(GIRO); p.dom.window.close();
+  console.log('giro ricaricato:', n18(reload), '->', n18(after), '| vecchio gr:', old);
+  ok(Array.isArray(midN) && n18(reload) === String(midN[1].length), 'giro in corso ripristinato');
+  ok(+n18(after) >= +n18(reload), 'la tappa successiva continua il giro');
+  ok(old === 'In corso: 1/18, ultima tappa in Friuli-Venezia Giulia. Prossima tappa in: Friuli-Venezia Giulia, Veneto. Mancano 17 regioni.', 'vecchio salvataggio gr e prossime tappe dal Friuli');
+  // 3. Giro delle province a tappe: Verona -> Mantova continua, Bari e' un salto; resta dopo il ricaricamento
   p = await open();
-  const walkRow = () => p.row(/Italia a piedi/);
+  const p0 = p.st(GIROP); p.type(pickP('VR')); p.type(pickP('MN')); const pVM = p.st(GIROP), pRow = p.row(GIROP), pSaved = p.saved();
+  p.type(pickP('BA')); const pBA = p.st(GIROP); p.dom.window.close();
+  p = await open(pSaved); const pReload = p.st(GIROP); p.dom.window.close();
+  console.log('giro province:', pVM, '|', pBA.slice(0, 40), '| ricaricato:', pReload.slice(0, 40));
+  ok(/^Per iniziare: /.test(p0) && /^In corso: 2\/93, ultima tappa in Mantova\. Prossima tappa in: .*Verona.*\. Mancano 91 province\.$/.test(pVM) && /2\/93$/.test(pRow), 'province confinanti di fila');
+  ok(/^In corso: 1\/93, ultima tappa in Bari\./.test(pBA), 'salto tra province');
+  ok(pReload === pVM, 'giro delle province ripristinato');
+  // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
+  p = await open();
+  const WALK = /^(🔒|🚶) Italia a piedi/, walkRow = () => p.row(WALK);
   let trio = null;
   for (const c of caps) { if (ins.has(c)) continue; const ns = NB[c].filter(allowed); for (const a of ns) { const b = ns.find(b => map.r[b] !== map.r[a] && !NB[a].includes(b) && !NB[a].some(x => NB[b].includes(x) && allowed(x))); if (b !== undefined) { trio = [a, c, b]; break; } } if (trio) break; }
-  trio.forEach(p.type); const viaCap = walkRow();
+  const walk0 = p.st(WALK); trio.forEach(p.type); const viaCap = walkRow(), viaCapSt = p.st(WALK);
   const start = trio[0], walk = new Set([start]);
   mainRegs.forEach(k => { const path2 = bfs([...walk], allowed, i => map.r[i] === k); path2.forEach(i => walk.add(i)); });
   let half = null; [...walk].forEach((i, s, all) => { p.type(i); if (s === Math.floor(all.length / 2)) half = walkRow(); });
   const walkDone = walkRow(); await p.settle();
-  console.log('italia a piedi: via capoluogo', viaCap, '| a metà', half, '| fine', walkDone, '(', walk.size, 'comuni )');
-  ok(/^🔒 Italia a piedi1\/18/.test(viaCap), 'un capoluogo non unisce due catene');
-  ok(/^🔒 Italia a piedi\d+\/18/.test(half) && /^🚶 Italia a piedi18\/18/.test(walkDone), 'catena attraverso le 18 regioni');
+  console.log('italia a piedi: via capoluogo', viaCapSt, '| a metà', half.slice(-5), '| fine', walkDone.slice(-5), '(', walk.size, 'comuni )');
+  ok(walk0 === 'Nessuna catena per ora.' && /i capoluoghi valgono, le isole no/.test(viaCap), 'regola di Italia a piedi');
+  ok(/^🔒 Italia a piedi.*2\/18$/s.test(viaCap) && /^La catena più lunga tocca 2\/18 regioni\. Mancano 16 regioni\.$/.test(viaCapSt), 'un capoluogo unisce due catene');
+  ok(/^🔒 Italia a piedi.*\d+\/18$/s.test(half) && /^🚶 Italia a piedi.*18\/18$/s.test(walkDone), 'catena attraverso le 18 regioni');
   ok(p.toasts.some(t => /^🚶 Italia a piedi: /.test(t)), 'avviso Italia a piedi');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
 }

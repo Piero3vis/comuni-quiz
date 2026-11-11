@@ -229,31 +229,51 @@ function coastStep(i){
   NB[i].forEach(j=>{ if(ccP[j]>=0) r = ccUnion(r,j); else if(found[j] && CO.has(j)) ccAdd(find(ccP,r),D.sea[j],j); });
   ccTouch(find(ccP,r));
 }
-// Italia a piedi: gruppi di comuni della penisola trovati e confinanti, senza capoluoghi (union-find wkP), con le regioni toccate (wkM)
-const wkP = new Int32Array(N).fill(-1), wkM = new Int32Array(N); let wkBest = 0;
-const allowed = i => MAIN[i] && !CAPS.has(i);
+// Italia a piedi: gruppi di comuni della penisola trovati e confinanti, capoluoghi compresi (union-find wkP), con le regioni toccate (wkM);
+// wkBest/wkBestM: regioni del gruppo migliore
+const wkP = new Int32Array(N).fill(-1), wkM = new Int32Array(N); let wkBest = 0, wkBestM = 0;
 function walkStep(i){
-  if(!allowed(i)) return; wkP[i] = i; wkM[i] = 1<<D.r[i];
+  if(!MAIN[i]) return; wkP[i] = i; wkM[i] = 1<<D.r[i];
   NB[i].forEach(j=>{ if(wkP[j]>=0){ const b = find(wkP,j); if(b!==i){ wkP[b] = i; wkM[i] |= wkM[b]; } } });
-  wkBest = Math.max(wkBest, bits(wkM[i]));
+  const n = bits(wkM[i]); if(n > wkBest){ wkBest = n; wkBestM = wkM[i]; }
 }
-// Giro d’Italia a tappe: conta l'ordine delle risposte. gr = [regione dell'ultima tappa o -1, regioni toccate (bit)], salvato in comuniQuizV1.gr
-let gr = [-1, 0];
-function giroStep(added){
-  const ok = added.filter(allowed), [c, v] = gr;
-  const next = c<0 ? [] : ok.filter(i => D.r[i]===c || RADJ[c].has(D.r[i]));
-  const i = next.find(j => !(v>>D.r[j]&1)) ?? next[0];
+// Giri a tappe: conta l'ordine delle risposte. Ogni tappa è un comune della penisola che non sia capoluogo (allowed), nella stessa unità
+// (regione o provincia) della tappa precedente o in una confinante; si può tornare in unità già toccate. Un capoluogo, un comune delle
+// isole o un salto interrompono il giro. Stato: last (unità dell'ultima tappa o null) e seen (unità toccate), salvati in comuniQuizV1.tr
+const allowed = i => MAIN[i] && !CAPS.has(i);
+const PADJ = {}; NB.forEach((a,i)=>a.forEach(j=>{ if(MAIN[i] && MAIN[j] && D.p[i]!==D.p[j]) (PADJ[D.p[i]] = PADJ[D.p[i]] || new Set()).add(D.p[j]); }));
+const MPROVN = new Set(D.p.filter((_,i)=>MAIN[i])).size;
+const TOURS = [
+  { id:'giro', ic:'🚴', l:'Giro d’Italia a tappe', unit: i => D.r[i], adj: k => RADJ[k], total: MREGN, name: rn, many:'regioni', every: 1, breakAt: 3 },
+  { id:'giroP', ic:'🚲', l:'Giro delle province a tappe', unit: i => D.p[i], adj: q => PADJ[q], total: MPROVN, name: q => PN[q]||q, many:'province', every: 10, breakAt: 5 },
+].map(t => Object.assign(t, { last: null, seen: new Set() }));
+function tourStep(t, added){
+  const ok = added.filter(allowed);
+  const next = t.last===null ? [] : ok.filter(i => t.unit(i)===t.last || t.adj(t.last).has(t.unit(i)));
+  const i = next.find(j => !t.seen.has(t.unit(j))) ?? next[0];
   if(i !== undefined){
-    const k = D.r[i], nv = v | 1<<k, n = bits(nv); gr = [k, nv];
-    if(nv === v) return;
-    if(n === MREGN){ if(!earned.has('giro')){ earned.add('giro'); unlocked.add('giro'); toast('🚴','Giro d’Italia a tappe: tutte le '+MREGN+' regioni della penisola, senza salti!'); } }
-    else if(n >= 2) toast('🚴','Giro a tappe: '+rn(k)+', '+n+'/'+MREGN+' regioni');
+    const u = t.unit(i), isNew = !t.seen.has(u); t.last = u; t.seen.add(u);
+    const n = t.seen.size;
+    if(!isNew) return;
+    if(n === t.total){ if(!earned.has(t.id)){ earned.add(t.id); unlocked.add(t.id); toast(t.ic, t.l+': tutte le '+t.total+' '+t.many+' della penisola, senza salti!'); } }
+    else if(n >= 2 && n % t.every === 0) toast(t.ic, t.l+': '+t.name(u)+', '+n+'/'+t.total+' '+t.many);
     return;
   }
-  const n = bits(v);
-  if(n >= 3){ const j = ok[0] ?? added[0], why = ok.length ? 'da '+rn(c)+' a '+rn(D.r[j])+' è un salto' : regName0(j)+(CAPS.has(j) ? ' è un capoluogo' : ' è su un’isola'); toast('🚴','Giro interrotto dopo '+n+' regioni: '+why); }
-  gr = ok.length ? [D.r[ok[0]], 1<<D.r[ok[0]]] : [-1, 0];
+  const n = t.seen.size;
+  if(n >= t.breakAt){ const j = ok[0] ?? added[0], why = ok.length ? 'da '+t.name(t.last)+' a '+t.name(t.unit(j))+' è un salto' : regName0(j)+(CAPS.has(j) ? ' è un capoluogo' : ' è su un’isola'); toast(t.ic, t.l+' interrotto dopo '+n+' '+t.many+': '+why); }
+  t.last = ok.length ? t.unit(ok[0]) : null; t.seen = new Set(t.last===null ? [] : [t.last]);
 }
+// Testo di stato di un giro per il pannello: come iniziare, oppure ultima tappa, dove può andare la prossima e cosa manca
+const byIt = (a,b) => a.localeCompare(b,'it');
+// Cosa manca: l'elenco se è corto (fino a 8), altrimenti solo quante
+const missing = (names, many) => names.length===1 ? 'Manca: '+names[0]+'.' : names.length<=8 && names[0]!==undefined ? 'Mancano: '+names.sort(byIt).join(', ')+'.' : 'Mancano '+names.length+' '+many+'.';
+function tourStatus(t){
+  if(t.last===null) return 'Per iniziare: scrivi un comune della penisola che non sia un capoluogo.';
+  const n = t.seen.size, nextU = [t.last, ...t.adj(t.last)].map(t.name).sort(byIt).join(', ');
+  const miss = t.id==='giro' ? missing(REGK.filter(k=>MAIN_REG.has(k) && !t.seen.has(k)).map(rn), 'regioni') : missing(Array(t.total-n), 'province');
+  return 'In corso: '+n+'/'+t.total+', ultima tappa in '+t.name(t.last)+'. Prossima tappa in: '+nextU+'.'+(n<t.total ? ' '+miss : '');
+}
+const MAIN_REG = new Set(D.r.filter((_,i)=>MAIN[i]));
 const REC = [['nord','⬆️','Il più a nord'],['sud','⬇️','Il più a sud'],['est','➡️','Il più a est'],['ovest','⬅️','Il più a ovest'],['grande','🗺️','Il più grande'],['piccolo','🔎','Il più piccolo'],['popoloso','🏙️','Il più popoloso'],['spopolato','🏚️','Il meno popoloso']];
 const RECT = { nord:'il comune più a nord d’Italia', sud:'il comune più a sud d’Italia', est:'il comune più a est d’Italia', ovest:'il comune più a ovest d’Italia', grande:'il comune più grande d’Italia', piccolo:'il comune più piccolo d’Italia', popoloso:'il comune più popoloso d’Italia', spopolato:'il comune meno popoloso d’Italia' };
 // Borghi: comuni sotto una soglia di abitanti; id b<soglia>:<quanti> (0 = tutti)
@@ -275,7 +295,7 @@ const TG = [
 ];
 const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
-const CH = [['raffica','⚡','Raffica','10 comuni in un minuto'],['giro','🚴','Giro d’Italia a tappe','']], earned = new Set(), burst = [];
+const CH = [['raffica','⚡','Raffica','10 comuni in un minuto'],['giro','🚴','Giro d’Italia a tappe',''],['giroP','🚲','Giro delle province a tappe','']], earned = new Set(), burst = [];
 const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
@@ -326,11 +346,16 @@ function achCats(){
     { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l:'???', c:'' }) },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
-    { k:'ch', ic:'⚡', t:'Sfide', info: '🚴 <b>Giro d’Italia a tappe</b>: tutte le '+MREGN+' regioni della penisola di fila, ogni comune nella stessa regione del precedente o in una confinante; capoluoghi e isole interrompono il giro. '
-        + (gr[0]>=0 ? 'Giro in corso: '+bits(gr[1])+'/'+MREGN+' regioni, ultima tappa in '+rn(gr[0])+'.' : 'Nessun giro in corso.')
-        + '<br>🚶 <b>Italia a piedi</b>: una catena di comuni trovati e confinanti, senza capoluoghi, che tocca tutte le '+MREGN+' regioni della penisola.',
-      items: [it('raffica','⚡','Raffica','10 comuni in un minuto'), it('giro','🚴','Giro d’Italia a tappe',bits(gr[1])+'/'+MREGN), it('walk','🚶','Italia a piedi',wkBest+'/'+MREGN)] },
-    { k:'cc', ic:'⛵', t:'Da costa a costa', info: 'Due comuni costieri su mari diversi, uniti via terra da almeno un comune dell’entroterra: tutti trovati e confinanti tra loro.',
+    { k:'ch', ic:'⚡', t:'Sfide', info: 'Nelle sfide conta come e in che ordine trovi i comuni. I giri in corso si salvano con la partita.',
+      items: [
+        Object.assign(it('raffica','⚡','Raffica',''), { h: 'Trova 10 comuni in meno di un minuto.' }),
+        ...TOURS.map(t => Object.assign(it(t.id,t.ic,t.l,t.seen.size+'/'+t.total), { s: tourStatus(t), h: t.id==='giro'
+          ? 'Parti da una regione qualsiasi della penisola. Ogni comune deve stare nella stessa regione del precedente o in una confinante; puoi tornare in regioni già toccate. Un capoluogo, un comune delle isole o un salto in una regione non confinante interrompono il giro.'
+          : 'Come il Giro d’Italia a tappe, ma per province: tutte le '+t.total+' della penisola, ogni comune nella stessa provincia del precedente o in una confinante.' })),
+        Object.assign(it('walk','🚶','Italia a piedi',wkBest+'/'+MREGN), { h: 'Trova comuni confinanti tra loro fino a formare una catena che tocca tutte le '+MREGN+' regioni della penisola. L’ordine non conta; i capoluoghi valgono, le isole no.',
+          s: wkBest ? 'La catena più lunga tocca '+wkBest+'/'+MREGN+' regioni.'+(wkBest<MREGN ? ' '+missing(REGK.filter(k=>MAIN_REG.has(k) && !(wkBestM>>k&1)).map(rn), 'regioni') : '') : 'Nessuna catena per ora.' }),
+      ] },
+    { k:'cc', ic:'⛵', t:'Da costa a costa', info: 'Come si fa: trova un comune sulla costa del primo mare, poi uno o più comuni dell’entroterra confinanti uno con l’altro, fino a un comune sulla costa del secondo mare. Lungo la costa non vale; l’ordine non conta.',
       items: CC.map(c=>{ const r = ccDone.get(c.id); return it(c.id,'⛵',c.l,'',r ? 'da '+regName0(r[0])+' a '+regName0(r[1]) : ''); }) },
     { k:'cap', ic:'🏛️', t:'Capoluoghi', items: [it('cap','🏛️','Tutti i capoluoghi',capFound()+'/'+CAPS.size)] },
     { k:'x', ic:'📌', t:'Record d’Italia', items: REC.map(([k,ic,l])=>it('x:'+k,ic,l,has('x:'+k) ? regName0(D.rec[k]) : '?')) },
@@ -362,7 +387,7 @@ function renderAch(){
     const u = c.items.filter(x=>x.u).length, n = c.items.length, items = c.items.filter(show);
     if(!items.length) return '';
     // la nota (aneddoto) si vede solo a traguardo sbloccato: per alcuni svelerebbe la risposta
-    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"><span>${x.u?x.ic:'🔒'} ${x.l}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
+    const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"><span>${x.u?x.ic:'🔒'} ${x.l}${x.h ? `<small>${x.h}</small>` : ''}${x.s ? `<small class="st">${x.s}</small>` : ''}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
     return `<details class="cat${u===n?' full':''}" data-a="${c.k}"${openAch.has(c.k)?' open':''}><summary><span class="ci">${c.ic}</span><span class="ct">${c.t}</span><span class="c">${u}/${n}</span><span class="mbar"><i style="width:${100*u/n}%"></i></span></summary>`
       + (c.info ? `<div class="info">${c.info}</div>` : '') + rows + (c.more||'') + `</details>`;
   }).join('') || '<div class="empty">Nessun traguardo qui, per ora.</div>';
@@ -372,8 +397,8 @@ document.querySelectorAll('#achfilt button').forEach(b => b.onclick = () => { ac
 function fmt(t){ t = Math.floor(t/1000); const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = t%60; return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textContent = fmt(elapsed); }
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); $('rar').textContent = fmtN(rarFound); }
-function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(gr[0]>=0 ? {gr} : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
-function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; if(Array.isArray(s.gr) && D.regs[s.gr[0]] && s.gr[1]>0) gr = [s.gr[0]|0, s.gr[1]|0]; (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
+function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
   $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
@@ -401,7 +426,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); giroStep(added); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); burstCheck(added.length); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];
