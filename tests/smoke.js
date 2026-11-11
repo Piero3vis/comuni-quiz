@@ -224,9 +224,20 @@ async function runFacts(){
   const map = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')), facts = JSON.parse(fs.readFileSync(path.join(root, 'data/facts.json'), 'utf8'));
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (curiosità): ' + msg); process.exitCode = 1; } };
   const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const leaks = Object.entries(facts).filter(([nm, t]) => nm.replace(/ \([A-Z]{2}\)$/, '').split('/').some(part => norm(t).includes(norm(part))));
+  // formato { testo, fonte }: fonte obbligatoria, niente capoluoghi, una curiosità per ogni provincia del Veneto
+  const caps = new Set(JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')).cap);
+  const at = nm => { const m = /^(.*) \(([A-Z]{2})\)$/.exec(nm); return m ? map.n.findIndex((n, i) => n === m[1] && map.p[i] === m[2]) : map.n.indexOf(nm); };
+  const noSrc = Object.entries(facts).filter(([, f]) => !f || typeof f.testo !== 'string' || !/^https:\/\/\S+$/.test(f.fonte || '')).map(([nm]) => nm);
+  ok(noSrc.length === 0, 'curiosità senza testo o senza fonte https: ' + noSrc.join(', '));
+  const capFacts = Object.keys(facts).filter(nm => caps.has(at(nm)));
+  ok(capFacts.length === 0, 'curiosità su capoluoghi: ' + capFacts.join(', '));
+  const provs = [...new Set(map.p)], withFact = new Set(Object.keys(facts).map(nm => map.p[at(nm)]));
+  const veneto = provs.filter(q => map.regs[map.r[map.p.indexOf(q)]] === 'Veneto');
+  ok(veneto.length === 7 && veneto.every(q => withFact.has(q)), 'Veneto: una curiosità per provincia, mancano ' + veneto.filter(q => !withFact.has(q)).join(', '));
+  console.log('curiosità: province coperte', withFact.size + '/' + provs.length, '| senza:', provs.filter(q => !withFact.has(q)).sort().join(' '));
+  const leaks = Object.entries(facts).filter(([nm, f]) => nm.replace(/ \([A-Z]{2}\)$/, '').split('/').some(part => norm(f.testo).includes(norm(part))));
   ok(leaks.length === 0, 'il nome compare nella curiosità: ' + leaks.map(x => x[0]).join(', '));
-  ok(Object.values(facts).every(t => t.length <= 200 && !/'/.test(t)), 'curiosità brevi, con l’apostrofo tipografico');
+  ok(Object.values(facts).every(f => f.testo.length <= 200 && !/'/.test(f.testo)), 'curiosità brevi, con l’apostrofo tipografico');
   const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8'), errors = [];
   const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
     beforeParse(w){
@@ -239,7 +250,7 @@ async function runFacts(){
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id), cv = $('cv');
   const click = nm => { w.hit = map.d[map.n.indexOf(nm)]; ['pointerdown','pointerup'].forEach(t => cv.dispatchEvent(new w.MouseEvent(t, { clientX: 100, clientY: 100 }))); return [...d.querySelectorAll('#mapbox > div')].find(el => el.style.display === 'block' && el.querySelector('#reveal, b')); };
   let box = click('Elva'); const before = box && box.querySelector('details.fact');
-  const hint = before && !before.open && before.querySelector('summary').textContent === '💡 Indizio: una curiosità' && before.querySelector('p').textContent === facts['Elva'];
+  const hint = before && !before.open && before.querySelector('summary').textContent === '💡 Indizio: una curiosità' && before.querySelector('p').textContent === facts['Elva'].testo;
   $('go').click(); $('inp').value = 'elva'; $('inp').dispatchEvent(new w.Event('input'));
   box = click('Elva'); const after = box && box.querySelector('details.fact');
   const shown = after && !after.open && after.querySelector('summary').textContent === '💡 Curiosità' && /abitanti/.test(box.textContent);
@@ -313,7 +324,7 @@ async function runChallenges(){
   p = await open(); p.type(idx('Elva')); p.type(idx('Milano')); await p.settle();
   const factToast = p.toasts.find(t => t.startsWith('💡')) || '-';
   console.log('curiosità sullo schermo:', factToast.slice(0, 60), '| totale', p.toasts.filter(t => t.startsWith('💡')).length);
-  ok(factToast === '💡 Curiosità su Elva: ' + facts['Elva'] && p.toasts.filter(t => t.startsWith('💡')).length === 1, 'avviso con la curiosità solo per Elva');
+  ok(factToast === '💡 Curiosità su Elva: ' + facts['Elva'].testo && p.toasts.filter(t => t.startsWith('💡')).length === 1, 'avviso con la curiosità solo per Elva');
   p.dom.window.close();
   // 2. Giro d’Italia a tappe
   const RADJ = map.regs.map(() => new Set()); NB.forEach((a, i) => a.forEach(j => { if (!ins.has(i) && !ins.has(j) && map.r[i] !== map.r[j]) RADJ[map.r[i]].add(map.r[j]); }));

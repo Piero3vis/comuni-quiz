@@ -39,9 +39,10 @@ write a duplicated name as `"Livo (CO)"`.
 geometry from openpolis + Natural Earth, plus `EXTRA` for very short borders, checked against the "Comuni confinanti" box on Wikipedia. Do not edit it by hand.
 
 ## Curiosità (`data/facts.json`)
-`{ "Nome": "testo" }` (same naming as groups, `"Livo (CO)"` for duplicates), resolved by `withGroups()` into `D.fact` (Map index → text), embedded by `build_single_file.py`.
+`{ "Nome": { "testo": "…", "fonte": "https://…" } }`, alphabetical (same naming as groups, `"Livo (CO)"` for duplicates), resolved by `withGroups()` into `D.fact` (Map index → `testo`), embedded by `build_single_file.py`.
 Shown as a toast "💡 Curiosità su <nome>: …" when the comune is found (end of `achCheck(i)`, live guesses only) and in the click box (`clickAt()`) as a closed `<details class="fact">`: "💡 Indizio: una curiosità" before the comune is found, "💡 Curiosità" under residents/rarity after.
-Texts never contain the comune's name or a `/` part (checked by `tests/smoke.js`), are checked on a source (mostly it.wikipedia) and avoid yearly numbers. `placeInfo()` keeps the box inside the map.
+Rules (checked by `tests/smoke.js`): every entry has an `https` `fonte` supporting the whole text; no capoluoghi; texts never contain the comune's name or a `/` part, ≤ 200 characters, typographic apostrophe; avoid yearly numbers.
+Goal: one per province (the test prints uncovered provinces); done by region: Veneto. `placeInfo()` keeps the box inside the map.
 
 ## Quiz logic
 - Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.

@@ -26,7 +26,7 @@ async function loadData() {
 
 // Trasforma i gruppi (isole, cammini) da nomi di comuni a indici.
 // Un gruppo con "union": true contiene tutti i comuni degli altri gruppi della lista (piu' gli eventuali "comuni" extra).
-// Anche le curiosita' (facts.json, { "Nome": "testo" }) usano i nomi: diventano map.fact, una Map indice -> testo.
+// Anche le curiosita' (facts.json, { "Nome": { "testo": "...", "fonte": "https://..." } }) usano i nomi: diventano map.fact, una Map indice -> testo.
 function withGroups(map, groups, facts) {
   const byName = new Map();
   map.n.forEach((nm, i) => { if (!byName.has(nm)) byName.set(nm, []); byName.get(nm).push(i); });
@@ -49,7 +49,7 @@ function withGroups(map, groups, facts) {
   map.conf = resolve(groups.confini);
   map.mar = resolve(groups.marinare);
   map.sto = resolve(groups.storia);
-  map.fact = new Map(Object.entries(facts).map(([nm, t]) => [lookup(nm), t]));
+  map.fact = new Map(Object.entries(facts).map(([nm, f]) => [lookup(nm), f.testo]));
   return map;
 }
 
