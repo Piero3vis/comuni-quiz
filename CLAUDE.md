@@ -66,7 +66,7 @@ Ids: `m<n>` milestone, `s<n>` secret (`SEC`: shown as "🔒 ???" until unlocked)
 Provinces with fewer than 4 comuni get no quarter/half achievements.
 Geography (from `geo.json`), updated in `addFound()` so a reload rebuilds them: `cc:<xy>` "Da costa a costa" (`CC`, sea letters `LTIACS`): union-find `ccP` over found inland comuni, `ccM` sea bitmask of found coastal neighbours, `ccE` one example comune per sea, `ccDone` id → [from, to];
 `walk` "Italia a piedi": union-find `wkP` over found peninsula comuni (`MAIN`, capoluoghi included), `wkM` region bitmask, `wkBest`/`wkBestM` best region count and mask; it weighs `WALKW` (10) in the total.
-`giro` / `giroP` "Giro d’Italia a tappe" / "Giro delle province a tappe" depend on the order of guesses: `TOURS` (unit = region index or province sigla, `adj` = `RADJ` / `PADJ`, `total` 18 / 93),
+`giro` / `giroP` "Giro d’Italia a tappe" / "Giro delle province a tappe" depend on the order of guesses. Paused: `TOURS_ON = false` empties `TOURS` (no rows, no steps); `load()` keeps a saved `tr` in `trKept` and `save()` writes it back, `giro`/`giroP` stay in `a`; the tour tests in `tests/smoke.js` run only when it is `true`. Rules: `TOURS` (unit = region index or province sigla, `adj` = `RADJ` / `PADJ`, `total` 18 / 93),
 `tourStep(t, added)` in the input handler (not on load); state `t.last` (or null) and `t.seen` (Set), saved as `comuniQuizV1.tr = { giro: [last, [units]], giroP: [...] }` (an old `gr: [region, mask]` is still read).
 Stages must be `allowed()` (peninsula, not capoluogo). `tourStatus(t)` writes the panel status; `missing()` lists up to 8 names, otherwise counts.
 
@@ -98,5 +98,6 @@ One branch and one pull request per change; `.github/workflows/pages.yml` tests 
 https://piero3vis.github.io/comuni-quiz/ (only `dist/quiz.html` as `index.html`). Never push straight to `main`.
 
 ## Ideas not done yet
+To think about first: a guess is accepted as soon as the text matches, so typing "Castrocaro Terme" takes "Castro" (if not found yet) and clears the field; 471 names are the start of a longer one (1,061 comuni affected). Options, detailed in the `pause-tours` OpenSpec design (wait or Enter for prefix names, keep the text and undo, tour-only fix); the tours come back (`TOURS_ON = true`) once it is solved.
 Merge the 2026 comuni (Castegnero Nanto, Lirio into Montalto Pavese) in `build_data.py`. Export/import of progress (for moving between devices), optional highlight of all coastal comuni, more cammini (Cammino dei Briganti, Cammino Materano, Via Appia),
 region labels on the map, a tidy Via Francigena list from the official stage data.

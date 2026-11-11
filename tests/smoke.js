@@ -341,42 +341,55 @@ async function runChallenges(){
   const pick = k => pickBy(j => map.r[j] === k), pickP = q => pickBy(j => map.p[j] === q);
   const mainRegs = [...new Set(map.r.filter((_, i) => !ins.has(i)))];
   const tour = []; (function dfs(k, seen){ seen.add(k); tour.push(k); [...RADJ[k]].sort((a, b) => a - b).forEach(x => { if (!seen.has(x)) { dfs(x, seen); tour.push(k); } }); })(R('Veneto'), new Set());
-  p = await open();
-  const GIRO = /^(🔒|🚴) Giro d’Italia a tappe/, GIROP = /^(🔒|🚲) Giro delle province a tappe/;
-  const n18 = t => (/In corso: (\d+)\/18/.exec(t) || [])[1];
-  const start0 = p.st(GIRO), help = p.row(GIRO);
-  [R('Veneto'), R('Emilia-Romagna'), R('Toscana')].forEach(k => p.type(pick(k))); const g3 = p.st(GIRO);
-  p.type(pick(R('Puglia'))); const jump = p.st(GIRO); await p.settle(); const jumpToast = p.toasts.find(t => /interrotto/.test(t)) || '-';
-  p.type(pick(R('Campania'))); p.type(pick(R('Lazio'))); p.type(idx('Latina')); const capo = p.st(GIRO);
-  let mid = null;
-  let near = '';
-  tour.forEach((k, s) => { p.type(pick(k)); if (s === 4) mid = { saved: p.saved(), next: tour[5] }; if (n18(p.st(GIRO)) === '13' && !near) near = p.st(GIRO); });
-  const giroDone = p.row(GIRO), giroSaved = JSON.parse(p.saved()).a.includes('giro');
-  console.log('giro:', start0, '|', g3, '|', jump, '|', jumpToast, '|', capo, '|', tour.length, 'tappe ->', giroDone.slice(0, 26), giroDone.slice(-5));
-  ok(/^Per iniziare: /.test(start0) && /Parti da una regione qualsiasi/.test(help) && /puoi tornare in regioni già toccate/.test(help), 'regola e come iniziare');
-  ok(/^In corso: 3\/18, ultima tappa in Toscana\. Prossima tappa in: Emilia-Romagna, Lazio, Liguria, Marche, Toscana, Umbria\. Mancano 15 regioni\.$/.test(g3), 'tre regioni confinanti di fila, con le prossime tappe');
-  ok(/^In corso: 1\/18, ultima tappa in Puglia/.test(jump) && /^🚴 Giro d’Italia a tappe interrotto dopo 3 regioni: da Toscana a Puglia è un salto$/.test(jumpToast), 'un salto fa ripartire il giro');
-  ok(/^Per iniziare: /.test(capo), 'un capoluogo interrompe il giro');
-  ok(mainRegs.length === 18 && /^🚴 Giro d’Italia a tappe.*18\/18$/s.test(giroDone) && giroSaved, 'giro completo e salvato');
-  ok(/ Mancano: [^,]+(, [^,]+){4}\.$/.test(near), 'con poche regioni mancanti si vede l’elenco: ' + near);
-  ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
-  // il giro in corso resta dopo il ricaricamento (formato tr); un vecchio salvataggio gr si legge ancora
-  const midN = JSON.parse(mid.saved).tr.giro; p = await open(mid.saved); const reload = p.st(GIRO);
-  p.type(pick(mid.next)); const after = p.st(GIRO); p.dom.window.close();
-  const fr = R('Friuli-Venezia Giulia'); p = await open(JSON.stringify({ f: [], t: 0, gr: [fr, 1 << fr] })); const old = p.st(GIRO); p.dom.window.close();
-  console.log('giro ricaricato:', n18(reload), '->', n18(after), '| vecchio gr:', old);
-  ok(Array.isArray(midN) && n18(reload) === String(midN[1].length), 'giro in corso ripristinato');
-  ok(+n18(after) >= +n18(reload), 'la tappa successiva continua il giro');
-  ok(old === 'In corso: 1/18, ultima tappa in Friuli-Venezia Giulia. Prossima tappa in: Friuli-Venezia Giulia, Veneto. Mancano 17 regioni.', 'vecchio salvataggio gr e prossime tappe dal Friuli');
-  // 3. Giro delle province a tappe: Verona -> Mantova continua, Bari e' un salto; resta dopo il ricaricamento
-  p = await open();
-  const p0 = p.st(GIROP); p.type(pickP('VR')); p.type(pickP('MN')); const pVM = p.st(GIROP), pRow = p.row(GIROP), pSaved = p.saved();
-  p.type(pickP('BA')); const pBA = p.st(GIROP); p.dom.window.close();
-  p = await open(pSaved); const pReload = p.st(GIROP); p.dom.window.close();
-  console.log('giro province:', pVM, '|', pBA.slice(0, 40), '| ricaricato:', pReload.slice(0, 40));
-  ok(/^Per iniziare: /.test(p0) && /^In corso: 2\/93, ultima tappa in Mantova\. Prossima tappa in: .*Verona.*\. Mancano 91 province\.$/.test(pVM) && /2\/93$/.test(pRow), 'province confinanti di fila');
-  ok(/^In corso: 1\/93, ultima tappa in Bari\./.test(pBA), 'salto tra province');
-  ok(pReload === pVM, 'giro delle province ripristinato');
+  // i giri a tappe sono in pausa finché vale TOURS_ON = false in app.js
+  if (/const TOURS_ON = true;/.test(fs.readFileSync(path.join(root, 'app.js'), 'utf8'))) {
+    p = await open();
+    const GIRO = /^(🔒|🚴) Giro d’Italia a tappe/, GIROP = /^(🔒|🚲) Giro delle province a tappe/;
+    const n18 = t => (/In corso: (\d+)\/18/.exec(t) || [])[1];
+    const start0 = p.st(GIRO), help = p.row(GIRO);
+    [R('Veneto'), R('Emilia-Romagna'), R('Toscana')].forEach(k => p.type(pick(k))); const g3 = p.st(GIRO);
+    p.type(pick(R('Puglia'))); const jump = p.st(GIRO); await p.settle(); const jumpToast = p.toasts.find(t => /interrotto/.test(t)) || '-';
+    p.type(pick(R('Campania'))); p.type(pick(R('Lazio'))); p.type(idx('Latina')); const capo = p.st(GIRO);
+    let mid = null;
+    let near = '';
+    tour.forEach((k, s) => { p.type(pick(k)); if (s === 4) mid = { saved: p.saved(), next: tour[5] }; if (n18(p.st(GIRO)) === '13' && !near) near = p.st(GIRO); });
+    const giroDone = p.row(GIRO), giroSaved = JSON.parse(p.saved()).a.includes('giro');
+    console.log('giro:', start0, '|', g3, '|', jump, '|', jumpToast, '|', capo, '|', tour.length, 'tappe ->', giroDone.slice(0, 26), giroDone.slice(-5));
+    ok(/^Per iniziare: /.test(start0) && /Parti da una regione qualsiasi/.test(help) && /puoi tornare in regioni già toccate/.test(help), 'regola e come iniziare');
+    ok(/^In corso: 3\/18, ultima tappa in Toscana\. Prossima tappa in: Emilia-Romagna, Lazio, Liguria, Marche, Toscana, Umbria\. Mancano 15 regioni\.$/.test(g3), 'tre regioni confinanti di fila, con le prossime tappe');
+    ok(/^In corso: 1\/18, ultima tappa in Puglia/.test(jump) && /^🚴 Giro d’Italia a tappe interrotto dopo 3 regioni: da Toscana a Puglia è un salto$/.test(jumpToast), 'un salto fa ripartire il giro');
+    ok(/^Per iniziare: /.test(capo), 'un capoluogo interrompe il giro');
+    ok(mainRegs.length === 18 && /^🚴 Giro d’Italia a tappe.*18\/18$/s.test(giroDone) && giroSaved, 'giro completo e salvato');
+    ok(/ Mancano: [^,]+(, [^,]+){4}\.$/.test(near), 'con poche regioni mancanti si vede l’elenco: ' + near);
+    ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+    // il giro in corso resta dopo il ricaricamento (formato tr); un vecchio salvataggio gr si legge ancora
+    const midN = JSON.parse(mid.saved).tr.giro; p = await open(mid.saved); const reload = p.st(GIRO);
+    p.type(pick(mid.next)); const after = p.st(GIRO); p.dom.window.close();
+    const fr = R('Friuli-Venezia Giulia'); p = await open(JSON.stringify({ f: [], t: 0, gr: [fr, 1 << fr] })); const old = p.st(GIRO); p.dom.window.close();
+    console.log('giro ricaricato:', n18(reload), '->', n18(after), '| vecchio gr:', old);
+    ok(Array.isArray(midN) && n18(reload) === String(midN[1].length), 'giro in corso ripristinato');
+    ok(+n18(after) >= +n18(reload), 'la tappa successiva continua il giro');
+    ok(old === 'In corso: 1/18, ultima tappa in Friuli-Venezia Giulia. Prossima tappa in: Friuli-Venezia Giulia, Veneto. Mancano 17 regioni.', 'vecchio salvataggio gr e prossime tappe dal Friuli');
+    // 3. Giro delle province a tappe: Verona -> Mantova continua, Bari e' un salto; resta dopo il ricaricamento
+    p = await open();
+    const p0 = p.st(GIROP); p.type(pickP('VR')); p.type(pickP('MN')); const pVM = p.st(GIROP), pRow = p.row(GIROP), pSaved = p.saved();
+    p.type(pickP('BA')); const pBA = p.st(GIROP); p.dom.window.close();
+    p = await open(pSaved); const pReload = p.st(GIROP); p.dom.window.close();
+    console.log('giro province:', pVM, '|', pBA.slice(0, 40), '| ricaricato:', pReload.slice(0, 40));
+    ok(/^Per iniziare: /.test(p0) && /^In corso: 2\/93, ultima tappa in Mantova\. Prossima tappa in: .*Verona.*\. Mancano 91 province\.$/.test(pVM) && /2\/93$/.test(pRow), 'province confinanti di fila');
+    ok(/^In corso: 1\/93, ultima tappa in Bari\./.test(pBA), 'salto tra province');
+    ok(pReload === pVM, 'giro delle province ripristinato');
+  } else {
+    // giri in pausa (TOURS_ON = false): nessuna riga, e un giro salvato resta nel salvataggio dopo una risposta
+    const tr0 = { giro: [R('Veneto'), [R('Veneto')]], giroP: ['VR', ['VR']] };
+    p = await open(JSON.stringify({ f: [], t: 0, a: ['giro'], tr: tr0 }));
+    const sfide = [...p.$('achlist').querySelectorAll('details[data-a="ch"] .ai')].map(e => e.textContent);
+    p.type(pick(R('Veneto'))); const kept = JSON.parse(p.saved());
+    console.log('giri in pausa:', sfide.map(t => t.slice(0, 18)).join(' | '), '| tr salvato:', JSON.stringify(kept.tr));
+    ok(sfide.length === 2 && /Raffica/.test(sfide[0]) && /Italia a piedi/.test(sfide[1]), 'giri nascosti nelle sfide');
+    ok(JSON.stringify(kept.tr) === JSON.stringify(tr0) && kept.a.includes('giro') && kept.f.length === 1, 'giro salvato e id giro conservati');
+    ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
+  }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
   p = await open();
   const WALK = /^(🔒|🚶) Italia a piedi/, walkRow = () => p.row(WALK);
