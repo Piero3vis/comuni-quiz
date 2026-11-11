@@ -4,7 +4,7 @@
 TBD - created by archiving change add-coast-and-giro-challenges. Update Purpose after archive.
 ## Requirements
 ### Requirement: Italia a piedi
-The super-challenge "Italia a piedi" SHALL unlock when the found comuni of the peninsula, capoluoghi included, contain one connected group of bordering comuni that touches all 18 regions of the peninsula. Island comuni SHALL NOT count. The order of guesses SHALL NOT matter. The challenge row SHALL show the rule and the largest number of regions touched by one such group, with the regions it still misses (listed when 8 or fewer, otherwise counted).
+The super-challenge "Italia a piedi" SHALL unlock when the found comuni of the peninsula, capoluoghi included, contain one connected group of bordering comuni that touches all 18 regions of the peninsula. Island comuni SHALL NOT count. The order of guesses SHALL NOT matter. The challenge row SHALL show the rule and the largest number of regions touched by one such group, with the regions it still misses (listed when 8 or fewer, otherwise counted). In the achievements total (unlocked/total and its bar) it SHALL count as 10 achievements, and its rule SHALL say so.
 
 #### Scenario: Progress
 - **WHEN** the player has found two separate chains, one touching 3 regions and one touching 5
@@ -16,5 +16,9 @@ The super-challenge "Italia a piedi" SHALL unlock when the found comuni of the p
 
 #### Scenario: Completion
 - **WHEN** a single chain touches all 18 regions of the peninsula
-- **THEN** "Italia a piedi" unlocks with a toast
+- **THEN** "Italia a piedi" unlocks with a toast and the unlocked count grows by 10
+
+#### Scenario: Weighted total
+- **WHEN** the achievements panel is shown
+- **THEN** the total is the number of achievements plus 9
 
