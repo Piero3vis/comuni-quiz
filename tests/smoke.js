@@ -162,12 +162,12 @@ async function run(label, htmlFile, useFetch){
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
   // link per sostenere il progetto (Ko-fi): semplice link esterno, in footer e pannello laterale, mai invadente
   const sup = $('support'), supSide = $('supportSide'), kofi = [...d.querySelectorAll('a[href*="ko-fi"]')];
-  ok(sup && foot.contains(sup) && /caffè/.test(sup.textContent) && /^https:\/\/ko-fi\.com\/[A-Za-z0-9_]+$/.test(sup.href) && !/USERNAME/i.test(sup.href), 'link Ko-fi nel footer');
+  ok(sup && foot.contains(sup) && /spritz/.test(sup.textContent) && /^https:\/\/ko-fi\.com\/[A-Za-z0-9_]+$/.test(sup.href) && !/USERNAME/i.test(sup.href), 'link Ko-fi nel footer');
   ok(/si apre Ko-fi, un sito esterno/.test(foot.textContent) && /Nessun cookie/.test(foot.textContent) && /ISTAT/.test(foot.textContent), 'footer: nota sul sito esterno, privacy e attribuzione');
   ok(supSide && d.querySelector('.side').contains(supSide) && supSide.href === sup.href && !$('supportBox').hidden, 'link Ko-fi nel pannello laterale, stesso indirizzo');
   ok(kofi.length === 2 && kofi.every(a => a.target === '_blank' && /noopener/.test(a.rel) && /noreferrer/.test(a.rel) && a.closest('.foot, .side')), 'link Ko-fi: solo due, target _blank e rel noopener noreferrer');
   $('tabA').click(); ok(d.querySelector('.side').contains(supSide) && !$('supportBox').hidden, 'link Ko-fi visibile su entrambe le schede'); $('tabR').click();
-  ok(!/caffè|Ko-fi/.test($('mapbox').textContent) && !d.querySelector('iframe') && ![...d.querySelectorAll('img')].some(i => /^https?:/.test(i.getAttribute('src')||'')), 'nessun invito durante il gioco, nessun iframe o immagine esterna');
+  ok(!/spritz|caffè|Ko-fi/.test($('mapbox').textContent) && !d.querySelector('iframe') && ![...d.querySelectorAll('img')].some(i => /^https?:/.test(i.getAttribute('src')||'')), 'nessun invito durante il gioco, nessun iframe o immagine esterna');
   dom.window.close();
 }
 // timer: riparte dal tempo salvato e lo salva correttamente in pausa

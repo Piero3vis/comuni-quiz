@@ -39,7 +39,7 @@ Qualche aiuto:
 Nessun cookie, nessuna pubblicità, nessuna statistica. Non viene inviato nessun dato: i progressi restano nel tuo browser.
 
 ## Sostieni il progetto
-Il quiz è e resta gratuito, senza registrazione e senza pubblicità. Se ti diverte e ti va di dire grazie, puoi [offrirmi un caffè su Ko-fi](https://ko-fi.com/diocastoro): è un semplice link, il quiz non carica nulla da Ko-fi e non traccia nessuno. Anche un commento o una segnalazione di un comune che manca fanno piacere.
+Il quiz è e resta gratuito, senza registrazione e senza pubblicità. Se ti diverte e ti va di dire grazie, puoi [offrirmi uno spritz su Ko-fi](https://ko-fi.com/diocastoro): è un semplice link, il quiz non carica nulla da Ko-fi e non traccia nessuno. Anche un commento o una segnalazione di un comune che manca fanno piacere.
 
 ## Dati
 - Confini dei comuni: © ISTAT, tramite [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy),
