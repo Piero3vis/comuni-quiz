@@ -123,11 +123,11 @@ async function run(label, htmlFile, useFetch){
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
-  ok(/Segreti\s*0\/2/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length === 2, 'segreti nascosti prima di 69');
+  ok(/Segreti\s*\d\/6/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length >= 2, 'segreti nascosti prima di 69');
   // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
   ok(/👥 Un italiano su cento/.test(sec60) && /🔒 Un italiano su dieci/.test(sec60), 'persone beccate: 1% sì, 10% no');
-  ok(/Segreti\s*1\/2/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
-  ok(/Segreti\s*2\/2/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
+  ok(/Segreti\s*\d\/6/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
+  ok(/Segreti\s*\d\/6/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
   ok(popShown === popExpected.toLocaleString('it-IT') && popExpected > 0, 'persone beccate (' + popShown + ' invece di ' + popExpected + ')');
   ok(tour0 === '🔒 6/' + provs.length && italy0 === '🔒 5/20', 'esplorazione: contatori iniziali');
   ok(italyAfter === '🇮🇹 20/20' && /Esplorazione\s*2\/2/.test(achText()), 'giro d’Italia sbloccato');
@@ -307,7 +307,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -413,6 +413,26 @@ async function runChallenges(){
     ok(recLoaded === 'Il tuo record: 40 in un minuto.' && /^⚡ Raffica/.test(rafLoaded), 'record ripristinato dopo il ricaricamento');
     ok(['⚡ Raffica: 10 comuni in un minuto!', '🔥 Raffica doppia: 20 comuni in un minuto!', '🔤 Stessa lettera: 10 comuni con la stessa iniziale in un minuto!', '🎯 Raffica di capoluoghi: 10 capoluoghi di provincia in un minuto!'].every(t => tToasts.includes(t)), 'avvisi delle sfide a tempo');
     ok(tErr.length === 0, 'errori JS: ' + tErr.join('; '));
+  }
+  // 6. occhiolini segreti: serie di risposte giuste sullo stesso tema; una risposta fuori tema azzera la serie
+  {
+    p = await open();
+    const I = nm => idx(nm), wink = re => p.row(re) !== '?' ? '✓' : '🔒', G = /^🐓 Cantagallo/, S = /^📈 Jesus increasing/, C = /^🦌 Occhio di cervo/, P = /^💬 Parole, parole, parole/;
+    ['Cantagallo', 'Gallodoro', 'Roma', 'Montegallo'].map(I).forEach(p.type); const gBroken = wink(G);
+    ['Gargallo', 'Gallo Matese'].map(I).forEach(p.type); const gDone = wink(G);
+    ['San Didero', 'San Gillio', 'San Ponso', "Sant'Olcese"].map(I).forEach(p.type); const s4row = wink(S); p.type(I('Sanremo')); p.type(I('Santo Stefano Belbo')); const sBroken = wink(S);
+    ['San Mauro Torinese', 'San Germano Chisone', 'San Raffaele Cimena', "Sant'Ambrogio di Torino"].map(I).forEach(p.type); const sDone = wink(S);
+    ['Cervia', 'Cerveteri', 'Cervinara'].map(I).forEach(p.type); const cDone = wink(C);
+    ['Laghi', 'Paese', 'Lettere'].map(I).forEach(p.type); const pDone = wink(P); await p.settle();
+    const saved = JSON.parse(p.saved()), wToasts = p.toasts, wErr = p.errors; p.dom.window.close();
+    p = await open(JSON.stringify(saved)); const gLoaded = wink(G); p.dom.window.close();
+    console.log('occhiolini:', [gBroken, gDone, s4row, sBroken, sDone, cDone, pDone, gLoaded].join(' '), '|', saved.a.filter(id => id.startsWith('sw:')).join(','));
+    ok(gBroken === '🔒' && gDone === '✓', 'gallo: tre di fila, una risposta fuori tema azzera');
+    ok(s4row === '🔒' && sBroken === '🔒' && sDone === '✓', 'santi: quattro non bastano, Sanremo azzera, cinque di fila sì');
+    ok(cDone === '✓' && pDone === '✓', 'cervi e parole comuni: tre di fila');
+    ok(['sw:gallo', 'sw:santi', 'sw:cervi', 'sw:parole'].every(id => saved.a.includes(id)) && gLoaded === '✓', 'occhiolini salvati e ripristinati');
+    ok(wToasts.some(t => /^🐓 Robin Hood e Little John van per la foresta\n.*\nUrca urca tirulero oggi splende il sol$/s.test(t)) && wToasts.includes('📈 Jesus increasing'), 'avvisi: Robin Hood e Jesus increasing');
+    ok(wErr.length === 0, 'errori JS: ' + wErr.join('; '));
   }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
   p = await open();

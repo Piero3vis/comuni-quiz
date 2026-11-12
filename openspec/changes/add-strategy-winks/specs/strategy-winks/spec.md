@@ -5,7 +5,7 @@ The game SHALL recognise a streak of consecutive correct new guesses that fit th
 
 #### Scenario: Gallo after three in a row
 - **WHEN** the player finds Cantagallo, Gallodoro and Montegallo one after the other
-- **THEN** the gallo wink unlocks and a Robin Hood toast is shown
+- **THEN** the gallo wink unlocks and the toast shows the Robin Hood song, starting with "Robin Hood e Little John van per la foresta"
 
 #### Scenario: Streak broken
 - **WHEN** the player finds Cantagallo, Gallodoro, then Roma, then Montegallo
