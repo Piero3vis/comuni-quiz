@@ -121,6 +121,22 @@ Forks should replace the URL in `index.html` and `.github/FUNDING.yml`. The `pub
 
 Note that saved progress belongs to the exact address the page is served from: a new URL or domain starts empty.
 
+## Performance
+
+Budgets checked by `npm test`: `dist/quiz.html` at most 1.3 MB and 450 KB gzip (now about 1.1 MB and 360 KB), and 100 guesses in jsdom under 15 s (logic only: drawing is stubbed there, and jsdom is much slower than a browser: about 3–5 s locally, so only a large regression fails).
+How the map stays smooth on phones: gestures move and scale the last full drawing and redraw the map when they stop; a guess repaints only a rectangle around the new comune; only comuni on screen are drawn and hit-tested; the canvas uses at most 2 device pixels per CSS pixel.
+
+Measured in Chromium (Playwright) with a phone profile, 390×844 at device pixel ratio 3 and CPU slowed 4×, without GPU (real phones are faster, but the comparison holds):
+
+| | before (Nov 2026) | after |
+|---|---|---|
+| drag / pinch frame | 520–610 ms | 16–17 ms |
+| guess (median) | 530–580 ms | 70–90 ms |
+| tap on a comune | 3–4 ms | under 1 ms |
+| load | 1.7–1.8 s | 1.4 s |
+
+To measure again: open the page in Chrome DevTools with device emulation and CPU throttling 4×, record a Performance profile while dragging and guessing; frames during a drag should stay near 16 ms.
+
 ## Data and credits
 - Municipal boundaries: © ISTAT, via [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy), licensed
   [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (licence checked on 2026-11-02). Simplified to 4%, reprojected and quantised,

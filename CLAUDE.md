@@ -5,9 +5,11 @@ Static, framework-free quiz page. UI language: Italian. No build step for the ap
 ## Architecture
 - `index.html` + `style.css` + `app.js`. `app.js` loads `data/map.json` and `data/groups.json` (or the inline `<script id="data">` that
   `scripts/build_single_file.py` embeds), then runs everything inside `main()`.
-- The map is drawn on one `<canvas>` with a `Path2D` per comune; the view is `scale`, `ox`, `oy`. Everything is redrawn on change via `draw()` (rAF-batched).
+- The map is drawn on one `<canvas>` with a `Path2D` per comune; the view is `scale`, `ox`, `oy`; `dpr` is capped at 2. `draw()` redraws everything (rAF-batched), only comuni whose box `BB[i]` is on screen.
+  Performance on phones: `render()` saves the result (without the `flash` highlight) in `snap`/`snapV`; drag, pinch, wheel and the pan animation use `drawFast()`/`blit()` (move/scale `snap`), then a full `draw()` 140 ms after the gesture.
+  `draw(list)` after a guess clears a device-pixel rectangle around those comuni and repaints it from scratch (same result as a full redraw); `draw([])` only changes the highlight. Keep this when touching `render()`, and recheck with a phone profile (see DEVELOPMENT.md).
   Region outline (`rb`) and province outline (`pb`) are single paths stroked on top with constant on-screen width.
-- Hit testing uses `isPointInPath` on a scratch canvas context (`hc`) over all comuni; it is only used for hover and click.
+- Hit testing uses `isPointInPath` on a scratch canvas context (`hc`), only on comuni whose `BB` contains the point (`inBB`); it is only used for hover and click.
 
 ## Data format (`data/map.json`)
 Parallel arrays, indexed by comune number `i` (0..7895):
