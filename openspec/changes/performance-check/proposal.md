@@ -1,3 +1,5 @@
+> **Status:** the implementation of PR #15 was reverted on 2026-11-12 because the desktop browser got worse. The measurements stay valid; the fixes must be redone and checked on desktop too.
+
 ## Why
 
 On phones the map is not smooth. Measured in Chromium with a phone profile (390×844, device pixel ratio 3, CPU slowed 4×; no GPU, so absolute numbers are pessimistic but comparisons hold): every drag or pinch frame and every guess redrew all 7,896 comuni plus the province and region outlines, about 520–610 ms each, and more when zoomed in (off-screen comuni were drawn too). The page also keeps growing (geo data, curiosità, challenges), so it needs a guard.
