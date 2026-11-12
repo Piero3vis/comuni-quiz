@@ -6,7 +6,7 @@ Many players follow a strategy: all the San/Santa comuni, every name with "gallo
 
 - New secret achievements in the "Segreti" category, hidden as "🔒 ???" until unlocked, each with a toast when it fires. They fire on **consecutive guesses**: N new guesses in a row that fit the same theme.
 - Themes (first set, wording proposed by the player, kept as written):
-  - **Santi**: names with San, Santo, Santa, Santi, Sant’ as a separate word (529 comuni). 📈 "Jesus increasing".
+  - **Santi**: names with San, Santo, Santa, Santi, Sant’ as a separate word (529 comuni), after **5** in a row. 📈 "Jesus increasing".
   - **Cervi**: names starting a word with "Cerv" (19 comuni: Cervo, Cervia, Cerveteri…). 🦌 with a line on the deer's field of view of almost 310 degrees.
   - **Gallo**: names containing "gallo" (6 comuni: Cantagallo, Gallo Matese, Gallodoro, Gargallo, Montegallo, Priolo Gargallo), after **3** in a row. 🐓 A Robin Hood (Disney) line: "Robin Hood e Little John vanno per la foresta", the song of Cantagallo.
   - **Parole comuni**: single-word names that are everyday Italian words (Laghi, Paese, Lago, Ponte, Scala, Stella, Lettere…; hand list).
@@ -17,7 +17,7 @@ Many players follow a strategy: all the San/Santa comuni, every name with "gallo
 
 ## Open questions
 
-- Streak length per theme: 3 for gallo (given). Santi are common (529), so 3 is easy: 5? Cervi 3?
+- Streak length for the other themes (gallo 3 and santi 5 are decided). Proposed: cervi 3, parole comuni 3, nomi parlanti 3, autostrade 5.
 - Does a wrong or duplicate guess break the streak, or only a correct guess outside the theme? Proposed: only a correct new guess outside the theme.
 - A guess that fills two homonyms (Castro) counts once.
 - Exact texts for cervi, parole comuni, nomi parlanti and autostrade (the user's lines for santi and gallo are fixed).

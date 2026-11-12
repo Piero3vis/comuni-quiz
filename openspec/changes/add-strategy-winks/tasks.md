@@ -1,5 +1,5 @@
 ## 1. Decide
-- [ ] 1.1 Streak length per theme, what breaks a streak, texts for cervi, parole comuni, nomi parlanti, autostrade
+- [ ] 1.1 Streak length for cervi, parole comuni, nomi parlanti, autostrade (decided: gallo 3, santi 5), what breaks a streak, texts for cervi, parole comuni, nomi parlanti, autostrade
 - [ ] 1.2 Hand lists: parole comuni, nomi parlanti
 
 ## 2. App
