@@ -56,7 +56,10 @@ function withGroups(map, groups, facts) {
 (async function main() {
 const D = await loadData();
 const N = D.n.length, PAL = ['#e6194b','#3cb44b','#d4a600','#4363d8','#f58231','#911eb4','#2aa5b8','#e040a0','#8fb800','#b06a2c','#008080','#7a5cc7','#c0392b','#2e8b57','#c77d00','#3b6fb6','#a23b72','#5a8f29','#d2691e','#6a7f8f'];
-const paths = D.d.map(s => new Path2D(s)); const regPath = new Path2D(D.rb); const provPath = new Path2D(D.pb);
+const paths = D.d.map(s => new Path2D(s));
+// riquadro di ogni comune: si disegnano e si testano solo i comuni che cadono sullo schermo
+const BB = D.d.map((_,i) => bboxOf(i));
+const regPath = new Path2D(D.rb); const provPath = new Path2D(D.pb);
 const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const keyMap = new Map();
 D.n.forEach((nm,i) => { new Set(nm.split('/').concat(nm.includes('/')?[nm]:[])).forEach(part => { const k = norm(part); if(!k) return; if(!keyMap.has(k)) keyMap.set(k,[]); const a = keyMap.get(k); if(!a.includes(i)) a.push(i); }); });
@@ -74,38 +77,79 @@ const cv = $('cv'), ctx = cv.getContext('2d'), box = $('mapbox');
 const [bx0,by0,bx1,by1] = D.bb;
 let scale = 1, ox = 0, oy = 0, W = 0, H = 0, dpr = 1, minScale = 1;
 function fit(){ const s = Math.min(W/(bx1-bx0), H/(by1-by0)) * .95; scale = minScale = s; ox = (W - (bx1-bx0)*s)/2 - bx0*s; oy = (H - (by1-by0)*s)/2 - by0*s; }
-function resize(){ dpr = window.devicePixelRatio||1; const pw = W, ph = H, ps = minScale; W = box.clientWidth; H = box.clientHeight; cv.width = W*dpr; cv.height = H*dpr; if(!pw){ fit(); } else { const cx = (pw/2-ox)/scale, cy = (ph/2-oy)/scale, ratio = scale/ps; fit(); scale = minScale*ratio; ox = W/2-cx*scale; oy = H/2-cy*scale; } draw(); }
-let raf = 0; function draw(){ if(raf) return; raf = requestAnimationFrame(()=>{ raf = 0; render(); }); }
-function render(){
-  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+function resize(){ dpr = Math.min(2, window.devicePixelRatio||1);   // oltre 2 il canvas diventa troppo pesante sui telefoni
+  const pw = W, ph = H, ps = minScale; W = box.clientWidth; H = box.clientHeight; cv.width = W*dpr; cv.height = H*dpr; if(!pw){ fit(); } else { const cx = (pw/2-ox)/scale, cy = (ph/2-oy)/scale, ratio = scale/ps; fit(); scale = minScale*ratio; ox = W/2-cx*scale; oy = H/2-cy*scale; } draw(); }
+// draw(): ridisegna tutta la mappa al prossimo fotogramma; draw(lista): ridipinge solo quei comuni sopra l'ultima immagine
+// (draw([]) toglie o sposta l'evidenziazione); se intanto la vista è cambiata, ridisegna tutto
+let raf = 0, part = null;
+function draw(only){
+  clearTimeout(settle);
+  if(raf){ if(!only) part = null; else if(part) part.push(...only); return; }
+  part = only ? [...only] : null;
+  raf = requestAnimationFrame(()=>{ raf = 0; const p = part; part = null; render(p); });
+}
+// durante trascinamento e zoom si sposta e si scala l'ultima immagine completa (snap), che costa pochissimo;
+// la mappa vera si ridisegna quando il gesto si ferma per un attimo
+const snap = document.createElement('canvas'), sctx = snap.getContext('2d'); let snapV = null, settle = 0, rafB = 0;
+function drawFast(){
+  if(!snapV){ draw(); return; }
+  clearTimeout(settle); settle = setTimeout(()=>draw(), 140);
+  if(rafB) return;
+  rafB = requestAnimationFrame(()=>{ rafB = 0; blit(); });
+}
+function blit(){ const k = scale/snapV.scale; ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(snap, (ox-snapV.ox*k)*dpr, (oy-snapV.oy*k)*dpr, snap.width*k, snap.height*k); }
+function render(only){
+  const part = only && snapV && snapV.scale===scale && snapV.ox===ox && snapV.oy===oy && snap.width===cv.width && snap.height===cv.height;
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  if(part) ctx.drawImage(snap,0,0);
   ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*ox,dpr*oy);
+  if(part && !only.length){ drawFlash(); return; }
+  // ridisegno parziale: si cancella il riquadro dei comuni nuovi e lo si ridipinge da zero (comuni che lo toccano e confini),
+  // così il risultato è identico al disegno completo (i confini semitrasparenti non si ripassano due volte)
+  let x0 = -ox/scale, y0 = -oy/scale, x1 = (W-ox)/scale, y1 = (H-oy)/scale;
+  if(part){
+    const m = 4/scale; let a = 1e9, b = 1e9, c = -1e9, d = -1e9; only.forEach(i=>{ const q = BB[i]; a = Math.min(a,q[0]); b = Math.min(b,q[1]); c = Math.max(c,q[2]); d = Math.max(d,q[3]); });
+    // riquadro in pixel interi del canvas, altrimenti il bordo del ritaglio lascia una riga sfumata
+    const X0 = Math.floor((Math.max(x0, a-m)*scale+ox)*dpr), Y0 = Math.floor((Math.max(y0, b-m)*scale+oy)*dpr);
+    const X1 = Math.ceil((Math.min(x1, c+m)*scale+ox)*dpr), Y1 = Math.ceil((Math.min(y1, d+m)*scale+oy)*dpr);
+    x0 = (X0/dpr-ox)/scale; y0 = (Y0/dpr-oy)/scale; x1 = (X1/dpr-ox)/scale; y1 = (Y1/dpr-oy)/scale;
+    ctx.setTransform(1,0,0,1,0,0); ctx.save(); ctx.beginPath(); ctx.rect(X0, Y0, X1-X0, Y1-Y0); ctx.clip(); ctx.clearRect(X0, Y0, X1-X0, Y1-Y0);
+    ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*ox,dpr*oy);
+  }
   const cs = getComputedStyle(document.documentElement);
   const unf = cs.getPropertyValue('--unf').trim(), stroke = cs.getPropertyValue('--stroke').trim();
-  ctx.lineWidth = Math.max(0.35/scale, Math.min(1.2/scale, 0.6/scale*Math.max(1,scale/minScale/6))); ctx.strokeStyle = stroke; ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(0.35/scale, Math.min(1.2/scale, 0.6/scale*Math.max(1,scale/minScale/6))); ctx.strokeStyle = stroke; ctx.lineJoin = 'miter';
   const showAll = gaveUp;
   for(let i=0;i<N;i++){
+    const b = BB[i], e = 2/scale; if(b[2] < x0-e || b[0] > x1+e || b[3] < y0-e || b[1] > y1+e) continue;
     if(found[i]) ctx.fillStyle = PAL[D.r[i]];
     else if(showAll) ctx.fillStyle = PAL[D.r[i]] + '80';
     else ctx.fillStyle = unf;
     ctx.fill(paths[i]); ctx.stroke(paths[i]);
   }
-  ctx.lineJoin='round'; ctx.lineWidth = 1.1/scale; ctx.strokeStyle = cs.getPropertyValue('--pline').trim(); ctx.stroke(provPath);
-  ctx.lineWidth = 4.5/scale; ctx.strokeStyle = cs.getPropertyValue('--rhalo').trim(); ctx.stroke(regPath);
+  ctx.lineWidth = 1.1/scale; ctx.strokeStyle = cs.getPropertyValue('--pline').trim(); ctx.stroke(provPath);
+  ctx.lineJoin = 'bevel'; ctx.lineWidth = 4.5/scale; ctx.strokeStyle = cs.getPropertyValue('--rhalo').trim(); ctx.stroke(regPath);
   ctx.lineWidth = 2/scale; ctx.strokeStyle = cs.getPropertyValue('--rline').trim(); ctx.stroke(regPath);
-  if(flash>=0){ ctx.lineWidth = 2.5/scale; ctx.strokeStyle = '#fff'; ctx.stroke(paths[flash]); ctx.lineWidth = 1.2/scale; ctx.strokeStyle = '#000'; ctx.stroke(paths[flash]); }
+  if(part){ ctx.restore(); ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*ox,dpr*oy); }
+  // l'immagine salvata non contiene l'evidenziazione, che si disegna sopra
+  if(snap.width!==cv.width || snap.height!==cv.height){ snap.width = cv.width; snap.height = cv.height; }
+  sctx.clearRect(0,0,snap.width,snap.height); sctx.drawImage(cv,0,0); snapV = { scale, ox, oy };
+  drawFlash();
 }
-function zoomAt(f,cx,cy){ hideInfo(); const ns = Math.max(minScale*.9, Math.min(minScale*400, scale*f)); const k = ns/scale; ox = cx-(cx-ox)*k; oy = cy-(cy-oy)*k; scale = ns; draw(); }
+function drawFlash(){ if(flash>=0){ ctx.lineWidth = 2.5/scale; ctx.strokeStyle = '#fff'; ctx.stroke(paths[flash]); ctx.lineWidth = 1.2/scale; ctx.strokeStyle = '#000'; ctx.stroke(paths[flash]); } }
+function zoomAt(f,cx,cy){ hideInfo(); const ns = Math.max(minScale*.9, Math.min(minScale*400, scale*f)); const k = ns/scale; ox = cx-(cx-ox)*k; oy = cy-(cy-oy)*k; scale = ns; drawFast(); }
 cv.addEventListener('wheel',e=>{ e.preventDefault(); const r = cv.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY*0.0015), e.clientX-r.left, e.clientY-r.top); },{passive:false});
 $('zi').onclick = ()=>zoomAt(1.6,W/2,H/2); $('zo').onclick = ()=>zoomAt(1/1.6,W/2,H/2); $('zr').onclick = ()=>{ fit(); draw(); };
 const ptrs = new Map(); let lastPinch = 0, moved = 0;
 cv.addEventListener('pointerdown',e=>{ cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,[e.clientX,e.clientY]); moved = 0; lastPinch = 0; hideInfo(); cv.style.cursor='grabbing'; });
-cv.addEventListener('pointerup',e=>{ const single = ptrs.size===1 && !lastPinch && moved<6; ptrs.delete(e.pointerId); cv.style.cursor='grab'; if(single){ const r = cv.getBoundingClientRect(); clickAt(e.clientX-r.left, e.clientY-r.top); } });
+cv.addEventListener('pointerup',e=>{ if(moved || lastPinch) draw(); const single = ptrs.size===1 && !lastPinch && moved<6; ptrs.delete(e.pointerId); cv.style.cursor='grab'; if(single){ const r = cv.getBoundingClientRect(); clickAt(e.clientX-r.left, e.clientY-r.top); } });
 cv.addEventListener('pointercancel',e=>ptrs.delete(e.pointerId));
 cv.addEventListener('pointermove',e=>{
   const r = cv.getBoundingClientRect();
   if(ptrs.has(e.pointerId)){
     const p = ptrs.get(e.pointerId);
-    if(ptrs.size===1){ ox += e.clientX-p[0]; oy += e.clientY-p[1]; moved += Math.abs(e.clientX-p[0])+Math.abs(e.clientY-p[1]); ptrs.set(e.pointerId,[e.clientX,e.clientY]); draw(); }
+    if(ptrs.size===1){ ox += e.clientX-p[0]; oy += e.clientY-p[1]; moved += Math.abs(e.clientX-p[0])+Math.abs(e.clientY-p[1]); ptrs.set(e.pointerId,[e.clientX,e.clientY]); drawFast(); }
     else if(ptrs.size===2){ ptrs.set(e.pointerId,[e.clientX,e.clientY]); const [a,b] = [...ptrs.values()]; const dist = Math.hypot(a[0]-b[0],a[1]-b[1]); if(lastPinch) zoomAt(dist/lastPinch,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top); lastPinch = dist; }
   } else hover(e.clientX-r.left, e.clientY-r.top);
 });
@@ -113,24 +157,25 @@ cv.addEventListener('pointerleave',()=>$('tip').style.display='none');
 const hc = document.createElement('canvas').getContext('2d');
 function hover(x,y){
   const tip = $('tip'); const wx = (x-ox)/scale, wy = (y-oy)/scale; let hit = -1;
-  for(let i=0;i<N;i++){ if(hc.isPointInPath(paths[i],wx,wy,'evenodd')){ hit = i; break; } }
+  for(let i=0;i<N;i++){ if(inBB(i,wx,wy) && hc.isPointInPath(paths[i],wx,wy,'evenodd')){ hit = i; break; } }
   if(hit>=0 && (found[hit]||gaveUp)){ tip.textContent = D.n[hit] + ' (' + D.p[hit] + ')'; tip.style.display='block'; tip.style.left = Math.min(x+14,W-160)+'px'; tip.style.top = (y+14)+'px'; }
   else tip.style.display='none';
 }
 function bboxOf(i){ let x=0,y=0,mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9; for(const seg of D.d[i].split('z').filter(Boolean)){ const m = seg.match(/^M(-?\d+) (-?\d+)l?(.*)$/); x=+m[1]; y=+m[2]; const pts=[[x,y]]; if(m[3]){ const v = m[3].trim().split(' ').map(Number); for(let k=0;k+1<v.length;k+=2){ x+=v[k]; y+=v[k+1]; pts.push([x,y]); } } for(const [a,b] of pts){ mnx=Math.min(mnx,a);mxx=Math.max(mxx,a);mny=Math.min(mny,b);mxy=Math.max(mxy,b); } } return [mnx,mny,mxx,mxy]; }
 let anim = 0;
 function ensureVisible(i){
-  const [a,b,c,d] = bboxOf(i);
+  const [a,b,c,d] = BB[i];
   const x0 = a*scale+ox, x1 = c*scale+ox, y0 = b*scale+oy, y1 = d*scale+oy;
   if(x1 > 0 && x0 < W && y1 > 0 && y0 < H) return;
   const tx = W/2-(a+c)/2*scale, ty = H/2-(b+d)/2*scale, sx = ox, sy = oy, st = performance.now(), dur = 450;
   cancelAnimationFrame(anim);
-  const step = now => { const t = Math.min(1,(now-st)/dur), e = 1-Math.pow(1-t,3); ox = sx+(tx-sx)*e; oy = sy+(ty-sy)*e; render(); if(t<1) anim = requestAnimationFrame(step); };
+  const step = now => { const t = Math.min(1,(now-st)/dur), e = 1-Math.pow(1-t,3); ox = sx+(tx-sx)*e; oy = sy+(ty-sy)*e; if(t<1){ if(snapV) blit(); else render(); anim = requestAnimationFrame(step); } else render(); };
   anim = requestAnimationFrame(step);
 }
 const info = document.createElement('div'); info.style.cssText = 'position:absolute;display:none;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;max-width:240px;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:5'; box.appendChild(info);
-function hideInfo(){ info.style.display = 'none'; if(flash>=0){ flash = -1; draw(); } }
-function pick(x,y){ const wx = (x-ox)/scale, wy = (y-oy)/scale; for(let i=0;i<N;i++){ if(hc.isPointInPath(paths[i],wx,wy,'evenodd')) return i; } return -1; }
+function hideInfo(){ info.style.display = 'none'; if(flash>=0){ flash = -1; draw([]); } }
+const inBB = (i,x,y) => { const b = BB[i]; return x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]; };
+function pick(x,y){ const wx = (x-ox)/scale, wy = (y-oy)/scale; for(let i=0;i<N;i++){ if(inBB(i,wx,wy) && hc.isPointInPath(paths[i],wx,wy,'evenodd')) return i; } return -1; }
 function clickAt(x,y){
   hideInfo(); const i = pick(x,y); if(i<0) return;
   const base = D.n[i].split('/')[0], reg = D.regs[D.r[i]].split('/')[0], letters = base.replace(/[^A-Za-z\u00C0-\u00FF]/g,'').length;
@@ -191,7 +236,7 @@ function sortRegs(){
 const REGK0 = D.regs.map((_,k)=>k);
 document.querySelectorAll('#regsort button').forEach(b => b.onclick = () => { regSort = b.dataset.s; document.querySelectorAll('#regsort button').forEach(x => x.setAttribute('aria-pressed', x===b)); sortRegs(); });
 $('regs').addEventListener('toggle', e => { const el = e.target; if(el.classList && el.classList.contains('prov')){ el.open ? openProv.add(el.dataset.p) : openProv.delete(el.dataset.p); } }, true);
-$('regs').addEventListener('click',e=>{ const li = e.target.closest('li'); if(li){ const i = +li.dataset.i; flash = i; draw(); setTimeout(()=>{ flash=-1; draw(); },1800); } });
+$('regs').addEventListener('click',e=>{ const li = e.target.closest('li'); if(li){ const i = +li.dataset.i; flash = i; draw([]); setTimeout(()=>{ flash=-1; draw([]); },1800); } });
 function addFound(i){ if(found[i]) return false; found[i] = 1; foundCount++; const k = D.r[i]; regCount[k]++; regLists[k].push(i); provFound[D.p[i]] = (provFound[D.p[i]]||0)+1; popFound += D.pop[i]; rarFound += RAR[i]; BG.forEach((b,j)=>{ if(D.pop[i]<b.lim) bgFound[j]++; }); if(CO.has(i)){ coastFound++; coastRegFound[D.r[i]]++; } coastStep(i); walkStep(i); return true; }
 const provFound = {}; let popFound = 0, rarFound = 0;
 // Rarità: più il comune è piccolo più punti vale, 10·log10(abitanti di Roma / abitanti), almeno 1 (Roma 1, Milano 3, metà dei comuni oltre 31, Morterone 49)
@@ -447,15 +492,15 @@ let dupT = 0, dupClr = 0;
 function dupNotice(hits, inp){
   const i = hits[0], nm = D.n[i].split('/')[0];
   dupEl.textContent = 'Già indovinato: ' + nm + (hits.length>1 ? ' (' + hits.length + ' comuni con questo nome)' : '');
-  dupEl.style.opacity = 1; inp.classList.add('shake'); flash = i; draw();
-  clearTimeout(dupT); dupT = setTimeout(()=>{ dupEl.style.opacity = 0; inp.classList.remove('shake'); if(flash===i){ flash = -1; draw(); } }, 1800);
+  dupEl.style.opacity = 1; inp.classList.add('shake'); flash = i; draw([]);
+  clearTimeout(dupT); dupT = setTimeout(()=>{ dupEl.style.opacity = 0; inp.classList.remove('shake'); if(flash===i){ flash = -1; draw([]); } }, 1800);
   const v = inp.value; clearTimeout(dupClr); dupClr = setTimeout(()=>{ if(inp.value===v) inp.value = ''; }, 1500);
 }
 $('inp').addEventListener('input',e=>{
   if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); timedCheck(added); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); timedCheck(added); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw([]); },1200); } draw(added); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];

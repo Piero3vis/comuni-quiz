@@ -252,11 +252,17 @@ async function runFacts(){
       w.Path2D = class { constructor(s){ this.s = s; } };
       const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? (p => !!p && p.s === w.hit) : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
       w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.HTMLElement.prototype.setPointerCapture = ()=>{};
+      // la mappa ha una dimensione vera, così il clic cade nel riquadro del comune (app.js prova solo i comuni il cui riquadro contiene il punto)
+      ['clientWidth', 'clientHeight'].forEach((k, j) => Object.defineProperty(w.HTMLElement.prototype, k, { get(){ return this.id === 'mapbox' ? [800, 600][j] : 0; } }));
       w.addEventListener('error', e=>errors.push(e.message)); w.localStorage.clear();
     }});
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id), cv = $('cv');
-  const click = nm => { w.hit = map.d[map.n.indexOf(nm)]; ['pointerdown','pointerup'].forEach(t => cv.dispatchEvent(new w.MouseEvent(t, { clientX: 100, clientY: 100 }))); return [...d.querySelectorAll('#mapbox > div')].find(el => el.style.display === 'block' && el.querySelector('#reveal, b')); };
+  // centro del riquadro del comune sullo schermo, con la stessa vista iniziale di fit() in app.js
+  const [bx0, by0, bx1, by1] = map.bb, fs0 = Math.min(800/(bx1-bx0), 600/(by1-by0))*.95, fox = (800-(bx1-bx0)*fs0)/2-bx0*fs0, foy = (600-(by1-by0)*fs0)/2-by0*fs0;
+  const centre = nm => { const xs = [], ys = []; map.d[map.n.indexOf(nm)].split('z').filter(Boolean).forEach(seg => { const m = /^M(-?\d+) (-?\d+)l?(.*)$/.exec(seg); let x = +m[1], y = +m[2]; xs.push(x); ys.push(y); const v = m[3].trim() ? m[3].trim().split(' ').map(Number) : []; for (let k = 0; k + 1 < v.length; k += 2) { x += v[k]; y += v[k+1]; xs.push(x); ys.push(y); } });
+    return [(Math.min(...xs)+Math.max(...xs))/2*fs0+fox, (Math.min(...ys)+Math.max(...ys))/2*fs0+foy]; };
+  const click = nm => { w.hit = map.d[map.n.indexOf(nm)]; const [cx, cy] = centre(nm); ['pointerdown','pointerup'].forEach(t => cv.dispatchEvent(new w.MouseEvent(t, { clientX: cx, clientY: cy }))); return [...d.querySelectorAll('#mapbox > div')].find(el => el.style.display === 'block' && el.querySelector('#reveal, b')); };
   let box = click('Elva'); const before = box && box.querySelector('details.fact');
   const hint = before && !before.open && before.querySelector('summary').textContent === '💡 Indizio: una curiosità' && before.querySelector('p').textContent === facts['Elva'].testo;
   $('go').click(); $('inp').value = 'elva'; $('inp').dispatchEvent(new w.Event('input'));
@@ -434,4 +440,24 @@ async function runChallenges(){
   ok(wRow && wRow.dataset.w === '10' && /Vale 10 obiettivi/.test(wRow.textContent) && weighted, 'Italia a piedi vale 10 nel totale');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
 }
-(async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// prestazioni: dimensione del file pubblicato e tempo della logica per 100 risposte (il disegno qui è finto: le misure nel browser sono in DEVELOPMENT.md)
+async function runPerf(){
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (prestazioni): ' + msg); process.exitCode = 1; } };
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html')), gz = require('zlib').gzipSync(html).length;
+  const map = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8'));
+  const dom = new JSDOM(html.toString('utf8'), { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+    beforeParse(w){
+      w.Path2D = class {};
+      const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+      w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.localStorage.clear();
+    }});
+  await new Promise(r=>setTimeout(r,1500));
+  const w = dom.window, $ = id => w.document.getElementById(id); $('go').click();
+  const names = map.n.filter((n, i) => map.n.indexOf(n) === i && !n.includes('/')).slice(0, 100), t0 = Date.now();
+  names.forEach(n => { $('inp').value = n; $('inp').dispatchEvent(new w.Event('input')); });
+  const ms = Date.now() - t0, found = +$('cnt').textContent; dom.window.close();
+  console.log('prestazioni:', (html.length / 1024).toFixed(0), 'KB,', (gz / 1024).toFixed(0), 'KB gzip | 100 risposte in', ms, 'ms (', found, 'trovati )');
+  ok(html.length <= 1.3 * 1024 * 1024 && gz <= 450 * 1024, 'dist/quiz.html oltre il limite: ' + html.length + ' byte, ' + gz + ' gzip');
+  ok(found >= 100 && ms < 15000, '100 risposte troppo lente: ' + ms + ' ms');
+}
+(async()=>{ await runPerf(); await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
