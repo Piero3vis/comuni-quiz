@@ -36,10 +36,10 @@ Qualche aiuto:
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 
 ## Privacy
-Nessun cookie, nessuna pubblicità, nessuna statistica. Non viene inviato nessun dato: i progressi restano nel tuo browser.
+Nessun cookie e nessuna pubblicità. Le visite sono contate in forma anonima con [GoatCounter](https://www.goatcounter.com/): pagina vista, sito di provenienza, paese, tipo di dispositivo e dimensione dello schermo, senza cookie e senza dati personali. I progressi e le risposte restano nel tuo browser e non vengono inviati a nessuno.
 
 ## Sostieni il progetto
-Il quiz è e resta gratuito, senza registrazione e senza pubblicità. Se ti diverte e ti va di dire grazie, puoi [offrirmi uno spritz su Ko-fi](https://ko-fi.com/diocastoro): è un semplice link, il quiz non carica nulla da Ko-fi e non traccia nessuno. Anche un commento o una segnalazione di un comune che manca fanno piacere.
+Il quiz è e resta gratuito, senza registrazione e senza pubblicità. Se ti diverte e ti va di dire grazie, puoi [offrirmi uno spritz su Ko-fi](https://ko-fi.com/diocastoro): è un semplice link, il quiz non carica nulla da Ko-fi. Anche un commento o una segnalazione di un comune che manca fanno piacere.
 
 ## Dati
 - Confini dei comuni: © ISTAT, tramite [openpolis/geojson-italy](https://github.com/openpolis/geojson-italy),
