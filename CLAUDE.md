@@ -102,3 +102,9 @@ https://piero3vis.github.io/comuni-quiz/ (only `dist/quiz.html` as `index.html`)
 To think about first: a guess is accepted as soon as the text matches, so typing "Castrocaro Terme" takes "Castro" (if not found yet) and clears the field; 471 names are the start of a longer one (1,061 comuni affected). Options, detailed in the `pause-tours` OpenSpec design (wait or Enter for prefix names, keep the text and undo, tour-only fix); the tours come back (`TOURS_ON = true`) once it is solved.
 Merge the 2026 comuni (Castegnero Nanto, Lirio into Montalto Pavese) in `build_data.py`. Export/import of progress (for moving between devices), optional highlight of all coastal comuni, more cammini (Cammino dei Briganti, Cammino Materano, Via Appia),
 region labels on the map, a tidy Via Francigena list from the official stage data.
+Ideas from the player (November 2026):
+- More strategy winks (`WINKS`, secret, consecutive correct guesses; keep them out of README and DEVELOPMENT.md): food and wine products (comuni named like a product: Barolo, Gorgonzola, Montepulciano, Castelmagno…),
+  gods (Giove, Portovenere, Campodigiove…), plants, lakes (only comuni whose name is exactly the lake's: Garda, Iseo, Bracciano, Bolsena…, not Castelnuovo del Garda).
+- "I Borghi più belli d’Italia" achievement, plus one per region (needs the official list with a source).
+- `data/facts.json`: replace the Cefalù fact (Crowley's Abbey of Thelema) with another one; add Cortina sulla Strada del Vino (BZ): known as "Piccola Venezia",
+  flooded by Adige branches until the 19th-century river works, people moved between houses by boat or in barrels. Both need a `fonte` that supports the whole text.
