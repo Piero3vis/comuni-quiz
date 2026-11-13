@@ -129,6 +129,11 @@ Note that saved progress belongs to the exact address the page is served from: a
   so the footer says "semplificati e modificati". CC BY requires the credit, the licence link and the change notice: keep them in the footer.
 - State borders (used to compute the coast and the border comuni): [Natural Earth](https://www.naturalearthdata.com/), public domain.
 
+## Ideas
+- "I Borghi più belli d’Italia" achievement, plus one per region, from the association's official list.
+- Curiosità: replace the Cefalù fact; add Cortina sulla Strada del Vino ("Piccola Venezia", flooded by the Adige before the 19th-century river works), with a source.
+- More themes for secret achievements (see CLAUDE.md).
+
 ## Known limitations
 - Provinces follow ISTAT 2026, including the Sardinian layout in force since 1 January 2026 (Città metropolitana di Sassari, Gallura Nord-Est Sardegna,
   Ogliastra, Medio Campidano, Sulcis Iglesiente). ISTAT uses the sigla `CI` for Sulcis Iglesiente; a proposed vehicle-plate rule would use `SU`.
