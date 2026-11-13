@@ -1,11 +1,14 @@
-const { JSDOM } = require('jsdom');
+const { JSDOM, requestInterceptor } = require('jsdom');
+// il contatore di visite (GoatCounter) non va mai contattato dai test: si risponde con uno script vuoto
+const GC = 'https://gc.zgo.at/count.js', gcCalls = [];
+const noCount = () => ({ interceptors: [requestInterceptor(req => { if (/goatcounter|zgo\.at/.test(req.url)) { gcCalls.push(req.url); return new Response('', { headers: { 'Content-Type': 'application/javascript' } }); } })] });
 const fs = require('fs'), path = require('path');
 const root = path.resolve(__dirname, '..');
 // Smoke test: carica la pagina in jsdom (canvas finto), simula alcune risposte e controlla traguardi e avvisi.
 async function run(label, htmlFile, useFetch){
   const html = fs.readFileSync(path.join(root, htmlFile), 'utf8');
   const errors = [];
-  const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable', url: 'http://localhost/', pretendToBeVisual: true,
+  const dom = new JSDOM(html, { runScripts: 'dangerously', resources: noCount(), url: 'http://localhost/', pretendToBeVisual: true,
     beforeParse(w){
       w.Path2D = class { constructor(){} };
       const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
@@ -147,7 +150,10 @@ async function run(label, htmlFile, useFetch){
   ok(links.includes('https://github.com/openpolis/geojson-italy') && links.includes('https://creativecommons.org/licenses/by/4.0/deed.it'), 'link openpolis e licenza CC BY 4.0');
   ok(/Natural Earth/.test(foot.textContent) && /pubblico dominio/.test(foot.textContent), 'credito Natural Earth');
   ok(/Nessun cookie/.test(foot.textContent) && d.cookie === '', 'nessun cookie');
-  if(!useFetch) ok(!d.querySelector('script[src], link[rel="stylesheet"]') && d.getElementById('data'), 'file unico senza risorse esterne');
+  const ext = [...d.querySelectorAll('script[src]')];
+  ok(/GoatCounter/.test(foot.textContent) && /in forma anonima/.test(foot.textContent), 'footer: contatore di visite anonimo dichiarato');
+  ok(d.querySelectorAll('script[src*="zgo.at"]').length === 1 && d.querySelector('script[src*="zgo.at"]').hasAttribute('async') && d.querySelector('script[src*="zgo.at"]').dataset.goatcounter === 'https://dio-castoro.goatcounter.com/count', 'GoatCounter: un solo script, async, codice dio-castoro');
+  if(!useFetch) ok(ext.length === 1 && ext[0].src === GC && !d.querySelector('link[rel="stylesheet"], iframe') && d.getElementById('data'), 'file unico: nessuna risorsa esterna oltre al contatore');
   // ricerca: titolo, descrizione, indirizzo canonico, anteprime, dati strutturati, favicon incorporata, testo visibile
   const meta = sel => (d.querySelector(sel)||{}).content || '';
   const site = 'https://piero3vis.github.io/comuni-quiz/';
@@ -454,4 +460,4 @@ async function runChallenges(){
   ok(wRow && wRow.dataset.w === '10' && /Vale 10 obiettivi/.test(wRow.textContent) && weighted, 'Italia a piedi vale 10 nel totale');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
 }
-(async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+(async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log('contatore di visite: richieste bloccate nei test', gcCalls.length); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

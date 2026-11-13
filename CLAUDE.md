@@ -81,7 +81,7 @@ Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes
 - Do not move the camera on guesses except through `ensureVisible()` (pan only if the new comune is entirely off screen).
 - Italian user-facing strings. Typographic apostrophe in prose, straight quotes in code.
 - The footer must keep the CC BY 4.0 attribution (ISTAT, openpolis link, licence link, "semplificati e modificati") and the "Nessun cookie" note.
-  No cookies, analytics or external resources: only `dist/quiz.html` is published (as `index.html`).
+  No cookies and no external resources except the GoatCounter visit counter (one `async` script tag at the end of `index.html`, `https://gc.zgo.at/count.js`, cookieless; the footer says so). Never send progress or guesses, never add events or other trackers. Only `dist/quiz.html` is published (as `index.html`).
 - Support link: the only external links are ordinary `<a>` elements: the attribution links and the Ko-fi support link (`#support` in the footer, `#supportSide` in the side panel, whose `href` `app.js` copies from the footer: change the URL in `index.html` only, plus `.github/FUNDING.yml`).
   Both open in a new tab with `rel="noopener noreferrer"`. No Ko-fi widget, button script, iframe or image; never in toasts, popups or triggered by game events; nothing locked behind it (`tests/smoke.js` checks all of this).
 - Search tags (title, description, canonical, Open Graph, JSON-LD, inline SVG favicon) and the `.about` text live in `index.html`.

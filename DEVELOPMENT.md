@@ -113,8 +113,10 @@ Recommended: in Settings → Branches, protect `main` and require the "test" che
 4. Merge when green: the site updates within a minute or two.
 5. `openspec archive <name>` to move the specs into `openspec/specs/`, commit on `main` (or in the same pull request before merging).
 
-Privacy: no cookies, no analytics, nothing is sent anywhere; progress and theme stay in the browser's `localStorage`
-(the footer says so). Adding analytics later would need a consent banner.
+Privacy: no cookies. The only request to a third party is the anonymous visit count by [GoatCounter](https://www.goatcounter.com/)
+(`<script data-goatcounter="https://dio-castoro.goatcounter.com/count" async src="https://gc.zgo.at/count.js">` at the end of `index.html`, copied as is into `dist/quiz.html`):
+one request per page view with path, referrer, country, browser and screen size, no cookies and no personal data, so no consent banner is needed. It loads `async` after the game, so it does not slow the page; if it is blocked, nothing changes.
+Progress, guesses and theme stay in the browser's `localStorage` and are never sent (the footer says so). Dashboard: https://dio-castoro.goatcounter.com. Forks should remove the tag or use their own GoatCounter code.
 
 Support link: a plain link to https://ko-fi.com/diocastoro in the footer and at the bottom of the side panel (no widget, so the privacy promise holds).
 Forks should replace the URL in `index.html` and `.github/FUNDING.yml`. The `publishing` requirement (single file has no external resources, only ordinary links) covers it: the footer and the side-panel support link are ordinary `<a>` elements.
