@@ -74,7 +74,7 @@ Stages must be `allowed()` (peninsula, not capoluogo). `tourStatus(t)` writes th
 ## Side panel
 Two tabs (`.tabs`, `#paneR` / `#paneA`, not saved). Regions: `buildSide()` makes one `<details class="reg" id="rg<k>">` per region, `updateReg(k)` fills percentage (`pct()`: floor, "<1%", "100%" only when complete), count, bar and province rows;
 `sortRegs()` orders them with CSS `order` (`regSort`: `az`, `pct`, `miss`) so open `<details>` survive. Achievements: `achCats()` returns the categories `{k, ic, t, info?, items: [{u, ic, l, c, d?, h?, s?}], more?}` (`d` detail shown once unlocked, `h` rule and `s` status always shown, used by challenges; `w` weight in the header total and bar, default 1, rendered as `data-w`),
-`renderAch()` draws the total, the filter (`achFilter`: `all`, `done`, `todo`) and one `<details class="cat" data-a>` per category; `openAch` keeps them open across re-renders. New achievements go in `achCats()`.
+`ACHG` puts every category key in one theme group (Progressi, Sfide, Geografia, Cultura e storia, Segreti; `achCats()` throws on a key without group and sorts by it), `renderAch()` draws the total, the filter (`achFilter`: `all`, `done`, `todo`), an `<h3 class="ag">` group title before the first visible category of each group and one `<details class="cat" data-a>` per category; `openAch` keeps them open across re-renders. New achievements go in `achCats()`, and a new category key in `ACHG`.
 
 ## Conventions
 - Keep it dependency-free (no framework, no bundler). Theme colours live in CSS variables with a dark-mode override.

@@ -378,6 +378,10 @@ $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.datase
 // Traguardi per categoria: ogni voce è { u: sbloccato, ic: icona, l: nome, c: testo a destra }; il totale è la somma delle voci
 const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.regs[k].split('/')[0];
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
+// Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
+const ACHG = [['Progressi',['m','pp','e','cap','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','i','f','x']],
+  ['Cultura e storia',['w','h','mr','t',...BG.map(b=>'b'+b.lim)]], ['Segreti',['s']]];
+const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
   const has = id => unlocked.has(id), it = (id,ic,l,c,d) => ({ u: has(id), ic, l, c, d });
   const tg = (t,g,gi) => it(t.pre+':'+gi, t.ic, t.label(g), islFound(g)+'/'+g[1].length, g[2]);
@@ -417,7 +421,7 @@ function achCats(){
     { k:'r50', ic:'🗺️', t:'Regioni: metà', items: REGK.map(k=>it('r50:'+k,'🗺️',regName(k),regCount[k]+'/'+RT[k][1])) },
     { k:'p25', ic:'📍', t:'Province: un quarto', items: Object.keys(PT).sort(byProv).map(p=>it('p25:'+p,'📍',PN[p]||p,(provFound[p]||0)+'/'+PT[p][0])) },
     { k:'p50', ic:'📍', t:'Province: metà', items: Object.keys(PT).sort(byProv).map(p=>it('p50:'+p,'📍',PN[p]||p,(provFound[p]||0)+'/'+PT[p][1])) },
-  ];
+  ].map(c => { const o = ACHO.get(c.k); if(!o) throw new Error('Categoria senza gruppo: '+c.k); return Object.assign(c, { o: o[0], g: o[1] }); }).sort((a,b)=>a.o-b.o);
 }
 const regName0 = i => D.n[i].split('/')[0];
 let achFilter = 'all';
@@ -427,12 +431,15 @@ function renderAch(){
   const done = all.filter(x=>x.u).reduce((a,x)=>a+wt(x),0), tot = all.reduce((a,x)=>a+wt(x),0);
   $('achc').textContent = done+'/'+tot; $('achn').textContent = done; $('acht').textContent = tot; $('achbar').style.width = (100*done/tot)+'%';
   const show = x => achFilter==='all' || (achFilter==='done') === x.u;
+  let lastG = '';
   $('achlist').innerHTML = cats.map(c=>{
     const u = c.items.filter(x=>x.u).length, n = c.items.length, items = c.items.filter(show);
     if(!items.length) return '';
     // la nota (aneddoto) si vede solo a traguardo sbloccato: per alcuni svelerebbe la risposta
     const rows = items.map(x=>`<div class="ai${x.u?' ok':' lock'}"${x.w ? ` data-w="${x.w}"` : ''}><span>${x.u?x.ic:'🔒'} ${x.l}${x.h ? `<small>${x.h}</small>` : ''}${x.s ? `<small class="st">${x.s}</small>` : ''}${x.u && x.d ? `<small>${x.d}</small>` : ''}</span><span class="c">${x.c}</span></div>`).join('');
-    return `<details class="cat${u===n?' full':''}" data-a="${c.k}"${openAch.has(c.k)?' open':''}><summary><span class="ci">${c.ic}</span><span class="ct">${c.t}</span><span class="c">${u}/${n}</span><span class="mbar"><i style="width:${100*u/n}%"></i></span></summary>`
+    // titolo del gruppo prima della sua prima categoria visibile (con il filtro un gruppo può sparire del tutto)
+    const head = c.g !== lastG ? `<h3 class="ag">${c.g}</h3>` : ''; lastG = c.g;
+    return head + `<details class="cat${u===n?' full':''}" data-a="${c.k}"${openAch.has(c.k)?' open':''}><summary><span class="ci">${c.ic}</span><span class="ct">${c.t}</span><span class="c">${u}/${n}</span><span class="mbar"><i style="width:${100*u/n}%"></i></span></summary>`
       + (c.info ? `<div class="info">${c.info}</div>` : '') + rows + (c.more||'') + `</details>`;
   }).join('') || '<div class="empty">Nessun traguardo qui, per ora.</div>';
 }

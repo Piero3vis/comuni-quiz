@@ -166,6 +166,15 @@ async function run(label, htmlFile, useFetch){
   ok(/^data:image\/svg\+xml,/.test(d.querySelector('link[rel="icon"]').getAttribute('href')), 'favicon incorporata');
   ok(/comuni italiani/.test(d.querySelector('.about').textContent) && /gioco di geografia/.test(d.querySelector('.about').textContent), 'testo visibile');
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
+  // ordine per tema: gruppi con titolo, Traguardi prima, Segreti in fondo; con il filtro i gruppi vuoti spariscono
+  const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
+  const catOrder = cats(), at = k => catOrder.indexOf(k);
+  ok(heads().join('|') === 'Progressi|Sfide|Geografia|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 26, 'ordine delle categorie: ' + catOrder.join(','));
+  d.querySelector('#achfilt button[data-f="done"]').click();
+  const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
+  d.querySelector('#achfilt button[data-f="all"]').click();
+  ok(doneHeads > 0 && orphan === 0, 'filtro: titoli solo per i gruppi con categorie visibili (' + doneHeads + ')');
   // link per sostenere il progetto (Ko-fi): semplice link esterno, in footer e pannello laterale, mai invadente
   const sup = $('support'), supSide = $('supportSide'), kofi = [...d.querySelectorAll('a[href*="ko-fi"]')];
   ok(sup && foot.contains(sup) && /spritz/.test(sup.textContent) && /^https:\/\/ko-fi\.com\/[A-Za-z0-9_]+$/.test(sup.href) && !/USERNAME/i.test(sup.href), 'link Ko-fi nel footer');
@@ -188,6 +197,9 @@ async function runTimer(){
     }});
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, $ = id=>w.document.getElementById(id), shown = ()=>$('time').firstChild.textContent;
+  w.document.querySelector('#achfilt button[data-f="done"]').click();
+  const doneHeads = [...w.document.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent).join('|');
+  w.document.querySelector('#achfilt button[data-f="all"]').click();
   const onLoad = shown(), rafLoaded = /⚡ Raffica/.test($('achlist').textContent) && !/sconosciuta/.test($('achlist').textContent);
   $('go').click(); await new Promise(r=>setTimeout(r,1200)); const running = shown();
   $('go').click(); const saved = JSON.parse(w.localStorage.getItem('comuniQuizV1')).t;
@@ -195,6 +207,7 @@ async function runTimer(){
   console.log('timer: load', onLoad, '| running', running, '| paused', paused, '| saved', saved);
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (timer): ' + msg); process.exitCode = 1; } };
   ok(rafLoaded, 'raffica ripristinata dal salvataggio');
+  ok(!/Geografia|Cultura|Segreti/.test(doneHeads) && /Progressi/.test(doneHeads), 'filtro Sbloccati: spariscono i gruppi senza traguardi (' + doneHeads + ')');
   ok(onLoad === '0:01:05', 'tempo salvato mostrato al caricamento');
   ok(running === '0:01:06', 'il timer riparte dal tempo salvato');
   ok(saved >= 66000 && saved < 68000, 'tempo salvato in pausa');
