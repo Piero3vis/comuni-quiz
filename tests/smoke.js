@@ -169,8 +169,8 @@ async function run(label, htmlFile, useFetch){
   // ordine per tema: gruppi con titolo, Traguardi prima, Segreti in fondo; con il filtro i gruppi vuoti spariscono
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
-  ok(heads().join('|') === 'Progressi|Sfide|Geografia|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 30 && at('t') + 1 === at('nm') && at('k') + 1 === at('lg') && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(heads().join('|') === 'Progressi|Sfide|Geografia|Città e borghi|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 30 && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('t') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -502,14 +502,17 @@ async function runBig(){
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
   const row = l => ([...d.querySelectorAll('#achlist .ai')].find(r => r.textContent.includes(l)) || { textContent: '' }).textContent;
-  const before = [row('sopra i 100.000'), row('I 10 comuni più estesi'), row('I 25 comuni più estesi')];
+  const before = [row('sopra i 100.000'), row('I 10 comuni più estesi'), row('I 25 comuni più estesi'), row('I 10 comuni più popolosi'), row('I 50 comuni più popolosi')];
   $('go').click(); $('inp').value = 'roma'; $('inp').dispatchEvent(new w.Event('input'));
-  const after = [row('sopra i 100.000'), row('sopra i 50.000'), row('I 10 comuni più estesi')];
+  const after = [row('sopra i 100.000'), row('sopra i 50.000'), row('I 10 comuni più estesi'), row('I 10 comuni più popolosi'), row('I 25 comuni più popolosi'), row('I 50 comuni più popolosi')];
+  const gcRows = [...d.querySelectorAll('#achlist details[data-a="gc"] .ai')].map(r=>r.textContent.replace(/^\S+ /,'').split(/\d/)[0].trim());
   const extList = [...d.querySelectorAll('#achlist details[data-a="extl"] li')].map(li=>li.textContent), extSum = d.querySelector('#achlist details[data-a="extl"] summary').textContent;
   console.log('grandi città:', before.join(' | '), '->', after.join(' | '));
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (grandi città): ' + msg); process.exitCode = 1; } };
   ok(big.length === 44 && /^🔒.*43\/44$/.test(before[0]) && /^🔒.*9\/10$/.test(before[1]) && /^🔒/.test(before[2]), 'bloccati prima di Roma');
   ok(/^🏙️.*44\/44$/.test(after[0]) && /^🔒.*\/137$/.test(after[1]) && /^📐.*10\/10$/.test(after[2]), 'sbloccati trovando Roma');
+  ok(/^🔒.*9\/10$/.test(before[3]) && /^🔒.*\/50$/.test(before[4]) && /^🏙️.*10\/10$/.test(after[3]) && /^🏙️.*25\/25$/.test(after[4]) && /^🔒.*44\/50$/.test(after[5]), 'i comuni più popolosi: ' + after.slice(3).join(' | '));
+  ok(gcRows.join('|') === 'I|I|Tutti i comuni sopra i|I|I|Tutti i comuni sopra i', 'grandi città in ordine di numero: ' + gcRows.join('|'));
   ['ne', 'vo', 're', 'san valentino in abruzzo citeriore'].forEach(v => { $('inp').value = v; $('inp').dispatchEvent(new w.Event('input')); });
   const nmRows = [row('Il nome più lungo'), row('nomi più lunghi'), row('Due lettere'), row('Tre lettere o meno')];
   const nmList = [...d.querySelectorAll('#achlist details[data-a="nml"] li')].map(li=>li.textContent);
