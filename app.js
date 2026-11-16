@@ -208,10 +208,10 @@ const PAROLE = new Set(['Arena','Campana','Canale','Carbone','Castelli','Cervo',
 const DEI = new Set(['Giove','Collegiove','Campo di Giove','Casagiove','Portovenere','Castelvenere','Giano dell\'Umbria','Giano Vetusto','Nettuno','Spigno Saturnia','Cefalà Diana','Minervino Murge','Minervino di Lecce','Ercolano']);
 const WINKS = [
   { k:'santi', ic:'📈', l:'Jesus increasing', n:5, fit: i => / (san|santo|santa|santi|sant) /.test(wkName(i)), t:'Jesus increasing', d:'Cinque santi di fila.' },
-  { k:'gallo', ic:'🐓', l:'Cantagallo', n:3, fit: i => /gallo/.test(wkName(i)), t:'Robin Hood e Little John van per la foresta\nEd ognun con l’altro ride e scherza come vuol\nSon felici del successo delle loro gesta\nUrca urca tirulero oggi splende il sol', d:'Tre galli di fila.' },
-  { k:'cervi', ic:'🦌', l:'Occhio di cervo', n:3, fit: i => / cerv/.test(wkName(i)), t:'Tre cervi di fila. Un cervo vede quasi a 310 gradi, ma anche noi ti abbiamo visto.', d:'Tre cervi di fila.' },
+  { k:'gallo', ic:'🐓', l:'Urca tirulero', n:3, fit: i => /gallo/.test(wkName(i)), t:'Robin Hood e Little John van per la foresta\nEd ognun con l’altro ride e scherza come vuol\nSon felici del successo delle loro gesta\nUrca urca tirulero oggi splende il sol', d:'Tre galli di fila.' },
+  { k:'cervi', ic:'🦌', l:'310 gradi', n:3, fit: i => / cerv/.test(wkName(i)), t:'Tre cervi di fila. Un cervo vede quasi a 310 gradi, ma anche noi ti abbiamo visto.', d:'Tre cervi di fila.' },
   { k:'dei', ic:'🔱', l:'Olimpo', n:3, fit: i => DEI.has(D.n[i].split('/')[0]), t:'Only Giano can judge me.', d:'Tre comuni con il nome di una divinità, di fila.' },
-  { k:'parole', ic:'💬', l:'Parole, parole, parole', n:3, fit: i => PAROLE.has(D.n[i].split('/')[0]), t:'Parole, parole, parole… e sono tutti comuni.', d:'Tre comuni che sono parole di tutti i giorni, di fila.' },
+  { k:'parole', ic:'💬', l:'Elementare', n:3, fit: i => PAROLE.has(D.n[i].split('/')[0]), t:'Parole, parole, parole… e sono tutti comuni.', d:'Tre comuni che sono parole di tutti i giorni, di fila.' },
 ].map(w => Object.assign(w, { id: 'sw:'+w.k, run: 0 }));
 // Traguardi sulle persone "beccate" (abitanti dei comuni trovati, ISTAT 2025): percentuali della popolazione; id pp<percentuale>.
 const PPS = [[1,'Un italiano su cento'],[10,'Un italiano su dieci'],[25,'Un quarto degli italiani'],[50,'Metà degli italiani'],[75,'Tre quarti degli italiani'],[100,'Tutti gli italiani']].map(([q,l])=>[q,l,Math.ceil(POP*q/100)]);
@@ -397,7 +397,8 @@ function achCats(){
   const tf = tesFound();
   return [
     { k:'m', ic:'🏆', t:'Traguardi', items: MS.map(([n,l])=>it('m'+n,'🏆',l,fmtN(n))) },
-    { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l:'???', c:'' }).concat(WINKS.map(w=>has(w.id) ? it(w.id,w.ic,w.l,'',w.d) : { u:false, ic:w.ic, l:'???', c:'' })) },
+    // segreti: da bloccati si vede solo il nome criptico, senza regola né conteggio; la descrizione (d) arriva con lo sblocco
+    { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l, c:'' }).concat(WINKS.map(w=>has(w.id) ? it(w.id,w.ic,w.l,'',w.d) : { u:false, ic:w.ic, l:w.l, c:'' })) },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
     { k:'tm', ic:'⏱️', t:'A tempo', info: 'Conta il tempo di gioco: in pausa l’orologio si ferma. Un nome con più comuni (Castro) li conta tutti.',

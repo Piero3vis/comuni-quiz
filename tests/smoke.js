@@ -126,10 +126,10 @@ async function run(label, htmlFile, useFetch){
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
-  ok(/Segreti\s*\d\/7/.test(sec60) && !/Nice|Blaze/.test(sec60) && (sec60.match(/🔒 \?\?\?/g)||[]).length >= 2, 'segreti nascosti prima di 69');
+  ok(/Segreti\s*\d\/7/.test(sec60) && /🔒 Nice\./.test(sec60) && /🔒 Blaze it/.test(sec60) && /🔒 Olimpo/.test(sec60) && /🔒 Urca tirulero/.test(sec60) && !/\?\?\?|Tre comuni con il nome|Tre galli/.test(sec60), 'segreti bloccati: solo il nome criptico, senza regola');
   // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
   ok(/👥 Un italiano su cento/.test(sec60) && /🔒 Un italiano su dieci/.test(sec60), 'persone beccate: 1% sì, 10% no');
-  ok(/Segreti\s*\d\/7/.test(sec69) && /😏 Nice\./.test(sec69) && !/Blaze/.test(sec69), 'segreto 69: Nice.');
+  ok(/Segreti\s*\d\/7/.test(sec69) && /😏 Nice\./.test(sec69) && /🔒 Blaze it/.test(sec69), 'segreto 69: Nice.');
   ok(/Segreti\s*\d\/7/.test(sec420) && /🌿 Blaze it/.test(sec420) && !/Quattro e venti/.test(sec420), 'segreto 420: Blaze it');
   ok(popShown === popExpected.toLocaleString('it-IT') && popExpected > 0, 'persone beccate (' + popShown + ' invece di ' + popExpected + ')');
   ok(tour0 === '🔒 6/' + provs.length && italy0 === '🔒 5/20', 'esplorazione: contatori iniziali');
@@ -436,7 +436,7 @@ async function runChallenges(){
   // 6. occhiolini segreti: serie di risposte giuste sullo stesso tema; una risposta fuori tema azzera la serie
   {
     p = await open();
-    const I = nm => idx(nm), wink = re => p.row(re) !== '?' ? '✓' : '🔒', G = /^🐓 Cantagallo/, S = /^📈 Jesus increasing/, C = /^🦌 Occhio di cervo/, P = /^💬 Parole, parole, parole/, O = /^🔱 Olimpo/;
+    const I = nm => idx(nm), wink = re => p.row(re) !== '?' ? '✓' : '🔒', G = /^🐓 Urca tirulero/, S = /^📈 Jesus increasing/, C = /^🦌 310 gradi/, P = /^💬 Elementare/, O = /^🔱 Olimpo/;
     ['Cantagallo', 'Gallodoro', 'Roma', 'Montegallo'].map(I).forEach(p.type); const gBroken = wink(G);
     ['Gargallo', 'Gallo Matese'].map(I).forEach(p.type); const gDone = wink(G);
     ['San Didero', 'San Gillio', 'San Ponso', "Sant'Olcese"].map(I).forEach(p.type); const s4row = wink(S); p.type(I('Sanremo')); p.type(I('Santo Stefano Belbo')); const sBroken = wink(S);
