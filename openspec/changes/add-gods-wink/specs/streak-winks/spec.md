@@ -21,3 +21,10 @@ A locked secret (count secrets and winks) SHALL be shown in Segreti as "🔒" fo
 #### Scenario: Unlocked secret
 - **WHEN** the player finds Ponte, Sale and Scala one after the other
 - **THEN** a toast appears and Segreti shows "💬 Elementare" with "Tre comuni che sono parole di tutti i giorni, di fila."
+
+### Requirement: Gall names
+The gallo wink SHALL count every comune whose name contains "gall", not only "gallo".
+
+#### Scenario: Gallicano, Senigallia, Galliera
+- **WHEN** the player finds Gallicano, Senigallia and Galliera one after the other
+- **THEN** "🐓 Urca tirulero" unlocks

@@ -126,7 +126,7 @@ async function run(label, htmlFile, useFetch){
   ok(afterCastro === before + 2, 'omonimi: entrambi i Castro');
   ok(raf0 === '🔒' && raf1 === '⚡' && rafSaved, 'raffica: 10 comuni in pochi secondi, salvata');
   ok(castroDup === 'Già indovinato: Castro (2 comuni con questo nome)', 'avviso doppione per omonimi');
-  ok(/Segreti\s*\d\/7/.test(sec60) && /🔒 Nice\./.test(sec60) && /🔒 Blaze it/.test(sec60) && /🔒 Olimpo/.test(sec60) && /🔒 Urca tirulero/.test(sec60) && !/\?\?\?|Tre comuni con il nome|Tre galli/.test(sec60), 'segreti bloccati: solo il nome criptico, senza regola');
+  ok(/Segreti\s*\d\/7/.test(sec60) && /🔒 Nice\./.test(sec60) && /🔒 Blaze it/.test(sec60) && /🔒 Olimpo/.test(sec60) && /🔒 Urca tirulero/.test(sec60) && !/\?\?\?|Tre comuni con il nome|Tre comuni «gall/.test(sec60), 'segreti bloccati: solo il nome criptico, senza regola');
   // con Roma (2,7 milioni, il 4,7%) si supera subito l'1% della popolazione
   ok(/👥 Un italiano su cento/.test(sec60) && /🔒 Un italiano su dieci/.test(sec60), 'persone beccate: 1% sì, 10% no');
   ok(/Segreti\s*\d\/7/.test(sec69) && /😏 Nice\./.test(sec69) && /🔒 Blaze it/.test(sec69), 'segreto 69: Nice.');
@@ -447,8 +447,10 @@ async function runChallenges(){
     ['Portovenere', "Giano dell'Umbria"].map(I).forEach(p.type); const oDone = wink(O); await p.settle();
     const saved = JSON.parse(p.saved()), wToasts = p.toasts, wErr = p.errors; p.dom.window.close();
     p = await open(JSON.stringify(saved)); const gLoaded = wink(G); p.dom.window.close();
+    p = await open(); ['Gallicano', 'Senigallia', 'Galliera'].map(I).forEach(p.type); const gGall = wink(G); p.dom.window.close();
     console.log('occhiolini:', [gBroken, gDone, s4row, sBroken, sDone, cDone, pDone, gLoaded, oBroken, oDone].join(' '), '|', saved.a.filter(id => id.startsWith('sw:')).join(','));
     ok(gBroken === '🔒' && gDone === '✓', 'gallo: tre di fila, una risposta fuori tema azzera');
+    ok(gGall === '✓', 'gallo: valgono tutti i nomi con «gall» (Gallicano, Senigallia, Galliera)');
     ok(s4row === '🔒' && sBroken === '🔒' && sDone === '✓', 'santi: quattro non bastano, Sanremo azzera, cinque di fila sì');
     ok(cDone === '✓' && pDone === '✓', 'cervi e parole comuni: tre di fila');
     ok(oBroken === '🔒' && oDone === '✓' && wToasts.includes('🔱 Only Giano can judge me.'), 'divinità: Martellago non vale e azzera, poi tre di fila con l’avviso');
