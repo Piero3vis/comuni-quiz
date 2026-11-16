@@ -505,10 +505,12 @@ async function runBig(){
   const before = [row('sopra i 100.000'), row('I 10 comuni più estesi'), row('I 25 comuni più estesi')];
   $('go').click(); $('inp').value = 'roma'; $('inp').dispatchEvent(new w.Event('input'));
   const after = [row('sopra i 100.000'), row('sopra i 50.000'), row('I 10 comuni più estesi')];
+  const extList = [...d.querySelectorAll('#achlist details[data-a="extl"] li')].map(li=>li.textContent), extSum = d.querySelector('#achlist details[data-a="extl"] summary').textContent;
   console.log('grandi città:', before.join(' | '), '->', after.join(' | '));
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (grandi città): ' + msg); process.exitCode = 1; } };
   ok(big.length === 44 && /^🔒.*43\/44$/.test(before[0]) && /^🔒.*9\/10$/.test(before[1]) && /^🔒/.test(before[2]), 'bloccati prima di Roma');
   ok(/^🏙️.*44\/44$/.test(after[0]) && /^🔒.*\/137$/.test(after[1]) && /^📐.*10\/10$/.test(after[2]), 'sbloccati trovando Roma');
+  ok(extList[0] === '1. Roma' && extList[1] === '2. Ravenna' && extSum === 'Più estesi trovati (' + extList.length + ')' && extList.length >= 10, 'elenco dei più estesi trovati, in ordine di superficie');
   ok(errors.length === 0, 'errori JS: ' + errors.join('; ')); dom.window.close();
 }
 (async()=>{ await runBig(); await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log('contatore di visite: richieste bloccate nei test', gcCalls.length); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();

@@ -10,3 +10,10 @@ The achievements panel SHALL have a "Laghi" category in the Geografia group with
 #### Scenario: Fifth lake
 - **WHEN** the player then finds Bracciano
 - **THEN** "5 laghi" unlocks with the toast "5 comuni-lago trovati" and the list of found lakes has 5 names
+
+### Requirement: Found list for the largest comuni
+The "I più estesi" category SHALL have a closed list "Più estesi trovati (n)" with the found comuni among the 100 largest, in order of area and with their rank.
+
+#### Scenario: Roma first
+- **WHEN** Roma and Ravenna are found and the list is opened
+- **THEN** it starts with "1. Roma" and "2. Ravenna"
