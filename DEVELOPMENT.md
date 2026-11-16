@@ -12,7 +12,7 @@ Technical documentation for the quiz. For players, see [README.md](README.md); f
   "Traguardi": total unlocked with a bar, filter (all, unlocked, to do), one collapsible category per group with its own bar.
 - Giving up shows every comune (map and side list) and is saved; "Ricomincia" clears the game and starts over.
 - Click an unfound comune for a hint (first letter, length) and an optional reveal.
-- Achievements: milestones (including 666), secret ones (69, 420) hidden as "???" until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
+- Achievements: milestones (including 666), secret ones (69, 420) shown only with a cryptic name until unlocked, quarter/half/complete per province and region, one comune in every region and in every province, all capoluoghi (119, co-capoluoghi included),
   the timed challenges in the "A tempo" category (Raffica 10 in 1 minute, 20 in 1 minute, 50 and 100 in 5 minutes, 250 in 15, 500 in 30, 10 capoluoghi in 1 minute, 10 borghi in 5 minutes, 10 with the same initial in 1 minute; game time, personal record shown and saved),
   "Da costa a costa" (9 sea pairs: two coastal comuni on different seas joined by found inland comuni that border each other),
   the "Giro d'Italia a tappe" challenge (paused, see below; all 18 regions of the peninsula in one run of guesses, each in the same or a bordering region; capoluoghi and islands end the run; saved with the progress),
