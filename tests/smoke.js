@@ -170,7 +170,7 @@ async function run(label, htmlFile, useFetch){
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
   ok(heads().join('|') === 'Progressi|Sfide|Geografia|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 29 && at('k') + 1 === at('lg') && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 30 && at('t') + 1 === at('nm') && at('k') + 1 === at('lg') && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -510,6 +510,12 @@ async function runBig(){
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (grandi città): ' + msg); process.exitCode = 1; } };
   ok(big.length === 44 && /^🔒.*43\/44$/.test(before[0]) && /^🔒.*9\/10$/.test(before[1]) && /^🔒/.test(before[2]), 'bloccati prima di Roma');
   ok(/^🏙️.*44\/44$/.test(after[0]) && /^🔒.*\/137$/.test(after[1]) && /^📐.*10\/10$/.test(after[2]), 'sbloccati trovando Roma');
+  ['ne', 'vo', 're', 'san valentino in abruzzo citeriore'].forEach(v => { $('inp').value = v; $('inp').dispatchEvent(new w.Event('input')); });
+  const nmRows = [row('Il nome più lungo'), row('nomi più lunghi'), row('Due lettere'), row('Tre lettere o meno')];
+  const nmList = [...d.querySelectorAll('#achlist details[data-a="nml"] li')].map(li=>li.textContent);
+  console.log('nomi:', nmRows.join(' | '), '|', nmList.join(', '));
+  ok(/^🔤 Il nome più lungo.*1\/1$/.test(nmRows[0]) && /^🔒 Gli 11 nomi più lunghi.*1\/11$/.test(nmRows[1]) && /^🔤 Due lettere.*3\/3$/.test(nmRows[2]) && /^🔒 Tre lettere o meno.*3\/23$/.test(nmRows[3]), 'nomi: più lungo, 11 più lunghi, due e tre lettere');
+  ok(nmList[0] === 'San Valentino in Abruzzo Citeriore (30)' && nmList.length === 4 && nmList.includes("Vo' (2)"), 'elenco dei nomi trovati, dal più lungo');
   ok(extList[0] === '1. Roma' && extList[1] === '2. Ravenna' && extSum === 'Più estesi trovati (' + extList.length + ')' && extList.length >= 10, 'elenco dei più estesi trovati, in ordine di superficie');
   ok(errors.length === 0, 'errori JS: ' + errors.join('; ')); dom.window.close();
 }
