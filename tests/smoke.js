@@ -455,7 +455,7 @@ async function runChallenges(){
     ok(cDone === '✓' && pDone === '✓', 'cervi e parole comuni: tre di fila');
     ok(oBroken === '🔒' && oDone === '✓' && wToasts.includes('🔱 Only Giano can judge me.'), 'divinità: Martellago non vale e azzera, poi tre di fila con l’avviso');
     ok(['sw:gallo', 'sw:santi', 'sw:cervi', 'sw:parole', 'sw:dei'].every(id => saved.a.includes(id)) && gLoaded === '✓', 'occhiolini salvati e ripristinati');
-    ok(wToasts.some(t => /^🐓 Robin Hood e Little John van per la foresta\n.*\nUrca urca tirulero oggi splende il sol$/s.test(t)) && wToasts.includes('📈 Jesus increasing'), 'avvisi: Robin Hood e Jesus increasing');
+    ok(wToasts.some(t => /^🐓 Robin Hood e Little John van per la foresta\n.*\nUrca urca tirulero oggi splende il sol$/s.test(t)) && wToasts.includes('📈 Jesus increasing') && wToasts.includes('💬 Bravo. Ora passiamo alle parole con più di tre sillabe, va bene?'), 'avvisi: Robin Hood, Jesus increasing, Elementare');
     ok(wErr.length === 0, 'errori JS: ' + wErr.join('; '));
   }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni

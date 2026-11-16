@@ -211,7 +211,7 @@ const WINKS = [
   { k:'gallo', ic:'🐓', l:'Urca tirulero', n:3, fit: i => /gall/.test(wkName(i)), t:'Robin Hood e Little John van per la foresta\nEd ognun con l’altro ride e scherza come vuol\nSon felici del successo delle loro gesta\nUrca urca tirulero oggi splende il sol', d:'Tre comuni «gall…» di fila: galli, Gallipoli, Galliera…' },
   { k:'cervi', ic:'🦌', l:'310 gradi', n:3, fit: i => / cerv/.test(wkName(i)), t:'Tre cervi di fila. Un cervo vede quasi a 310 gradi, ma anche noi ti abbiamo visto.', d:'Tre cervi di fila.' },
   { k:'dei', ic:'🔱', l:'Olimpo', n:3, fit: i => DEI.has(D.n[i].split('/')[0]), t:'Only Giano can judge me.', d:'Tre comuni con il nome di una divinità, di fila.' },
-  { k:'parole', ic:'💬', l:'Elementare', n:3, fit: i => PAROLE.has(D.n[i].split('/')[0]), t:'Parole, parole, parole… e sono tutti comuni.', d:'Tre comuni che sono parole di tutti i giorni, di fila.' },
+  { k:'parole', ic:'💬', l:'Elementare', n:3, fit: i => PAROLE.has(D.n[i].split('/')[0]), t:'Bravo. Ora passiamo alle parole con più di tre sillabe, va bene?', d:'Tre comuni che sono parole di tutti i giorni, di fila.' },
 ].map(w => Object.assign(w, { id: 'sw:'+w.k, run: 0 }));
 // Traguardi sulle persone "beccate" (abitanti dei comuni trovati, ISTAT 2025): percentuali della popolazione; id pp<percentuale>.
 const PPS = [[1,'Un italiano su cento'],[10,'Un italiano su dieci'],[25,'Un quarto degli italiani'],[50,'Metà degli italiani'],[75,'Tre quarti degli italiani'],[100,'Tutti gli italiani']].map(([q,l])=>[q,l,Math.ceil(POP*q/100)]);
