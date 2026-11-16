@@ -170,7 +170,7 @@ async function run(label, htmlFile, useFetch){
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
   ok(heads().join('|') === 'Progressi|Sfide|Geografia|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 28 && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 29 && at('k') + 1 === at('lg') && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -326,7 +326,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -458,6 +458,15 @@ async function runChallenges(){
     ok(wToasts.some(t => /^🐓 Robin Hood e Little John van per la foresta\n.*\nUrca urca tirulero oggi splende il sol$/s.test(t)) && wToasts.includes('📈 Jesus increasing') && wToasts.includes('💬 Bravo. Ora passiamo alle parole con più di tre sillabe, va bene?'), 'avvisi: Robin Hood, Jesus increasing, Elementare');
     ok(wErr.length === 0, 'errori JS: ' + wErr.join('; '));
   }
+  // 7. laghi: solo i comuni con il nome identico al lago (Castelnuovo del Garda no)
+  {
+    p = await open();
+    ['Garda', 'Castelnuovo del Garda', 'Iseo', 'Como', 'Nemi'].map(idx).forEach(p.type); const lk4 = p.row(/^🏞️ 5 laghi/);
+    p.type(idx('Bracciano')); const lk5 = p.row(/^🏞️ 5 laghi/); await p.settle();
+    const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.dom.window.close();
+    console.log('laghi:', lk4, '->', lk5, '|', (info.match(/\d+\/39 trovati/)||['?'])[0]);
+    ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
+  }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
   p = await open();
   const WALK = /^(🔒|🚶) Italia a piedi/, walkRow = () => p.row(WALK);
@@ -496,10 +505,12 @@ async function runBig(){
   const before = [row('sopra i 100.000'), row('I 10 comuni più estesi'), row('I 25 comuni più estesi')];
   $('go').click(); $('inp').value = 'roma'; $('inp').dispatchEvent(new w.Event('input'));
   const after = [row('sopra i 100.000'), row('sopra i 50.000'), row('I 10 comuni più estesi')];
+  const extList = [...d.querySelectorAll('#achlist details[data-a="extl"] li')].map(li=>li.textContent), extSum = d.querySelector('#achlist details[data-a="extl"] summary').textContent;
   console.log('grandi città:', before.join(' | '), '->', after.join(' | '));
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (grandi città): ' + msg); process.exitCode = 1; } };
   ok(big.length === 44 && /^🔒.*43\/44$/.test(before[0]) && /^🔒.*9\/10$/.test(before[1]) && /^🔒/.test(before[2]), 'bloccati prima di Roma');
   ok(/^🏙️.*44\/44$/.test(after[0]) && /^🔒.*\/137$/.test(after[1]) && /^📐.*10\/10$/.test(after[2]), 'sbloccati trovando Roma');
+  ok(extList[0] === '1. Roma' && extList[1] === '2. Ravenna' && extSum === 'Più estesi trovati (' + extList.length + ')' && extList.length >= 10, 'elenco dei più estesi trovati, in ordine di superficie');
   ok(errors.length === 0, 'errori JS: ' + errors.join('; ')); dom.window.close();
 }
 (async()=>{ await runBig(); await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log('contatore di visite: richieste bloccate nei test', gcCalls.length); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
