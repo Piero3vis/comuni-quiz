@@ -42,7 +42,7 @@ index.html            page skeleton
 style.css             styles (light/dark theme via CSS variables)
 app.js                all the logic: loading, canvas map, quiz, side panel, achievements
 data/map.json         generated map data (see CLAUDE.md for the format)
-data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni
+data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni, the 100 largest by area
 data/geo.json         generated from map.json: neighbouring comuni, sea of each coastal comune, island comuni
 data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics (by hand), borders (scripts/border_comuni.py)
 data/facts.json       short curiosità by comune name, shown in the map box (as a clue before the comune is found) and as a toast when the comune is found

@@ -218,6 +218,10 @@ const PT = {}; Object.keys(provTot).forEach(p=>{ const T = provTot[p]; if(T>=4) 
 const NP = Object.keys(provTot).length, provsTouched = () => Object.keys(provFound).length, regsTouched = () => regCount.filter(x=>x>0).length;
 // Capoluoghi (anche co-capoluoghi) e comuni da record, da data/extra.json
 const CAPS = new Set(D.cap), capFound = () => D.cap.filter(i=>found[i]).length;
+// Grandi città (comuni con almeno 100.000 / 50.000 abitanti, id big:<soglia>) e comuni più estesi (D.ext: i 100 più grandi per superficie, id ext:<quanti>)
+const BIGS = [100000, 50000].map(lim => ({ lim, list: D.pop.map((x,i)=>x>=lim ? i : -1).filter(i=>i>=0) }));
+const EXTS = [10, 25, 50, 100].map(n => ({ n, list: D.ext.slice(0, n) })), EXT = new Set(D.ext);
+const nFound = list => list.filter(i=>found[i]).length;
 // ---- geografia (data/geo.json) ----
 // NB[i]: comuni confinanti; MAIN[i]: comune della penisola (non su un'isola); RADJ[k]: regioni confinanti sulla penisola; MREGN: regioni della penisola (18)
 const NB = D.n.map(()=>[]); D.nb.forEach((ds,i)=>ds.forEach(dj=>{ NB[i].push(i+dj); NB[i+dj].push(i); }));
@@ -327,7 +331,7 @@ const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center;white-space:pre-line'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
 function winkCheck(added){
   WINKS.forEach(w=>{
     w.run = added.some(w.fit) ? w.run+1 : 0;
@@ -363,6 +367,8 @@ function achCheck(i){
   if(D.pop[i]<100) toast('🔍','Comune raro: '+D.n[i].split('/')[0]+', '+fmtN(D.pop[i])+' abitanti!');
   BG.forEach((b,j)=>{ if(D.pop[i]<b.lim) b.steps.forEach(n=>{ const id = 'b'+b.lim+':'+n; if(bgFound[j]>=n && !unlocked.has(id)){ unlocked.add(id); toast(b.ic, (n===b.tot ? 'Tutti i '+fmtN(n)+' '+b.l : fmtN(n)+' '+b.l)+' trovati (comuni sotto i '+fmtN(b.lim)+' abitanti)'); } }); });
   if(TES.has(i)){ toast('🗝️','Tesoro: '+D.n[i].split('/')[0]+' è il comune meno popoloso della '+provLabel(D.p[i])); const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n && !unlocked.has('t'+n)){ unlocked.add('t'+n); toast('🗝️', n===TES.size ? 'Tutti i tesori di provincia!' : n+' tesori di provincia'); } }); }
+  BIGS.forEach(b=>{ const id = 'big:'+b.lim; if(D.pop[i]>=b.lim && !unlocked.has(id) && nFound(b.list)===b.list.length){ unlocked.add(id); toast('🏙️','Tutti i '+b.list.length+' comuni sopra i '+fmtN(b.lim)+' abitanti!'); } });
+  if(EXT.has(i)) EXTS.forEach(e=>{ const id = 'ext:'+e.n; if(!unlocked.has(id) && nFound(e.list)===e.n){ unlocked.add(id); toast('📐','I '+e.n+' comuni più estesi d’Italia!'); } });
   if(CAPS.has(i) && !unlocked.has('cap') && capFound()===CAPS.size){ unlocked.add('cap'); toast('🏛️','Tutti i '+CAPS.size+' capoluoghi trovati!'); }
   ccDone.forEach(([a,b],id)=>{ if(!unlocked.has(id)){ unlocked.add(id); toast('⛵','Da costa a costa: '+CC.find(c=>c.id===id).l+', da '+regName0(a)+' a '+regName0(b)+'!'); } });
   if(wkBest===MREGN && !unlocked.has('walk')){ unlocked.add('walk'); toast('🚶','Italia a piedi: una catena di comuni confinanti attraverso tutte le '+MREGN+' regioni della penisola!'); }
@@ -379,7 +385,7 @@ $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.datase
 const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.regs[k].split('/')[0];
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 // Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
-const ACHG = [['Progressi',['m','pp','e','cap','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','i','f','x']],
+const ACHG = [['Progressi',['m','pp','e','cap','gc','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','i','f','x']],
   ['Cultura e storia',['w','h','mr','t',...BG.map(b=>'b'+b.lim)]], ['Segreti',['s']]];
 const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
@@ -393,7 +399,7 @@ function achCats(){
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
     { k:'tm', ic:'⏱️', t:'A tempo', info: 'Conta il tempo di gioco: in pausa l’orologio si ferma. Un nome con più comuni (Castro) li conta tutti.',
       items: TIMED.map(c => Object.assign(it(c.id,c.ic,c.l,''), { h: 'Trova '+c.n+' '+(c.what||'comuni')+' in '+c.span+'.', s: c.best ? 'Il tuo record: '+c.best+' in '+c.span+'.' : 'Nessun tentativo per ora.' })) },
-    { k:'ch', ic:'🚶', t:'Sfide', info: TOURS_ON ? 'Nelle sfide conta come e in che ordine trovi i comuni. I giri in corso si salvano con la partita.' : 'Nelle sfide conta come sono collegati tra loro i comuni che trovi.',
+    { k:'ch', ic:'🚶', t:'Percorsi', info: TOURS_ON ? 'Nei percorsi conta come e in che ordine trovi i comuni. I giri in corso si salvano con la partita.' : 'Nei percorsi conta come sono collegati tra loro i comuni che trovi.',
       items: [
         ...TOURS.map(t => Object.assign(it(t.id,t.ic,t.l,t.seen.size+'/'+t.total), { s: tourStatus(t), h: t.id==='giro'
           ? 'Parti da una regione qualsiasi della penisola. Ogni comune deve stare nella stessa regione del precedente o in una confinante; puoi tornare in regioni già toccate. Un capoluogo, un comune delle isole o un salto in una regione non confinante interrompono il giro.'
@@ -404,6 +410,8 @@ function achCats(){
     { k:'cc', ic:'⛵', t:'Da costa a costa', info: 'Come si fa: trova un comune sulla costa del primo mare, poi uno o più comuni dell’entroterra confinanti uno con l’altro, fino a un comune sulla costa del secondo mare. Lungo la costa non vale; l’ordine non conta.',
       items: CC.map(c=>{ const r = ccDone.get(c.id); return it(c.id,'⛵',c.l,'',r ? 'da '+regName0(r[0])+' a '+regName0(r[1]) : ''); }) },
     { k:'cap', ic:'🏛️', t:'Capoluoghi', items: [it('cap','🏛️','Tutti i capoluoghi',capFound()+'/'+CAPS.size)] },
+    { k:'gc', ic:'🏙️', t:'Grandi città', items: BIGS.map(b=>it('big:'+b.lim,'🏙️','Tutti i comuni sopra i '+fmtN(b.lim)+' abitanti',nFound(b.list)+'/'+b.list.length)) },
+    { k:'ext', ic:'📐', t:'I più estesi', info: 'I comuni con la superficie più grande, da Roma in giù.', items: EXTS.map(e=>it('ext:'+e.n,'📐','I '+e.n+' comuni più estesi',nFound(e.list)+'/'+e.n)) },
     { k:'x', ic:'📌', t:'Record d’Italia', items: REC.map(([k,ic,l])=>it('x:'+k,ic,l,has('x:'+k) ? regName0(D.rec[k]) : '?')) },
     ...BG.map((b,j)=>({ k:'b'+b.lim, ic:b.ic, t:b.t+' (sotto '+fmtN(b.lim)+' ab.)', info: bgFound[j]+'/'+fmtN(b.tot)+' '+b.l+' trovati', items: b.steps.map(n=>it('b'+b.lim+':'+n,b.ic,n===b.tot ? 'Tutti i '+b.l : fmtN(n)+' '+b.l,fmtN(n))) })),
     { k:'t', ic:'🗝️', t:'Tesori di provincia', info: tf.length+'/'+TES.size+' trovati', items: TS.map(n=>it('t'+n,'🗝️',n===TES.size ? 'Tutti i tesori' : n+' tesori',n)),
