@@ -228,6 +228,16 @@ const CAPS = new Set(D.cap), capFound = () => D.cap.filter(i=>found[i]).length;
 const BIGS = [100000, 50000].map(lim => ({ lim, list: D.pop.map((x,i)=>x>=lim ? i : -1).filter(i=>i>=0) }));
 const EXTS = [10, 25, 50, 100].map(n => ({ n, list: D.ext.slice(0, n) })), EXT = new Set(D.ext);
 const nFound = list => list.filter(i=>found[i]).length;
+// Nomi: lunghezza in lettere (senza spazi, apostrofi e trattini; per i nomi bilingui vale la parte italiana); id nm:<k>
+const NLEN = D.n.map(nm => (nm.split('/')[0].match(/\p{L}/gu) || []).length);
+const NBYLEN = D.n.map((_,i)=>i).sort((a,b)=>NLEN[b]-NLEN[a] || a-b), NL10 = NLEN[NBYLEN[9]];
+const NMS = [
+  { k:'lungo', l:'Il nome più lungo', list: NBYLEN.filter(i=>NLEN[i]===NLEN[NBYLEN[0]]) },
+  // almeno 10, a parità di lettere entrano tutti (oggi 11: si contano anche Š, č, ž)
+  { k:'l10', list: NBYLEN.filter(i=>NLEN[i]>=NL10) },
+  { k:'2', l:'Due lettere', list: NBYLEN.filter(i=>NLEN[i]<=2) },
+  { k:'3', l:'Tre lettere o meno', list: NBYLEN.filter(i=>NLEN[i]<=3) },
+].map(x => Object.assign(x, { id: 'nm:'+x.k, l: x.l || ([8,11].includes(x.list.length) ? 'Gli ' : 'I ')+x.list.length+' nomi più lunghi' })), NMSET = new Set(NMS.flatMap(x=>x.list));
 // ---- geografia (data/geo.json) ----
 // NB[i]: comuni confinanti; MAIN[i]: comune della penisola (non su un'isola); RADJ[k]: regioni confinanti sulla penisola; MREGN: regioni della penisola (18)
 const NB = D.n.map(()=>[]); D.nb.forEach((ds,i)=>ds.forEach(dj=>{ NB[i].push(i+dj); NB[i+dj].push(i); }));
@@ -337,7 +347,7 @@ const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center;white-space:pre-line'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
 function winkCheck(added){
   WINKS.forEach(w=>{
     w.run = added.some(w.fit) ? w.run+1 : 0;
@@ -375,6 +385,7 @@ function achCheck(i){
   if(TES.has(i)){ toast('🗝️','Tesoro: '+D.n[i].split('/')[0]+' è il comune meno popoloso della '+provLabel(D.p[i])); const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n && !unlocked.has('t'+n)){ unlocked.add('t'+n); toast('🗝️', n===TES.size ? 'Tutti i tesori di provincia!' : n+' tesori di provincia'); } }); }
   BIGS.forEach(b=>{ const id = 'big:'+b.lim; if(D.pop[i]>=b.lim && !unlocked.has(id) && nFound(b.list)===b.list.length){ unlocked.add(id); toast('🏙️','Tutti i '+b.list.length+' comuni sopra i '+fmtN(b.lim)+' abitanti!'); } });
   if(LGSET.has(i)){ const lf = nFound(LG); LGS.forEach(n=>{ const id = 'lg:'+n; if(lf>=n && !unlocked.has(id)){ unlocked.add(id); toast('🏞️', n===LG.length ? 'Tutti i '+n+' laghi: hai fatto il giro dei laghi d’Italia!' : n+' comuni-lago trovati'); } }); }
+  if(NMSET.has(i)) NMS.forEach(x=>{ if(!unlocked.has(x.id) && nFound(x.list)===x.list.length){ unlocked.add(x.id); toast('🔤', 'Nomi: '+x.l.toLowerCase()+(x.list.length>1 ? ' ('+x.list.length+' comuni)' : ': '+regName0(x.list[0])+', '+NLEN[x.list[0]]+' lettere')+'!'); } });
   if(EXT.has(i)) EXTS.forEach(e=>{ const id = 'ext:'+e.n; if(!unlocked.has(id) && nFound(e.list)===e.n){ unlocked.add(id); toast('📐','I '+e.n+' comuni più estesi d’Italia!'); } });
   if(CAPS.has(i) && !unlocked.has('cap') && capFound()===CAPS.size){ unlocked.add('cap'); toast('🏛️','Tutti i '+CAPS.size+' capoluoghi trovati!'); }
   ccDone.forEach(([a,b],id)=>{ if(!unlocked.has(id)){ unlocked.add(id); toast('⛵','Da costa a costa: '+CC.find(c=>c.id===id).l+', da '+regName0(a)+' a '+regName0(b)+'!'); } });
@@ -393,7 +404,7 @@ const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 // Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
 const ACHG = [['Progressi',['m','pp','e','cap','gc','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','lg','i','f','x']],
-  ['Cultura e storia',['w','h','mr','t',...BG.map(b=>'b'+b.lim)]], ['Segreti',['s']]];
+  ['Cultura e storia',['w','h','mr','t','nm',...BG.map(b=>'b'+b.lim)]], ['Segreti',['s']]];
 const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
   const has = id => unlocked.has(id), it = (id,ic,l,c,d) => ({ u: has(id), ic, l, c, d });
@@ -430,6 +441,8 @@ function achCats(){
     { k:'lg', ic:'🏞️', t:'Laghi', info: 'Comuni con lo stesso nome di un lago: Garda sì, Castelnuovo del Garda no. '+nFound(LG)+'/'+LG.length+' trovati', items: LGS.map(n=>it('lg:'+n,'🏞️',n===LG.length ? 'Tutti i laghi' : n+' laghi',n)),
       more: `<details class="sub" data-a="lgl"${openAch.has('lgl')?' open':''}><summary>Laghi trovati (${nFound(LG)})</summary><ul>${LG.filter(i=>found[i]).map(regName0).sort(byIt).map(nm=>`<li>${nm}</li>`).join('')}</ul></details>` },
     { k:'i', ic:'🏝️', t:'Isole', items: ISL.map((g,gi)=>it('i:'+gi,'🏝️',g[0],islFound(g)+'/'+g[1].length)) },
+    { k:'nm', ic:'🔤', t:'Nomi', info: 'Si contano solo le lettere, senza spazi né apostrofi; per i nomi bilingui vale quello italiano.', items: NMS.map(x=>it(x.id,'🔤',x.l,nFound(x.list)+'/'+x.list.length)),
+      more: `<details class="sub" data-a="nml"${openAch.has('nml')?' open':''}><summary>Nomi trovati (${nFound([...NMSET])})</summary><ul>${NBYLEN.filter(i=>NMSET.has(i) && found[i]).map(i=>`<li>${regName0(i)} (${NLEN[i]})</li>`).join('')}</ul></details>` },
     { k:'w', ic:'🥾', t:'Cammini', items: CAM.map((g,gi)=>it('w:'+gi,'🥾',g[0],islFound(g)+'/'+g[1].length)) },
     { k:'h', ic:'📜', t:'Storia', items: TG[2].list.map((g,gi)=>tg(TG[2],g,gi)) },
     { k:'mr', ic:'⚓', t:'Repubbliche marinare', items: TG[1].list.map((g,gi)=>tg(TG[1],g,gi)) },
