@@ -11,12 +11,14 @@ The achievement categories grew one feature at a time, so their order in the pan
   4. **Cultura e storia**: Cammini, Storia, Repubbliche marinare, Tesori di provincia, Borghi
   5. **Segreti** last
 - Within a category, keep the current order (increasing difficulty).
+- The "Sfide" category (Italia a piedi, tours) becomes "Percorsi", so it no longer repeats the group title.
+- Two new Progressi categories right after Capoluoghi: **Grandi città** (all comuni with at least 100.000 and 50.000 residents, with the count; ids `big:100000`, `big:50000`) and **I più estesi** (the 10, 25, 50 and 100 largest comuni by area; ids `ext:<n>`). `scripts/build_extra.py` writes `ext`, the 100 largest comuni, from the same unsimplified borders as the "Il più grande" record.
 - Ids do not change, so saves are unaffected.
 
-## Open questions
+## Decisions
 
-- Theme order as above, or easiest-first (categories that unlock early on top)?
-- Group headings visible, or only the order?
+- Theme order (not easiest-first), with a small uppercase title per group; a group whose categories are all hidden by the filter has no title.
+- The group of each category is listed in one table (`ACHG`); a category missing from it is an error, so new categories cannot fall to a random place.
 
 ## Capabilities
 

@@ -5,6 +5,7 @@
   cap  indici dei comuni capoluogo di provincia / citta' metropolitana / libero consorzio (flag dell'elenco comuni ISTAT)
   rec  indici dei comuni da record: piu' a nord/sud/est/ovest e piu' grande/piccolo (dai confini openpolis non semplificati),
        piu' e meno popoloso (da pop)
+  ext  indici dei 100 comuni piu' estesi, dal piu' grande (stessi confini e stessa area di rec)
 
 I comuni si abbinano per (nome, sigla) a openpolis (codice catastale e codice ISTAT), poi al codice catastale dell'elenco ISTAT
 (flag capoluogo, codice 2017-2025) e infine al codice di POSAS 2025. I comuni gia' fusi nel 2026, assenti dall'elenco ISTAT in vigore,
@@ -127,7 +128,8 @@ def main():
     rec = {"nord": north[1], "sud": south[1], "est": east[1], "ovest": west[1],
            "grande": big, "piccolo": small, "popoloso": most, "spopolato": least}
 
-    out = {"pop": pop, "cap": cap, "rec": rec}
+    ext = sorted(range(N), key=lambda i: -area[i])[:100]
+    out = {"pop": pop, "cap": cap, "rec": rec, "ext": ext}
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     name = lambda i: f"{m['n'][i]} ({m['p'][i]})"
     print(f"popolazione totale {sum(pop):,}; non nell'elenco ISTAT in vigore (fusi nel 2026): {', '.join(not_in_elenco) or '-'}")
@@ -135,6 +137,7 @@ def main():
     for k, i in rec.items():
         extra = f"{area[i]:.2f} km2" if k in ("grande", "piccolo") else f"{pop[i]:,} ab." if k in ("popoloso", "spopolato") else ""
         print(f"  {k}: {name(i)} {extra}")
+    print("piu' estesi (10, 25, 50, 100): " + ", ".join(f"{k + 1}. {name(i)} {area[i]:.0f} km2" for k, i in enumerate(ext) if k + 1 in (1, 2, 3, 10, 11, 25, 26, 50, 51, 100, 101)))
     print(f"-> {args.out}")
 
 

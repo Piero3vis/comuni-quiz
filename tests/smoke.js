@@ -166,6 +166,15 @@ async function run(label, htmlFile, useFetch){
   ok(/^data:image\/svg\+xml,/.test(d.querySelector('link[rel="icon"]').getAttribute('href')), 'favicon incorporata');
   ok(/comuni italiani/.test(d.querySelector('.about').textContent) && /gioco di geografia/.test(d.querySelector('.about').textContent), 'testo visibile');
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
+  // ordine per tema: gruppi con titolo, Traguardi prima, Segreti in fondo; con il filtro i gruppi vuoti spariscono
+  const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
+  const catOrder = cats(), at = k => catOrder.indexOf(k);
+  ok(heads().join('|') === 'Progressi|Sfide|Geografia|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && at('b100') < at('s') && catOrder.length === 28 && at('cap') + 1 === at('gc') && at('gc') + 1 === at('ext'), 'ordine delle categorie: ' + catOrder.join(','));
+  d.querySelector('#achfilt button[data-f="done"]').click();
+  const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
+  d.querySelector('#achfilt button[data-f="all"]').click();
+  ok(doneHeads > 0 && orphan === 0, 'filtro: titoli solo per i gruppi con categorie visibili (' + doneHeads + ')');
   // link per sostenere il progetto (Ko-fi): semplice link esterno, in footer e pannello laterale, mai invadente
   const sup = $('support'), supSide = $('supportSide'), kofi = [...d.querySelectorAll('a[href*="ko-fi"]')];
   ok(sup && foot.contains(sup) && /spritz/.test(sup.textContent) && /^https:\/\/ko-fi\.com\/[A-Za-z0-9_]+$/.test(sup.href) && !/USERNAME/i.test(sup.href), 'link Ko-fi nel footer');
@@ -188,6 +197,9 @@ async function runTimer(){
     }});
   await new Promise(r=>setTimeout(r,1500));
   const w = dom.window, $ = id=>w.document.getElementById(id), shown = ()=>$('time').firstChild.textContent;
+  w.document.querySelector('#achfilt button[data-f="done"]').click();
+  const doneHeads = [...w.document.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent).join('|');
+  w.document.querySelector('#achfilt button[data-f="all"]').click();
   const onLoad = shown(), rafLoaded = /⚡ Raffica/.test($('achlist').textContent) && !/sconosciuta/.test($('achlist').textContent);
   $('go').click(); await new Promise(r=>setTimeout(r,1200)); const running = shown();
   $('go').click(); const saved = JSON.parse(w.localStorage.getItem('comuniQuizV1')).t;
@@ -195,6 +207,7 @@ async function runTimer(){
   console.log('timer: load', onLoad, '| running', running, '| paused', paused, '| saved', saved);
   const ok = (cond, msg) => { if (!cond) { console.error('FAIL (timer): ' + msg); process.exitCode = 1; } };
   ok(rafLoaded, 'raffica ripristinata dal salvataggio');
+  ok(!/Geografia|Cultura|Segreti/.test(doneHeads) && /Progressi/.test(doneHeads), 'filtro Sbloccati: spariscono i gruppi senza traguardi (' + doneHeads + ')');
   ok(onLoad === '0:01:05', 'tempo salvato mostrato al caricamento');
   ok(running === '0:01:06', 'il timer riparte dal tempo salvato');
   ok(saved >= 66000 && saved < 68000, 'tempo salvato in pausa');
@@ -460,4 +473,28 @@ async function runChallenges(){
   ok(wRow && wRow.dataset.w === '10' && /Vale 10 obiettivi/.test(wRow.textContent) && weighted, 'Italia a piedi vale 10 nel totale');
   ok(p.errors.length === 0, 'errori JS: ' + p.errors.join('; ')); p.dom.window.close();
 }
-(async()=>{ await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log('contatore di visite: richieste bloccate nei test', gcCalls.length); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
+// grandi città e comuni più estesi: da un salvataggio con tutti tranne Roma, poi si scrive "roma"
+async function runBig(){
+  const ex = JSON.parse(fs.readFileSync(path.join(root, 'data/extra.json'), 'utf8')), map = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8'));
+  const roma = map.n.indexOf('Roma'), big = ex.pop.map((x,i)=>x>=100000 ? i : -1).filter(i=>i>=0), f = [...new Set(big.concat(ex.ext.slice(0,10)))].filter(i=>i!==roma);
+  const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8'), errors = [];
+  const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
+    beforeParse(w){
+      w.Path2D = class {};
+      const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
+      w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.addEventListener('error', e=>errors.push(e.message));
+      w.localStorage.clear(); w.localStorage.setItem('comuniQuizV1', JSON.stringify({ f, t: 1000 }));
+    }});
+  await new Promise(r=>setTimeout(r,1500));
+  const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
+  const row = l => ([...d.querySelectorAll('#achlist .ai')].find(r => r.textContent.includes(l)) || { textContent: '' }).textContent;
+  const before = [row('sopra i 100.000'), row('I 10 comuni più estesi'), row('I 25 comuni più estesi')];
+  $('go').click(); $('inp').value = 'roma'; $('inp').dispatchEvent(new w.Event('input'));
+  const after = [row('sopra i 100.000'), row('sopra i 50.000'), row('I 10 comuni più estesi')];
+  console.log('grandi città:', before.join(' | '), '->', after.join(' | '));
+  const ok = (cond, msg) => { if (!cond) { console.error('FAIL (grandi città): ' + msg); process.exitCode = 1; } };
+  ok(big.length === 44 && /^🔒.*43\/44$/.test(before[0]) && /^🔒.*9\/10$/.test(before[1]) && /^🔒/.test(before[2]), 'bloccati prima di Roma');
+  ok(/^🏙️.*44\/44$/.test(after[0]) && /^🔒.*\/137$/.test(after[1]) && /^📐.*10\/10$/.test(after[2]), 'sbloccati trovando Roma');
+  ok(errors.length === 0, 'errori JS: ' + errors.join('; ')); dom.window.close();
+}
+(async()=>{ await runBig(); await runChallenges(); await runFacts(); await runTimer(); await runGiveUp(); await run('single-file', 'dist/quiz.html', false); await run('multi-file', 'index.html', true); console.log('contatore di visite: richieste bloccate nei test', gcCalls.length); console.log(process.exitCode ? 'TEST FALLITO' : 'OK'); process.exit(process.exitCode || 0); })();
