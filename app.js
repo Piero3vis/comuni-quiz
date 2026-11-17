@@ -458,7 +458,7 @@ function achCats(){
       more: `<details class="sub" data-a="bbl"${openAch.has('bbl')?' open':''}><summary>Borghi trovati (${nFound(BB)})</summary><ul>${BB.filter(i=>found[i]).map(bbName).sort(byIt).map(nm=>`<li>${nm}</li>`).join('')}</ul></details>` },
     { k:'c', ic:'🏖️', t:'Costa italiana', info: coastFound+'/'+CO.size+' comuni costieri', items: CMS.map(([n,l])=>it('c'+n,'🏖️',l,n)) },
     { k:'k', ic:'🌊', t:'Coste regionali', items: REGK.filter(k=>coastRegTot[k]>0).map(k=>it('k:'+k,'🌊',regName(k),coastRegFound[k]+'/'+coastRegTot[k])) },
-    { k:'lg', ic:'🏞️', t:'Laghi', info: 'Comuni con lo stesso nome di un lago: Garda sì, Castelnuovo del Garda no. '+nFound(LG)+'/'+LG.length+' trovati', items: LGS.map(n=>it('lg:'+n,'🏞️',n===LG.length ? 'Tutti i laghi' : n+' laghi',n)),
+    { k:'lg', ic:'🏞️', t:'Laghi', info: 'Comuni con lo stesso nome di un lago. '+nFound(LG)+'/'+LG.length+' trovati', items: LGS.map(n=>it('lg:'+n,'🏞️',n===LG.length ? 'Tutti i laghi' : n+' laghi',n)),
       more: `<details class="sub" data-a="lgl"${openAch.has('lgl')?' open':''}><summary>Laghi trovati (${nFound(LG)})</summary><ul>${LG.filter(i=>found[i]).map(regName0).sort(byIt).map(nm=>`<li>${nm}</li>`).join('')}</ul></details>` },
     { k:'i', ic:'🏝️', t:'Isole', items: ISL.map((g,gi)=>it('i:'+gi,'🏝️',g[0],islFound(g)+'/'+g[1].length)) },
     { k:'nm', ic:'🔤', t:'Nomi', info: 'Si contano solo le lettere, senza spazi né apostrofi; per i nomi bilingui vale quello italiano.', items: NMS.map(x=>it(x.id,'🔤',x.l,nFound(x.list)+'/'+x.list.length)),

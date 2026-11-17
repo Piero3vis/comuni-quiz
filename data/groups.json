@@ -1,6 +1,14 @@
 {
  "isole": [
   {
+   "name": "Salina",
+   "comuni": [
+    "Leni",
+    "Malfa",
+    "Santa Marina Salina"
+   ]
+  },
+  {
    "name": "Isole Eolie",
    "comuni": [
     "Lipari",
@@ -60,6 +68,13 @@
    ]
   },
   {
+   "name": "Capri",
+   "comuni": [
+    "Capri",
+    "Anacapri"
+   ]
+  },
+  {
    "name": "Isole campane",
    "comuni": [
     "Ischia",
@@ -78,6 +93,13 @@
    "comuni": [
     "Ponza",
     "Ventotene"
+   ]
+  },
+  {
+   "name": "Sant'Antioco",
+   "comuni": [
+    "Sant'Antioco",
+    "Calasetta"
    ]
   },
   {
