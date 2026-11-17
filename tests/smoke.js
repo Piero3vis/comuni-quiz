@@ -166,8 +166,8 @@ async function run(label, htmlFile, useFetch){
   ok(/^data:image\/svg\+xml,/.test(d.querySelector('link[rel="icon"]').getAttribute('href')), 'favicon incorporata');
   ok(/comuni italiani/.test(d.querySelector('.about').textContent) && /gioco di geografia/.test(d.querySelector('.about').textContent), 'testo visibile');
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
-  const islRows = [...d.querySelectorAll('#achlist details[data-a="i"] .ai')].map(r => r.textContent);
-  ok(islRows.some(r => /^🏝️ Salina.*3\/3$/.test(r)) && islRows.some(r => /^🔒 Capri.*0\/2$/.test(r)) && islRows.some(r => /^🔒 Sant’?'?Antioco.*0\/2$/.test(r)), 'isole: Salina (trovata), Capri e Sant’Antioco: ' + islRows.join(' | '));
+  const islRows = [...d.querySelectorAll('#achlist details[data-a="i"] .ai')].map(r => r.textContent), allIsl = islRows.find(r => /Tutte le isole minori/.test(r)) || '';
+  ok(islRows.some(r => /^🔒 Comuni completamente insulari.*\/14$/.test(r)) && /\/33$/.test(allIsl), 'isole: comuni completamente insulari (14), Monte Isola fuori da tutte le isole minori: ' + islRows.join(' | '));
   // ordine per tema: gruppi con titolo, Traguardi prima, Segreti in fondo; con il filtro i gruppi vuoti spariscono
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);

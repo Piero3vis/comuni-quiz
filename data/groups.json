@@ -1,14 +1,6 @@
 {
  "isole": [
   {
-   "name": "Salina",
-   "comuni": [
-    "Leni",
-    "Malfa",
-    "Santa Marina Salina"
-   ]
-  },
-  {
    "name": "Isole Eolie",
    "comuni": [
     "Lipari",
@@ -68,13 +60,6 @@
    ]
   },
   {
-   "name": "Capri",
-   "comuni": [
-    "Capri",
-    "Anacapri"
-   ]
-  },
-  {
    "name": "Isole campane",
    "comuni": [
     "Ischia",
@@ -96,13 +81,6 @@
    ]
   },
   {
-   "name": "Sant'Antioco",
-   "comuni": [
-    "Sant'Antioco",
-    "Calasetta"
-   ]
-  },
-  {
    "name": "Isole minori sarde",
    "comuni": [
     "La Maddalena",
@@ -110,6 +88,12 @@
     "Calasetta",
     "Sant'Antioco"
    ]
+  },
+  {
+   "name": "Comuni completamente insulari",
+   "comuni": ["Capraia Isola", "Carloforte", "Favignana", "Isola del Giglio", "Isole Tremiti", "La Maddalena", "Lampedusa e Linosa", "Lipari", "Monte Isola", "Pantelleria", "Ponza", "Procida", "Ustica", "Ventotene"],
+   "nota": "comuni su isole senza confini di terra con altri comuni; Monte Isola, sul lago d’Iseo, è l’unico su un’isola di lago",
+   "noUnion": true
   },
   {
    "name": "Tutte le isole minori italiane",

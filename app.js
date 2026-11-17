@@ -26,7 +26,7 @@ async function loadData() {
 }
 
 // Trasforma i gruppi (isole, cammini) da nomi di comuni a indici.
-// Un gruppo con "union": true contiene tutti i comuni degli altri gruppi della lista (piu' gli eventuali "comuni" extra).
+// Un gruppo con "union": true contiene tutti i comuni degli altri gruppi della lista (piu' gli eventuali "comuni" extra), esclusi quelli con "noUnion": true.
 // Anche le curiosita' (facts.json, { "Nome": { "testo": "...", "fonte": "https://..." } }) usano i nomi: diventano map.fact, una Map indice -> testo.
 // I Borghi piu' belli d'Italia (borghi.json, { agg, fonte, reg: { regione: [nomi] }, fraz: { comune: frazione } }) diventano map.bpb = { agg, reg: [[k, indici]], fraz: Map indice -> frazione }.
 function withGroups(map, groups, facts, borghi) {
@@ -41,9 +41,9 @@ function withGroups(map, groups, facts, borghi) {
   };
   // ogni gruppo diventa [nome, indici ordinati, nota]
   const resolve = list => {
-    const parsed = list.map(g => ({ name: g.name, nota: g.nota || '', union: !!g.union, set: new Set((g.comuni || []).map(lookup)) }));
+    const parsed = list.map(g => ({ name: g.name, nota: g.nota || '', union: !!g.union, noUnion: !!g.noUnion, set: new Set((g.comuni || []).map(lookup)) }));
     const all = new Set();
-    parsed.filter(g => !g.union).forEach(g => g.set.forEach(i => all.add(i)));
+    parsed.filter(g => !g.union && !g.noUnion).forEach(g => g.set.forEach(i => all.add(i)));
     return parsed.map(g => [g.name, [...(g.union ? new Set([...g.set, ...all]) : g.set)].sort((a, b) => a - b), g.nota]);
   };
   map.isl = resolve(groups.isole);
