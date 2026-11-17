@@ -1,18 +1,19 @@
 // Quiz: tutti i comuni d'Italia
-// Carica data/map.json + data/groups.json + data/extra.json + data/facts.json + data/geo.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
+// Carica data/map.json + data/groups.json + data/extra.json + data/facts.json + data/geo.json + data/borghi.json (oppure i dati incorporati nel file unico generato da scripts/build_single_file.py).
 
 async function loadData() {
-  let map, groups, extra, facts, geo;
+  let map, groups, extra, facts, geo, borghi;
   const inline = document.getElementById('data');
   if (inline) {
-    ({ map, groups, extra, facts, geo } = JSON.parse(inline.textContent));
+    ({ map, groups, extra, facts, geo, borghi } = JSON.parse(inline.textContent));
   } else {
-    [map, groups, extra, facts, geo] = await Promise.all([
+    [map, groups, extra, facts, geo, borghi] = await Promise.all([
       fetch('data/map.json').then(r => r.json()),
       fetch('data/groups.json').then(r => r.json()),
       fetch('data/extra.json').then(r => r.json()),
       fetch('data/facts.json').then(r => r.json()),
       fetch('data/geo.json').then(r => r.json()),
+      fetch('data/borghi.json').then(r => r.json()),
     ]);
   }
   // extra.json (scripts/build_extra.py): popolazione, capoluoghi e comuni da record, con gli indici di map.json
@@ -21,13 +22,14 @@ async function loadData() {
   // geo.json (scripts/build_geo.py): confinanti (nb), mare dei comuni costieri (sea, seas), comuni delle isole (ins)
   if (geo.sea.length !== map.n.length) throw new Error('data/geo.json non allineato a map.json: rigenerarlo');
   Object.assign(map, geo);
-  return withGroups(map, groups, facts);
+  return withGroups(map, groups, facts, borghi);
 }
 
 // Trasforma i gruppi (isole, cammini) da nomi di comuni a indici.
 // Un gruppo con "union": true contiene tutti i comuni degli altri gruppi della lista (piu' gli eventuali "comuni" extra).
 // Anche le curiosita' (facts.json, { "Nome": { "testo": "...", "fonte": "https://..." } }) usano i nomi: diventano map.fact, una Map indice -> testo.
-function withGroups(map, groups, facts) {
+// I Borghi piu' belli d'Italia (borghi.json, { agg, fonte, reg: { regione: [nomi] }, fraz: { comune: frazione } }) diventano map.bpb = { agg, reg: [[k, indici]], fraz: Map indice -> frazione }.
+function withGroups(map, groups, facts, borghi) {
   const byName = new Map();
   map.n.forEach((nm, i) => { if (!byName.has(nm)) byName.set(nm, []); byName.get(nm).push(i); });
   // "Nome" oppure, per i nomi doppi, "Nome (SIGLA)"
@@ -50,6 +52,12 @@ function withGroups(map, groups, facts) {
   map.mar = resolve(groups.marinare);
   map.sto = resolve(groups.storia);
   map.fact = new Map(Object.entries(facts).map(([nm, f]) => [lookup(nm), f.testo]));
+  map.bpb = { agg: borghi.agg, fraz: new Map(Object.entries(borghi.fraz).map(([nm, f]) => [lookup(nm), f])),
+    reg: Object.entries(borghi.reg).map(([rn, list]) => {
+      const k = map.regs.indexOf(rn), a = list.map(lookup).sort((x, y) => x - y);
+      if (k < 0 || a.some(i => map.r[i] !== k)) throw new Error('Borghi: regione sbagliata in ' + rn);
+      return [k, a];
+    }) };
   return map;
 }
 
@@ -230,6 +238,10 @@ const POPORD = D.pop.map((_,i)=>i).sort((a,b)=>D.pop[b]-D.pop[a] || a-b);
 const POPS = [10, 25, 50, 100].map(n => ({ n, list: POPORD.slice(0, n) })), POPSET = new Set(POPS[3].list);
 const EXTS = [10, 25, 50, 100].map(n => ({ n, list: D.ext.slice(0, n) })), EXT = new Set(D.ext);
 const nFound = list => list.filter(i=>found[i]).length;
+// Borghi più belli d'Italia (data/borghi.json): passi nazionali e un traguardo per regione
+const BBR = D.bpb.reg, BB = BBR.flatMap(([,a])=>a), BBSET = new Set(BB), BBS = [10,50,100,200].filter(n=>n<BB.length).concat([BB.length]);
+const bbName = i => regName0(i)+(D.bpb.fraz.has(i) ? ' ('+D.bpb.fraz.get(i)+')' : '');
+const BBAGG = new Date(D.bpb.agg+'T12:00:00').toLocaleDateString('it-IT',{ day:'numeric', month:'long', year:'numeric' });
 // Nomi: lunghezza in lettere (senza spazi, apostrofi e trattini; per i nomi bilingui vale la parte italiana); id nm:<k>
 const NLEN = D.n.map(nm => (nm.split('/')[0].match(/\p{L}/gu) || []).length);
 const NBYLEN = D.n.map((_,i)=>i).sort((a,b)=>NLEN[b]-NLEN[a] || a-b), NL10 = NLEN[NBYLEN[9]];
@@ -349,7 +361,7 @@ const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center;white-space:pre-line'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); { const bf = nFound(BB); BBS.forEach(n=>{ if(bf>=n) unlocked.add('bb:'+n); }); } BBR.forEach(([k,a])=>{ if(nFound(a)===a.length) unlocked.add('bb:r'+k); }); }
 function winkCheck(added){
   WINKS.forEach(w=>{
     w.run = added.some(w.fit) ? w.run+1 : 0;
@@ -387,6 +399,8 @@ function achCheck(i){
   if(TES.has(i)){ toast('🗝️','Tesoro: '+D.n[i].split('/')[0]+' è il comune meno popoloso della '+provLabel(D.p[i])); const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n && !unlocked.has('t'+n)){ unlocked.add('t'+n); toast('🗝️', n===TES.size ? 'Tutti i tesori di provincia!' : n+' tesori di provincia'); } }); }
   BIGS.forEach(b=>{ const id = 'big:'+b.lim; if(D.pop[i]>=b.lim && !unlocked.has(id) && nFound(b.list)===b.list.length){ unlocked.add(id); toast('🏙️','Tutti i '+b.list.length+' comuni sopra i '+fmtN(b.lim)+' abitanti!'); } });
   if(LGSET.has(i)){ const lf = nFound(LG); LGS.forEach(n=>{ const id = 'lg:'+n; if(lf>=n && !unlocked.has(id)){ unlocked.add(id); toast('🏞️', n===LG.length ? 'Tutti i '+n+' laghi: hai fatto il giro dei laghi d’Italia!' : n+' comuni-lago trovati'); } }); }
+  if(BBSET.has(i)){ const bf = nFound(BB); BBS.forEach(n=>{ const id = 'bb:'+n; if(bf>=n && !unlocked.has(id)){ unlocked.add(id); toast('🌸', n===BB.length ? 'Tutti i '+n+' Borghi più belli d’Italia!' : n+' Borghi più belli d’Italia trovati'); } });
+    const r = BBR.find(([k])=>k===D.r[i]); if(r && !unlocked.has('bb:r'+r[0]) && nFound(r[1])===r[1].length){ unlocked.add('bb:r'+r[0]); toast('🌸','Borghi più belli: '+D.regs[r[0]].split('/')[0]+' al completo!'); } }
   if(NMSET.has(i)) NMS.forEach(x=>{ if(!unlocked.has(x.id) && nFound(x.list)===x.list.length){ unlocked.add(x.id); toast('🔤', 'Nomi: '+x.l.toLowerCase()+(x.list.length>1 ? ' ('+x.list.length+' comuni)' : ': '+regName0(x.list[0])+', '+NLEN[x.list[0]]+' lettere')+'!'); } });
   if(POPSET.has(i)) POPS.forEach(p=>{ const id = 'pop:'+p.n; if(!unlocked.has(id) && nFound(p.list)===p.n){ unlocked.add(id); toast('🏙️','I '+p.n+' comuni più popolosi d’Italia!'); } });
   if(EXT.has(i)) EXTS.forEach(e=>{ const id = 'ext:'+e.n; if(!unlocked.has(id) && nFound(e.list)===e.n){ unlocked.add(id); toast('📐','I '+e.n+' comuni più estesi d’Italia!'); } });
@@ -407,7 +421,7 @@ const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 // Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
 const ACHG = [['Progressi',['m','pp','e','cap','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','lg','i','f','x']],
-  ['Città e borghi',['gc',...BG.map(b=>'b'+b.lim),'t']], ['Cultura e storia',['w','h','mr','nm']], ['Segreti',['s']]];
+  ['Città e borghi',['gc',...BG.map(b=>'b'+b.lim),'t','bb']], ['Cultura e storia',['w','h','mr','nm']], ['Segreti',['s']]];
 const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
   const has = id => unlocked.has(id), it = (id,ic,l,c,d) => ({ u: has(id), ic, l, c, d });
@@ -439,6 +453,9 @@ function achCats(){
     ...BG.map((b,j)=>({ k:'b'+b.lim, ic:b.ic, t:b.t+' (sotto '+fmtN(b.lim)+' ab.)', info: bgFound[j]+'/'+fmtN(b.tot)+' '+b.l+' trovati', items: b.steps.map(n=>it('b'+b.lim+':'+n,b.ic,n===b.tot ? 'Tutti i '+b.l : fmtN(n)+' '+b.l,fmtN(n))) })),
     { k:'t', ic:'🗝️', t:'Tesori di provincia', info: tf.length+'/'+TES.size+' trovati', items: TS.map(n=>it('t'+n,'🗝️',n===TES.size ? 'Tutti i tesori' : n+' tesori',n)),
       more: `<details class="sub" data-a="tes"${openAch.has('tes')?' open':''}><summary>Tesori trovati (${tf.length})</summary><ul>${tf.map(i=>[PN[TES.get(i)]||TES.get(i), regName0(i)]).sort((a,b)=>a[0].localeCompare(b[0],'it')).map(([p,nm])=>`<li>${p}: ${nm}</li>`).join('')}</ul></details>` },
+    { k:'bb', ic:'🌸', t:'Borghi più belli d’Italia', info: 'I comuni dell’associazione «I Borghi più belli d’Italia» (elenco al '+BBAGG+'); se il borgo è una frazione conta il suo comune. '+nFound(BB)+'/'+BB.length+' trovati',
+      items: BBS.map(n=>it('bb:'+n,'🌸',n===BB.length ? 'Tutti i borghi più belli' : n+' borghi',n)).concat([...BBR].sort((a,b)=>byIt(regName(a[0]),regName(b[0]))).map(([k,a])=>it('bb:r'+k,'🌸',regName(k),nFound(a)+'/'+a.length))),
+      more: `<details class="sub" data-a="bbl"${openAch.has('bbl')?' open':''}><summary>Borghi trovati (${nFound(BB)})</summary><ul>${BB.filter(i=>found[i]).map(bbName).sort(byIt).map(nm=>`<li>${nm}</li>`).join('')}</ul></details>` },
     { k:'c', ic:'🏖️', t:'Costa italiana', info: coastFound+'/'+CO.size+' comuni costieri', items: CMS.map(([n,l])=>it('c'+n,'🏖️',l,n)) },
     { k:'k', ic:'🌊', t:'Coste regionali', items: REGK.filter(k=>coastRegTot[k]>0).map(k=>it('k:'+k,'🌊',regName(k),coastRegFound[k]+'/'+coastRegTot[k])) },
     { k:'lg', ic:'🏞️', t:'Laghi', info: 'Comuni con lo stesso nome di un lago: Garda sì, Castelnuovo del Garda no. '+nFound(LG)+'/'+LG.length+' trovati', items: LGS.map(n=>it('lg:'+n,'🏞️',n===LG.length ? 'Tutti i laghi' : n+' laghi',n)),

@@ -10,7 +10,7 @@ L’associazione "I Borghi più belli d’Italia" pubblica sul suo sito l’elen
 
 ## Decisions
 
-1. **File a parte `data/borghi.json`** invece di una lista in `groups.json`: `{ "agg": "2026-11-17", "fonte": "https://borghipiubelliditalia.it/borghi/", "reg": { "Liguria": ["Apricale", …], … } }`. Motivo: è un elenco esterno con una data e una fonte unica, che si aggiorna tutto insieme; in `groups.json` i gruppi hanno ciascuno la sua nota. `loadData()` lo risolve con `withGroups()` (stesso controllo su nomi mancanti o non univoci, `"Nome (SIGLA)"` per gli omonimi) e lo incorpora `build_single_file.py`.
+1. **File a parte `data/borghi.json`** invece di una lista in `groups.json`: `{ "agg": "2026-11-17", "fonte": "https://borghipiubelliditalia.it/borghi/", "reg": { "Liguria": ["Apricale", …], … } }`. Motivo: è un elenco esterno con una data e una fonte unica, che si aggiorna tutto insieme; in `groups.json` i gruppi hanno ciascuno la sua nota. `loadData()` lo risolve con `withGroups()` in `D.bpb` (`D.bb` è già il riquadro della mappa) (stesso controllo su nomi mancanti o non univoci, `"Nome (SIGLA)"` per gli omonimi) e lo incorpora `build_single_file.py`.
 2. **Frazioni → comune**: se il borgo è una frazione o un nome diverso dal comune, si scrive il comune (Tellaro → Lerici) e si annota l’associazione in un campo `fraz` `{ "Lerici": "Tellaro" }`, usato nell’elenco dei trovati ("Lerici (Tellaro)"). Due borghi nello stesso comune contano una volta.
 3. **Regione dal dato**: la regione di ogni comune viene da `map.json`; il test verifica che coincida con la chiave in `borghi.json`.
 4. **Traguardi** (id `bb:<n>` nazionali, `bb:r<k>` regionali, categoria `bb`):

@@ -170,7 +170,7 @@ async function run(label, htmlFile, useFetch){
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
   ok(heads().join('|') === 'Progressi|Sfide|Geografia|Città e borghi|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 30 && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('t') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 31 && at('t') + 1 === at('bb') && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('bb') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -326,7 +326,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -466,6 +466,26 @@ async function runChallenges(){
     const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.dom.window.close();
     console.log('laghi:', lk4, '->', lk5, '|', (info.match(/\d+\/39 trovati/)||['?'])[0]);
     ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
+  }
+  // 8. Borghi più belli d'Italia: passi nazionali, regioni complete, frazioni attribuite al comune, ripristino al caricamento
+  {
+    const bb = read('data/borghi.json'), nB = Object.values(bb.reg).flat().length;
+    ok(/^https:\/\/\S+$/.test(bb.fonte) && /^\d{4}-\d{2}-\d{2}$/.test(bb.agg) && nB === new Set(Object.values(bb.reg).flat()).size && Object.keys(bb.reg).length === 20 && !Object.values(bb.reg).flat().some(nm => /San Marino/.test(nm)), 'borghi.json: fonte, data, nessun doppione, 20 regioni, niente San Marino');
+    p = await open();
+    const bbRow = re => ([...p.d.querySelectorAll('#achlist details[data-a="bb"] .ai')].find(e => re.test(e.textContent)) || {}).textContent || '?', r10 = () => bbRow(/^(🔒|🌸) 10 borghi/), mol = () => bbRow(/^(🔒|🌸) Molise/);
+    ['Fornelli', 'Frosolone', 'Oratino', 'Sepino'].map(idx).forEach(p.type); const mol4 = mol();
+    p.type(idx('Termoli')); const mol5 = mol(), r10a = r10();
+    ['Bard', 'Etroubles', 'Fontainemore', 'Lerici'].map(idx).forEach(p.type); const r10b = r10();
+    p.type(idx('Apricale')); const r10c = r10(); await p.settle();
+    const bInfo = p.d.querySelector('#achlist details[data-a="bb"]').textContent, bList = [...p.d.querySelectorAll('#achlist details[data-a="bbl"] li')].map(li => li.textContent);
+    const bSaved = p.saved(), bToasts = p.toasts, bErr = p.errors; p.dom.window.close();
+    p = await open(bSaved); const molLoaded = bbRow(/^(🔒|🌸) Molise/), loadToasts = p.toasts.filter(t => t.startsWith('🌸')); p.dom.window.close();
+    console.log('borghi più belli:', nB, '|', mol4, '->', mol5, '|', r10b, '->', r10c, '|', bList.join(', '));
+    ok(/^🔒 Molise.*4\/5$/s.test(mol4) && /^🌸 Molise.*5\/5$/s.test(mol5) && bToasts.includes('🌸 Borghi più belli: Molise al completo!'), 'borghi: Molise completo con Termoli (Borgo Vecchio)');
+    ok(/^🔒/.test(r10a) && /^🔒/.test(r10b) && /^🌸/.test(r10c) && bToasts.includes('🌸 10 Borghi più belli d’Italia trovati'), 'borghi: 10 borghi');
+    ok(bList.includes('Termoli (Borgo Vecchio)') && bList.includes('Lerici (Tellaro)') && bList.includes('Bard') && new RegExp('10/' + nB + ' trovati').test(bInfo) && /elenco al \d+ \S+ \d{4}/.test(bInfo), 'borghi: elenco dei trovati con le frazioni e info');
+    ok(/^🌸 Molise/.test(molLoaded) && loadToasts.length === 0, 'borghi: ripristinati al caricamento senza avvisi');
+    ok(bErr.length === 0, 'errori JS: ' + bErr.join('; '));
   }
   // 4. Italia a piedi: i capoluoghi uniscono le catene; poi una catena attraverso le 18 regioni
   p = await open();
