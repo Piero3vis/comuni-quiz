@@ -31,3 +31,25 @@ I gruppi a tema (`confini`, `marinare`, `storia`) stanno in `data/groups.json`, 
 
 - Liguria occitana (Olivetta San Michele, Triora…): da includere solo se esiste una delimitazione.
 - Ladino bellunese: la delimitazione provinciale è ampia; verificare l’elenco esatto.
+
+## Elenchi raccolti (17 novembre 2026)
+
+Fonte di riferimento: l’elenco nazionale dei comuni delimitati ai sensi della legge 482/1999 ("Elenco Comuni legge 482/1999", aprile 2023, https://www.regione.piemonte.it/web/media/42708/download), seguito alla lettera; più la Valle d’Aosta intera e le valli ladine di Bolzano, tutelate dallo statuto e non dalla 482.
+
+| Minoranza | Comuni | Note |
+|---|---:|---|
+| Francoprovenzale | 127 | 74 Valle d’Aosta (tutti), 51 Torino, Faeto e Celle di San Vito |
+| Occitana | 114 | 74 Cuneo, 37 Torino, Olivetta San Michele e Triora (IM), Guardia Piemontese; Valmala → Busca |
+| Ladina | 52 | 38 Belluno (Val di Zoldo per Forno e Zoldo Alto), 6 Fassa, 8 Gardena e Badia |
+| Albanese (arbëreshë) | 50 | come l’elenco nazionale |
+| Slovena | 32 | DPR 12 settembre 2007 |
+| Greca | 25 | 15 Reggio Calabria, 9 Lecce, Messina |
+| Croata | 4 | Acquaviva Collecroce, Montemitro, San Felice del Molise, Tavenna |
+| Catalana | 1 | Alghero |
+
+Casi dubbi (tenuti perché nell’elenco ufficiale, salvo dove detto):
+- Tavenna (croata): nell’elenco, ma il croato non si parla più.
+- Gressoney-La-Trinité, Gressoney-Saint-Jean, Issime: walser (germanici) per l’elenco, tenuti perché la Valle d’Aosta è intera per scelta.
+- Castagnole Piemonte, Pont Canavese, Corio, Lanzo Torinese, Monastero di Lanzo (francoprovenzale): delimitati per delibera, fuori dall’area linguistica secondo IRES Piemonte 2007.
+- Gizzeria, Lamezia Terme, Maida, Rosciano (albanese): arbëreshë solo in una frazione (Vena di Maida, Zangarona, Villa Badessa) o con la lingua scomparsa. Mezzojuso, Palazzo Adriano, Cervicati, Mongrassano, Brindisi Montagna: lingua perduta o quasi.
+- Esclusi: Cardeto (grecanico, nessun atto di delimitazione trovato), Carpignano Salentino e Cutrofiano (Unione della Grecìa ma non delimitati), Castelrotto (ladino solo in alcune frazioni), i 9 comuni della bassa Val di Susa elencati da Wikipedia ma non delimitati.

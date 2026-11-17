@@ -19,7 +19,7 @@
 The achievements panel SHALL have a category "Minoranze linguistiche" in the group "Cultura e storia" with one row per minority, id `ml:<gi>`, showing found/total, unlocked when every comune of the group is found. A comune in two groups MUST count for both.
 
 #### Scenario: Croatian minority completed
-- **WHEN** the player finds Acquaviva Collecroce, Montemitro and San Felice del Molise
+- **WHEN** the player finds every comune of the Croatian group (Acquaviva Collecroce, Montemitro, San Felice del Molise, Tavenna)
 - **THEN** the achievement for the Croatian minority is unlocked and its `nota` is shown
 
 #### Scenario: Restored on reload
