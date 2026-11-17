@@ -51,6 +51,7 @@ function withGroups(map, groups, facts, borghi) {
   map.conf = resolve(groups.confini);
   map.mar = resolve(groups.marinare);
   map.sto = resolve(groups.storia);
+  map.min = resolve(groups.minoranze);
   map.fact = new Map(Object.entries(facts).map(([nm, f]) => [lookup(nm), f.testo]));
   map.bpb = { agg: borghi.agg, fraz: new Map(Object.entries(borghi.fraz).map(([nm, f]) => [lookup(nm), f])),
     reg: Object.entries(borghi.reg).map(([rn, list]) => {
@@ -333,13 +334,15 @@ const TS = [10,50,TES.size], tesFound = () => [...TES.keys()].filter(i=>found[i]
 const RT = regTot.map(T=>[Math.ceil(T*.25),Math.ceil(T*.5)]);
 const openAch = new Set();
 const CAM = D.cam, camOf = new Map(); CAM.forEach((g,gi)=>g[1].forEach(i=>{ if(!camOf.has(i)) camOf.set(i,[]); camOf.get(i).push(gi); }));
-// Gruppi a tema da groups.json (confini, repubbliche marinare, storia): id <pre>:<gi>, sbloccati quando il gruppo è completo
+// Gruppi a tema da groups.json (confini, repubbliche marinare, storia, minoranze linguistiche): id <pre>:<gi>, sbloccati quando il gruppo è completo
 const CONF = D.conf, CONFA = { 'Francia':'la Francia', 'Svizzera':'la Svizzera', 'Austria':'l’Austria', 'Slovenia':'la Slovenia', 'Città del Vaticano':'il Vaticano' };
 const confTouched = () => CONF.filter(g=>g[1].some(i=>found[i])).length;
+const MLG = D.min, minTouched = () => MLG.filter(g=>g[1].some(i=>found[i])).length;
 const TG = [
   { pre:'f', ic:'🛂', list: CONF, label: g => 'Tutto il confine con '+(CONFA[g[0]]||g[0]) },
   { pre:'mr', ic:'⚓', list: D.mar, label: g => g[0] },
   { pre:'h', ic:'📜', list: D.sto, label: g => g[0] },
+  { pre:'ml', ic:'🗣️', list: D.min, label: g => 'Minoranza '+g[0].toLowerCase() },
 ];
 const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
@@ -361,7 +364,7 @@ const unlocked = new Set(), toastQ = []; let toasting = false;
 const toastEl = document.createElement('div'); toastEl.style.cssText = 'position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--accent);border-radius:10px;padding:8px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none;z-index:6;max-width:90%;text-align:center;white-space:pre-line'; box.appendChild(toastEl);
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
-function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); { const bf = nFound(BB); BBS.forEach(n=>{ if(bf>=n) unlocked.add('bb:'+n); }); } BBR.forEach(([k,a])=>{ if(nFound(a)===a.length) unlocked.add('bb:r'+k); }); }
+function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('t'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); if(minTouched()===MLG.length) unlocked.add('ml:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); { const bf = nFound(BB); BBS.forEach(n=>{ if(bf>=n) unlocked.add('bb:'+n); }); } BBR.forEach(([k,a])=>{ if(nFound(a)===a.length) unlocked.add('bb:r'+k); }); }
 function winkCheck(added){
   WINKS.forEach(w=>{
     w.run = added.some(w.fit) ? w.run+1 : 0;
@@ -390,6 +393,7 @@ function achCheck(i){
   (islOf.get(i)||[]).forEach(gi=>{ if(!unlocked.has('i:'+gi) && islDone(ISL[gi])){ unlocked.add('i:'+gi); toast('🏝️','Isole: '+ISL[gi][0]+' al completo!'); } });
   (camOf.get(i)||[]).forEach(gi=>{ if(!unlocked.has('w:'+gi) && islDone(CAM[gi])){ unlocked.add('w:'+gi); toast('🥾','Cammino completato: '+CAM[gi][0]); } });
   (tgOf.get(i)||[]).forEach(([t,gi])=>{ const g = t.list[gi], id = t.pre+':'+gi; if(!unlocked.has(id) && islDone(g)){ unlocked.add(id); toast(t.ic, t.label(g)+(g[2] ? ': '+g[2] : '!')); } });
+  if(MLG.some(g=>g[1].includes(i)) && !unlocked.has('ml:giro') && minTouched()===MLG.length){ unlocked.add('ml:giro'); toast('🗣️','Giro delle minoranze: un comune per ogni minoranza linguistica!'); }
   if(CONF.some(g=>g[1].includes(i)) && !unlocked.has('f:giro') && confTouched()===CONF.length){ unlocked.add('f:giro'); toast('🛂','Giro delle frontiere: un comune al confine con ogni Stato vicino!'); }
   const p = D.p[i], k = D.r[i];
   if(PT[p]){ const f = provFound[p]; [['p25',0,'un quarto'],['p50',1,'metà']].forEach(([s,x,l])=>{ const id = s+':'+p; if(f>=PT[p][x] && !unlocked.has(id)){ unlocked.add(id); toast('📍',provLabel(p)+': '+l+' dei comuni'); } }); }
@@ -421,7 +425,7 @@ const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 // Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
 const ACHG = [['Progressi',['m','pp','e','cap','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','lg','i','f','x']],
-  ['Città e borghi',['gc',...BG.map(b=>'b'+b.lim),'t','bb']], ['Cultura e storia',['w','h','mr','nm']], ['Segreti',['s']]];
+  ['Città e borghi',['gc',...BG.map(b=>'b'+b.lim),'t','bb']], ['Cultura e storia',['w','h','mr','ml','nm']], ['Segreti',['s']]];
 const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
   const has = id => unlocked.has(id), it = (id,ic,l,c,d) => ({ u: has(id), ic, l, c, d });
@@ -465,6 +469,8 @@ function achCats(){
       more: `<details class="sub" data-a="nml"${openAch.has('nml')?' open':''}><summary>Nomi trovati (${nFound([...NMSET])})</summary><ul>${NBYLEN.filter(i=>NMSET.has(i) && found[i]).map(i=>`<li>${regName0(i)} (${NLEN[i]})</li>`).join('')}</ul></details>` },
     { k:'w', ic:'🥾', t:'Cammini', items: CAM.map((g,gi)=>it('w:'+gi,'🥾',g[0],islFound(g)+'/'+g[1].length)) },
     { k:'h', ic:'📜', t:'Storia', items: TG[2].list.map((g,gi)=>tg(TG[2],g,gi)) },
+    { k:'ml', ic:'🗣️', t:'Minoranze linguistiche', info: 'Comuni dove la lingua della minoranza è tutelata (legge 482/1999 e statuti speciali).',
+      items: [it('ml:giro','🗣️','Giro delle minoranze',minTouched()+'/'+MLG.length,'un comune per ogni minoranza linguistica')].concat(MLG.map((g,gi)=>tg(TG[3],g,gi))) },
     { k:'mr', ic:'⚓', t:'Repubbliche marinare', items: TG[1].list.map((g,gi)=>tg(TG[1],g,gi)) },
     { k:'f', ic:'🛂', t:'Confini', items: [it('f:giro','🛂','Giro delle frontiere',confTouched()+'/'+CONF.length,'un comune al confine con ogni Stato vicino')].concat(CONF.map((g,gi)=>tg(TG[0],g,gi))) },
     { k:'r', ic:'🥇', t:'Regioni completate', items: REGK.map(k=>it('r:'+k,'🥇',regName(k),regCount[k]+'/'+regTot[k])) },

@@ -172,7 +172,7 @@ async function run(label, htmlFile, useFetch){
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
   ok(heads().join('|') === 'Progressi|Sfide|Geografia|Città e borghi|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 31 && at('t') + 1 === at('bb') && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('bb') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 32 && at('mr') + 1 === at('ml') && at('t') + 1 === at('bb') && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('bb') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -328,7 +328,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸|🗣️) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -468,6 +468,26 @@ async function runChallenges(){
     const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.lgInfo = p.d.querySelector('#achlist details[data-a="lg"] .info').textContent; p.dom.window.close();
     console.log('laghi:', lk4, '->', lk5, '|', (info.match(/\d+\/39 trovati/)||['?'])[0]);
     ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && !/Garda/.test(p.lgInfo) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
+  }
+  // 9. minoranze linguistiche: dati con fonte, un traguardo per minoranza, Giro delle minoranze
+  {
+    const mn = read('data/groups.json').minoranze, vda = map.n.map((nm, i) => i).filter(i => /^Valle d'Aosta/.test(map.regs[map.r[i]]));
+    ok(mn.map(g => g.name).join('|') === 'Francoprovenzale|Occitana|Ladina|Albanese (arbëreshë)|Slovena|Greca|Croata|Catalana', 'minoranze: 8 gruppi in ordine');
+    ok(mn.every(g => [].concat(g.fonte).every(u => /^https:\/\/\S+$/.test(u)) && g.nota), 'minoranze: fonte https e nota per ogni gruppo');
+    ok(mn[7].comuni.join() === 'Alghero' && vda.every(i => mn[0].comuni.includes(map.n[i])), 'minoranze: Alghero da solo, tutta la Valle d’Aosta nel francoprovenzale');
+    p = await open();
+    const mlRow = re => ([...p.d.querySelectorAll('#achlist details[data-a="ml"] .ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
+    const croati = mn[6].comuni.map(idx); croati.slice(0, -1).forEach(p.type); const cr0 = mlRow(/Minoranza croata/);
+    p.type(croati[croati.length - 1]); const cr1 = mlRow(/Minoranza croata/);
+    mn.slice(0, 6).forEach(g => p.type(idx(g.comuni.find(nm => !/[/(]/.test(nm) && map.n.filter(x => x === nm).length === 1)))); const g0 = mlRow(/Giro delle minoranze/);
+    p.type(idx('Alghero')); const g1 = mlRow(/Giro delle minoranze/); await p.settle();
+    const mToasts = p.toasts, mErr = p.errors, mSaved = p.saved(); p.dom.window.close();
+    p = await open(mSaved); const crLoaded = mlRow(/Minoranza croata/); p.dom.window.close();
+    console.log('minoranze:', mn.map(g => g.comuni.length).join(','), '|', cr0, '->', cr1, '|', g0, '->', g1);
+    ok(/^🔒/.test(cr0) && /^🗣️ Minoranza croata/.test(cr1) && mToasts.some(t => /^🗣️ Minoranza croata: /.test(t)), 'minoranze: croati completi, con la nota');
+    ok(/7\/8$/.test(g0) && /^🗣️ Giro delle minoranze.*8\/8$/s.test(g1) && mToasts.includes('🗣️ Giro delle minoranze: un comune per ogni minoranza linguistica!'), 'minoranze: Giro delle minoranze');
+    ok(/^🗣️ Minoranza croata/.test(crLoaded), 'minoranze: ripristinate al caricamento');
+    ok(mErr.length === 0, 'errori JS: ' + mErr.join('; '));
   }
   // 8. Borghi più belli d'Italia: passi nazionali, regioni complete, frazioni attribuite al comune, ripristino al caricamento
   {

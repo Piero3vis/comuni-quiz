@@ -555,5 +555,55 @@
    "comuni": ["Seborga"],
    "nota": "dal 1963 il paese ha un suo «principe» e si dichiara indipendente: per lo Stato è un comune come gli altri"
   }
+ ],
+ "minoranze": [
+  {
+   "name": "Francoprovenzale",
+   "comuni": ["Ala di Stura", "Allein", "Alpette", "Antey-Saint-André", "Aosta", "Arnad", "Arvier", "Avigliana", "Avise", "Ayas", "Aymavilles", "Balme", "Bard", "Bionaz", "Brissogne", "Brusson", "Cantoira", "Caprie", "Carema", "Castagnole Piemonte", "Celle di San Vito", "Ceres", "Ceresole Reale", "Challand-Saint-Anselme", "Challand-Saint-Victor", "Chambave", "Chamois", "Champdepraz", "Champorcher", "Charvensod", "Chialamberto", "Chianocco", "Châtillon", "Coassolo Torinese", "Coazze", "Cogne", "Condove", "Corio", "Courmayeur", "Donnas", "Doues", "Emarèse", "Etroubles", "Faeto", "Fontainemore", "Frassinetto", "Fénis", "Gaby", "Germagnano", "Giaglione", "Giaveno", "Gignod", "Gravere", "Gressan", "Gressoney-La-Trinité", "Gressoney-Saint-Jean", "Groscavallo", "Hône", "Ingria", "Introd", "Issime", "Issogne", "Jovençan", "La Magdeleine", "La Salle", "La Thuile", "Lanzo Torinese", "Lemie", "Lillianes", "Locana", "Mattie", "Meana di Susa", "Mezzenile", "Mompantero", "Monastero di Lanzo", "Moncenisio", "Montjovet", "Morgex", "Noasca", "Novalesa", "Nus", "Ollomont", "Oyace", "Perloz", "Pessinetto", "Pollein", "Pont Canavese", "Pont-Saint-Martin", "Pontboset", "Pontey", "Pré-Saint-Didier", "Quart", "Rhêmes-Notre-Dame", "Rhêmes-Saint-Georges", "Ribordone", "Roisan", "Ronco Canavese", "Rubiana", "Saint-Christophe", "Saint-Denis", "Saint-Marcel", "Saint-Nicolas", "Saint-Oyen", "Saint-Pierre", "Saint-Rhémy-en-Bosses", "Saint-Vincent", "San Giorio di Susa", "Sant'Antonino di Susa", "Sarre", "Sparone", "Susa", "Torgnon", "Traves", "Usseglio", "Vaie", "Valgioie", "Valgrisenche", "Valpelline", "Valprato Soana", "Valsavarenche", "Valtournenche", "Venaus", "Verrayes", "Verrès", "Villar Focchiardo", "Villeneuve", "Viù"],
+   "nota": "il patois si parla in tutta la Valle d’Aosta e nelle valli torinesi; Faeto e Celle di San Vito lo conservano in Puglia dal Medioevo",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://www.regione.piemonte.it/web/media/4558/download", "https://www.regione.piemonte.it/web/temi/cultura-turismo-sport/cultura/cultura-storia-lingue-piemonte/norme-nazionali-materia-tutela-delle-minoranze-linguistiche-storiche"]
+  },
+  {
+   "name": "Occitana",
+   "comuni": ["Acceglio", "Aisone", "Angrogna", "Argentera", "Bardonecchia", "Barge", "Bellino", "Bernezzo", "Bibiana", "Bobbio Pellice", "Borgo San Dalmazzo", "Boves", "Bricherasio", "Briga Alta", "Brondello", "Brossasco", "Busca", "Canosio", "Caraglio", "Cartignano", "Casteldelfino", "Castelmagno", "Celle di Macra", "Cervasca", "Cesana Torinese", "Chiomonte", "Chiusa di Pesio", "Claviere", "Crissolo", "Demonte", "Dronero", "Elva", "Entracque", "Envie", "Exilles", "Fenestrelle", "Frabosa Soprana", "Frabosa Sottana", "Frassino", "Gaiola", "Gambasca", "Guardia Piemontese", "Inverso Pinasca", "Isasca", "Limone Piemonte", "Luserna San Giovanni", "Lusernetta", "Macra", "Marmora", "Massello", "Melle", "Moiola", "Montemale di Cuneo", "Monterosso Grana", "Olivetta San Michele", "Oncino", "Ormea", "Ostana", "Oulx", "Paesana", "Pagno", "Perosa Argentina", "Perrero", "Peveragno", "Pietraporzio", "Pinasca", "Pomaretto", "Pontechianale", "Porte", "Pradleves", "Pragelato", "Prali", "Pramollo", "Prarostino", "Prazzo", "Revello", "Rifreddo", "Rittana", "Roaschia", "Robilante", "Roburent", "Roccabruna", "Roccaforte Mondovì", "Roccasparvera", "Roccavione", "Rorà", "Roure", "Salbertrand", "Saluzzo", "Salza di Pinerolo", "Sambuco", "Sampeyre", "San Damiano Macra", "San Germano Chisone", "San Secondo di Pinerolo", "Sanfront", "Sauze d'Oulx", "Sauze di Cesana", "Sestriere", "Stroppo", "Torre Pellice", "Triora", "Usseaux", "Valdieri", "Valgrana", "Valloriate", "Venasca", "Vernante", "Vignolo", "Villanova Mondovì", "Villar Pellice", "Villar Perosa", "Villar San Costanzo", "Vinadio"],
+   "nota": "la lingua dei trovatori, nelle valli alpine del Piemonte; Guardia Piemontese, in Calabria, fu fondata da valdesi arrivati dal Piemonte",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://www.regione.piemonte.it/web/node/1913", "https://www.regione.piemonte.it/web/media/56102/download"]
+  },
+  {
+   "name": "Ladina",
+   "comuni": ["Agordo", "Alleghe", "Auronzo di Cadore", "Badia/Abtei", "Borca di Cadore", "Calalzo di Cadore", "Campitello di Fassa", "Canale d'Agordo", "Canazei", "Cencenighe Agordino", "Cibiana di Cadore", "Colle Santa Lucia", "Comelico Superiore", "Cortina d'Ampezzo", "Corvara in Badia/Corvara", "Danta di Cadore", "Domegge di Cadore", "Falcade", "Gosaldo", "La Valle Agordina", "La Valle/Wengen", "Livinallongo del Col di Lana", "Lorenzago di Cadore", "Lozzo di Cadore", "Marebbe/Enneberg", "Mazzin", "Moena", "Ortisei/St. Ulrich", "Ospitale di Cadore", "Perarolo di Cadore", "Pieve di Cadore", "Rivamonte Agordino", "Rocca Pietore", "San Giovanni di Fassa-Sèn Jan", "San Martino in Badia/St. Martin in Thurn", "San Nicolò di Comelico", "San Pietro di Cadore", "San Tomaso Agordino", "San Vito di Cadore", "Santa Cristina Valgardena/St. Christina in Gröden", "Santo Stefano di Cadore", "Selva di Cadore", "Selva di Val Gardena/Wolkenstein in Gröden", "Soraga di Fassa", "Taibon Agordino", "Val di Zoldo", "Vallada Agordina", "Valle di Cadore", "Vigo di Cadore", "Vodo Cadore", "Voltago Agordino", "Zoppè di Cadore"],
+   "nota": "lingua retoromanza delle valli intorno al gruppo del Sella: Gardena, Badia, Fassa, Livinallongo e Ampezzo",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://istitutoladino.opencontent.it/content/download/3776/29889/file/Ponti_Gianpiero-Legge_482-99.pdf", "https://www.provincia.tn.it/Argomenti/Cultura/Minoranze-linguistiche-storiche/Minoranza-ladina-di-Fassa", "https://de.wikipedia.org/wiki/Ladinische_Sprache", "https://www.stol.it/artikel/politik/svp-in-den-ladinischen-gemeinden-stark", "https://www.regione.piemonte.it/web/media/56102/download"]
+  },
+  {
+   "name": "Albanese (arbëreshë)",
+   "comuni": ["Acquaformosa", "Andali", "Barile", "Brindisi Montagna", "Campomarino", "Caraffa di Catanzaro", "Carfizzi", "Casalvecchio di Puglia", "Castroregio", "Cervicati", "Cerzeto", "Chieuti", "Civita", "Contessa Entellina", "Falconara Albanese", "Firmo", "Frascineto", "Ginestra", "Gizzeria", "Greci", "Lamezia Terme", "Lungro", "Maida", "Marcedusa", "Maschito", "Mezzojuso", "Mongrassano", "Montecilfone", "Palazzo Adriano", "Pallagorio", "Piana degli Albanesi", "Plataci", "Portocannone", "Rosciano", "San Basile", "San Benedetto Ullano", "San Cosmo Albanese", "San Costantino Albanese", "San Demetrio Corone", "San Giorgio Albanese", "San Martino di Finita", "San Marzano di San Giuseppe", "San Nicola dell'Alto", "San Paolo Albanese", "Santa Caterina Albanese", "Santa Cristina Gela", "Santa Sofia d'Epiro", "Spezzano Albanese", "Ururi", "Vaccarizzo Albanese"],
+   "nota": "comunità arrivate dai Balcani tra Quattrocento e Settecento, molte dopo la morte di Skanderbeg e la conquista ottomana",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://www.vatrarberesh.it/biblioteca/ebooks/laminoranzalinguisticaalbanese.pdf", "https://www.regione.sicilia.it/index%2Ephp/system/files/2026-04/D.A.%20n.%20192%20del%2022.04.2026.pdf"]
+  },
+  {
+   "name": "Slovena",
+   "comuni": ["Attimis", "Cividale del Friuli", "Cormons", "Doberdò del Lago-Doberdob", "Drenchia", "Duino Aurisina-Devin Nabrežina", "Faedis", "Gorizia", "Grimacco", "Lusevera", "Malborghetto Valbruna", "Monfalcone", "Monrupino-Repentabor", "Muggia", "Nimis", "Prepotto", "Pulfero", "Resia", "Ronchi dei Legionari", "Sagrado", "San Dorligo della Valle-Dolina", "San Floriano del Collio-Števerjan", "San Leonardo", "San Pietro al Natisone", "Savogna", "Savogna d'Isonzo-Sovodnje ob Soči", "Sgonico-Zgonik", "Stregna", "Taipana", "Tarvisio", "Torreano", "Trieste"],
+   "nota": "a Trieste, a Gorizia e nelle valli del Natisone e del Torre, lungo il confine con la Slovenia",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://english.sta.si/1191099/italian-president-signs-decree-on-bilingual-municipalities"]
+  },
+  {
+   "name": "Greca",
+   "comuni": ["Bagaladi", "Bova", "Bova Marina", "Brancaleone", "Calimera", "Castrignano de' Greci", "Condofuri", "Corigliano d'Otranto", "Martano", "Martignano", "Melito di Porto Salvo", "Melpignano", "Messina", "Montebello Jonico", "Motta San Giovanni", "Palizzi", "Reggio di Calabria", "Roccaforte del Greco", "Roghudi", "Samo", "San Lorenzo", "Soleto", "Staiti", "Sternatia", "Zollino"],
+   "nota": "il griko nella Grecìa salentina e il grecanico nell’Aspromonte, eredi della lunga presenza greca nel Sud",
+   "fonte": ["https://www.regione.piemonte.it/web/media/42708/download", "https://it.wikipedia.org/wiki/Comuni_italiani_di_lingua_greca"]
+  },
+  {
+   "name": "Croata",
+   "comuni": ["Acquaviva Collecroce", "Montemitro", "San Felice del Molise", "Tavenna"],
+   "nota": "discendenti di profughi arrivati dall’altra sponda dell’Adriatico nel Cinquecento: parlano il «na-našu»",
+   "fonte": "https://www.regione.piemonte.it/web/media/42708/download"
+  },
+  {
+   "name": "Catalana",
+   "comuni": ["Alghero"],
+   "nota": "conquistata dagli aragonesi nel 1354 e ripopolata da catalani: qui si parla l’alguerese",
+   "fonte": "https://www.regione.piemonte.it/web/media/42708/download"
+  }
  ]
 }

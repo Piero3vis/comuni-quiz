@@ -44,7 +44,7 @@ app.js                all the logic: loading, canvas map, quiz, side panel, achi
 data/map.json         generated map data (see CLAUDE.md for the format)
 data/extra.json       generated ISTAT data aligned to map.json: population, capoluoghi, record comuni, the 100 largest by area
 data/geo.json         generated from map.json: neighbouring comuni, sea of each coastal comune, island comuni
-data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics (by hand), borders (scripts/border_comuni.py)
+data/groups.json      groups listed by comune name: islands, cammini, history, maritime republics, linguistic minorities (by hand, with sources), borders (scripts/border_comuni.py)
 data/borghi.json      the comuni of "I Borghi più belli d’Italia" by region (by hand from borghipiubelliditalia.it/borghi/, dated; frazioni listed under their comune in `fraz`)
 data/facts.json       short curiosità by comune name, shown in the map box (as a clue before the comune is found) and as a toast when the comune is found
 scripts/build_data.py regenerates data/map.json from the open data sources
