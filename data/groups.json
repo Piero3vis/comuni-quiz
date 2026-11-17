@@ -90,6 +90,12 @@
    ]
   },
   {
+   "name": "Comuni completamente insulari",
+   "comuni": ["Capraia Isola", "Carloforte", "Favignana", "Isola del Giglio", "Isole Tremiti", "La Maddalena", "Lampedusa e Linosa", "Lipari", "Monte Isola", "Pantelleria", "Ponza", "Procida", "Ustica", "Ventotene"],
+   "nota": "comuni su isole senza confini di terra con altri comuni; Monte Isola, sul lago d’Iseo, è l’unico su un’isola di lago",
+   "noUnion": true
+  },
+  {
    "name": "Tutte le isole minori italiane",
    "union": true,
    "comuni": [

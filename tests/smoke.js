@@ -166,6 +166,8 @@ async function run(label, htmlFile, useFetch){
   ok(/^data:image\/svg\+xml,/.test(d.querySelector('link[rel="icon"]').getAttribute('href')), 'favicon incorporata');
   ok(/comuni italiani/.test(d.querySelector('.about').textContent) && /gioco di geografia/.test(d.querySelector('.about').textContent), 'testo visibile');
   ok(/Isole Eolie/.test(al) && /Cammini/.test(al) && /Costa italiana/.test(al), 'sezioni traguardi');
+  const islRows = [...d.querySelectorAll('#achlist details[data-a="i"] .ai')].map(r => r.textContent), allIsl = islRows.find(r => /Tutte le isole minori/.test(r)) || '';
+  ok(islRows.some(r => /^🔒 Comuni completamente insulari.*\/14$/.test(r)) && /\/33$/.test(allIsl), 'isole: comuni completamente insulari (14), Monte Isola fuori da tutte le isole minori: ' + islRows.join(' | '));
   // ordine per tema: gruppi con titolo, Traguardi prima, Segreti in fondo; con il filtro i gruppi vuoti spariscono
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
@@ -463,9 +465,9 @@ async function runChallenges(){
     p = await open();
     ['Garda', 'Castelnuovo del Garda', 'Iseo', 'Como', 'Nemi'].map(idx).forEach(p.type); const lk4 = p.row(/^🏞️ 5 laghi/);
     p.type(idx('Bracciano')); const lk5 = p.row(/^🏞️ 5 laghi/); await p.settle();
-    const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.dom.window.close();
+    const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.lgInfo = p.d.querySelector('#achlist details[data-a="lg"] .info').textContent; p.dom.window.close();
     console.log('laghi:', lk4, '->', lk5, '|', (info.match(/\d+\/39 trovati/)||['?'])[0]);
-    ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
+    ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && !/Garda/.test(p.lgInfo) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
   }
   // 8. Borghi più belli d'Italia: passi nazionali, regioni complete, frazioni attribuite al comune, ripristino al caricamento
   {
