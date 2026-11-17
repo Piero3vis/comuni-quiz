@@ -1,8 +1,8 @@
 ## 1. Elenco
 
-- [ ] 1.1 Leggere l’elenco da https://borghipiubelliditalia.it/borghi/ e dalle pagine regionali collegate, annotando la data
-- [ ] 1.2 Riportare ogni borgo al comune di `map.json` (frazioni in `fraz`, omonimi come `"Nome (SIGLA)"`, fusioni), togliere San Marino
-- [ ] 1.3 Scrivere `data/borghi.json` (`agg`, `fonte`, `reg`, `fraz`)
+- [x] 1.1 Leggere l’elenco da https://borghipiubelliditalia.it/borghi/ e dalle pagine regionali collegate, annotando la data
+- [x] 1.2 Riportare ogni borgo al comune di `map.json` (frazioni in `fraz`, omonimi come `"Nome (SIGLA)"`, fusioni), togliere San Marino
+- [x] 1.3 Scrivere `data/borghi.json` (`agg`, `fonte`, `reg`, `fraz`)
 
 ## 2. App
 
