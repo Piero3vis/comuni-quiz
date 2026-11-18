@@ -328,7 +328,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸|🗣️) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸|🗣️|🎉) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -468,6 +468,19 @@ async function runChallenges(){
     const info = p.d.querySelector('#achlist details[data-a="lg"]').textContent, lToasts = p.toasts; p.lgInfo = p.d.querySelector('#achlist details[data-a="lg"] .info').textContent; p.dom.window.close();
     console.log('laghi:', lk4, '->', lk5, '|', (info.match(/\d+\/39 trovati/)||['?'])[0]);
     ok(lk4 === '?' && lk5 !== '?' && /5\/39 trovati/.test(info) && !/Garda/.test(p.lgInfo) && /Laghi trovati \(5\)/.test(info) && lToasts.includes('🏞️ 5 comuni-lago trovati'), 'laghi: 5 comuni-lago, Castelnuovo del Garda non conta');
+  }
+  // 10. parole di tutti i giorni (colori, oggetti) e festa per i 1000 comuni
+  {
+    p = await open(); ['Rossa', 'Viola', 'Nave'].map(idx).forEach(p.type); const elem = p.row(/^💬 Elementare/); p.dom.window.close();
+    const f999 = map.n.map((nm, i) => i).filter(i => !caps.has(i)).slice(0, 999), next = map.n.findIndex((nm, i) => !f999.includes(i) && map.n.filter(x => x === nm).length === 1 && !/\//.test(nm));
+    p = await open(JSON.stringify({ f: f999, t: 1000 })); const before = p.d.querySelector('.party');
+    p.type(next); const party = p.d.querySelector('.party'), big = party && party.querySelector('b').textContent; await p.settle();
+    const pToasts = p.toasts, pSaved = p.saved(), pErr = p.errors; p.dom.window.close();
+    p = await open(pSaved); const again = p.d.querySelector('.party'); p.dom.window.close();
+    console.log('festa 1000:', big, '|', pToasts.filter(t => t.startsWith('🎉')).join(' | '), '| Elementare con i colori:', elem.slice(0, 12));
+    ok(/^💬 Elementare/.test(elem), 'Elementare: Rossa, Viola, Nave di fila');
+    ok(!before && big === '1.000' && pToasts.includes('🎉 Mille comuni! Un comune italiano su otto è già tuo.') && !again, 'festa per i 1000 comuni, una volta sola');
+    ok(pErr.length === 0, 'errori JS: ' + pErr.join('; '));
   }
   // 9. minoranze linguistiche: dati con fonte, un traguardo per minoranza, Giro delle minoranze
   {
