@@ -76,3 +76,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .fact summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:12px}
 .fact p{margin:4px 0 0;font-size:12.5px;line-height:1.35}
 .support{margin:14px 2px 2px;color:var(--muted);font-size:12px}.support a{color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}.support a:hover{text-decoration-color:currentColor}
+.party{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.party b{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:clamp(56px,14vw,140px);font-weight:800;color:var(--accent);text-shadow:0 2px 0 var(--panel),0 0 24px var(--panel);animation:partyBig 4.4s ease-out forwards}
+.party i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:partyFall 3s cubic-bezier(.3,.6,.5,1) forwards}
+@keyframes partyBig{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}20%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1}100%{opacity:0}}
+@keyframes partyFall{to{top:105%;transform:translateX(40px) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.party b{animation:none;opacity:1}}
