@@ -471,7 +471,9 @@ async function runChallenges(){
   }
   // 10. parole di tutti i giorni (colori, oggetti) e festa per i 1000 comuni
   {
-    p = await open(); ['Rossa', 'Viola', 'Nave'].map(idx).forEach(p.type); const elem = p.row(/^💬 Elementare/); p.dom.window.close();
+    p = await open(); const parl0 = p.d.querySelector('#achlist details[data-a="parl"]');
+    ['Rossa', 'Viola', 'Nave'].map(idx).forEach(p.type); const elem = p.row(/^💬 Elementare/), parl = [...p.d.querySelectorAll('#achlist details[data-a="parl"] li')].map(li => li.textContent); p.dom.window.close();
+    ok(!parl0 && parl.length > 70 && parl.includes('Rossa ✓') && parl.includes('Viola ✓') && parl.includes('Cento'), 'Elementare: elenco delle parole solo dopo lo sblocco, con le trovate segnate');
     const f999 = map.n.map((nm, i) => i).filter(i => !caps.has(i)).slice(0, 999), next = map.n.findIndex((nm, i) => !f999.includes(i) && map.n.filter(x => x === nm).length === 1 && !/\//.test(nm));
     p = await open(JSON.stringify({ f: f999, t: 1000 })); const before = p.d.querySelector('.party');
     p.type(next); const party = p.d.querySelector('.party'), big = party && party.querySelector('b').textContent; await p.settle();
