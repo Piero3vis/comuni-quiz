@@ -214,6 +214,7 @@ const SEC = [[69,'Nice.','😏','Nice.'],[420,'Blaze it','🌿','420 comuni. Bla
 const wkName = i => ' '+D.n[i].split('/')[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/['’-]/g,' ')+' ';
 // comuni che sono parole di tutti i giorni (colori, oggetti, numeri, piante…): controllati su map.json, niente nomi che sono solo città (Bari, Torino)
 const PAROLE = new Set(['Ala','Alba','Altare','Arco','Arena','Badia','Bella','Bianco','Calcio','Calvi','Camino','Campana','Canale','Carbone','Carro','Cascina','Castelli','Cavallino','Cave','Cento','Cervo','Chiusa','Colonna','Contrada','Erba','Ferriere','Fondi','Fonte','Fornace','Frassino','Ginestra','Grotte','Laghi','Lago','Lana','Lavagna','Lavello','Lettere','Macello','Manta','Massa','Mele','Monti','Mura','Nave','Noci','Nomi','Nove','Ora','Ossi','Paese','Penne','Pero','Pigna','Pila','Ponte','Ponti','Porte','Prato','Re','Rive','Rose','Rossa','Sacco','Sale','Scala','Serre','Sesto','Spiazzo','Stella','Taverna','Toro','Torretta','Tramonti','Tufo','Vasto','Viola','Vita','Volano']);
+const PARI = new Map([...PAROLE].map(w=>[w, D.n.map((nm,i)=>nm.split('/')[0]===w ? i : -1).filter(i=>i>=0)]));
 // Divinità nel nome (elenco fisso: Martello, Ceresole o Serdiana contengono le lettere solo per caso)
 const DEI = new Set(['Giove','Collegiove','Campo di Giove','Casagiove','Portovenere','Castelvenere','Giano dell\'Umbria','Giano Vetusto','Nettuno','Spigno Saturnia','Cefalà Diana','Minervino Murge','Minervino di Lecce','Ercolano']);
 // Laghi: comuni con lo stesso identico nome di un lago (Garda sì, Castelnuovo del Garda no); categoria Laghi, id lg:<quanti>
@@ -442,7 +443,9 @@ function achCats(){
   return [
     { k:'m', ic:'🏆', t:'Traguardi', items: MS.map(([n,l])=>it('m'+n,'🏆',l,fmtN(n))) },
     // segreti: da bloccati si vede solo il nome criptico, senza regola né conteggio; la descrizione (d) arriva con lo sblocco
-    { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l, c:'' }).concat(WINKS.map(w=>has(w.id) ? it(w.id,w.ic,w.l,'',w.d) : { u:false, ic:w.ic, l:w.l, c:'' })) },
+    { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l, c:'' }).concat(WINKS.map(w=>has(w.id) ? it(w.id,w.ic,w.l,'',w.d) : { u:false, ic:w.ic, l:w.l, c:'' })),
+      // sbloccato Elementare, l'elenco completo delle parole (quelle trovate con ✓)
+      more: has('sw:parole') ? `<details class="sub" data-a="parl"${openAch.has('parl')?' open':''}><summary>Le ${PAROLE.size} parole di Elementare</summary><ul>${[...PAROLE].sort(byIt).map(w=>`<li>${w}${PARI.get(w).some(i=>found[i]) ? ' ✓' : ''}</li>`).join('')}</ul></details>` : '' },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
     { k:'tm', ic:'⏱️', t:'A tempo', info: 'Conta il tempo di gioco: in pausa l’orologio si ferma. Un nome con più comuni (Castro) li conta tutti.',
