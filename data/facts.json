@@ -275,10 +275,6 @@
   "testo": "Per la sua antica comunità ebraica il centro storico è detto «piccola Gerusalemme»: restano il vecchio ghetto, la sinagoga cinquecentesca e il cimitero.",
   "fonte": "https://it.wikipedia.org/wiki/Pitigliano"
  },
- "Poggio a Caiano": {
-  "testo": "Nella villa voluta da Lorenzo de’ Medici morirono Francesco I de’ Medici e Bianca Cappello: si sospettò il veleno, le cronache ufficiali parlarono di febbre.",
-  "fonte": "https://it.wikipedia.org/wiki/Villa_medicea_di_Poggio_a_Caiano"
- },
  "Poggiodomo": {
   "testo": "La piccola chiesa di San Pietro conserva affreschi medievali, tra cui una delle prime raffigurazioni di santa Rita da Cascia.",
   "fonte": "https://it.wikipedia.org/wiki/Poggiodomo"
@@ -382,6 +378,10 @@
  "Valeggio sul Mincio": {
   "testo": "Il terzo martedì di giugno, per la festa del Nodo d’Amore, una tavolata lunga quanto il ponte visconteo, 650 metri, serve tortellini a oltre quattromila commensali.",
   "fonte": "https://it.wikipedia.org/wiki/Valeggio_sul_Mincio"
+ },
+ "Vernio": {
+  "testo": "Fu una contea indipendente dei Bardi finché Napoleone la abolì; dopo una carestia i conti sfamarono il paese con farina di castagne e baccalà, e ogni anno una festa lo ricorda.",
+  "fonte": "https://it.wikipedia.org/wiki/Vernio"
  },
  "Vinci": {
   "testo": "Ha il maggior numero di ulivi dell’area fiorentina e una biblioteca con circa 22.000 opere dedicate al suo concittadino più famoso.",
