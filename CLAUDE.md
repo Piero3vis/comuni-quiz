@@ -50,7 +50,7 @@ geometry from openpolis + Natural Earth, plus `EXTRA` for very short borders, ch
 `{ "Nome": { "testo": "…", "fonte": "https://…" } }`, alphabetical (same naming as groups, `"Livo (CO)"` for duplicates), resolved by `withGroups()` into `D.fact` (Map index → `testo`), embedded by `build_single_file.py`.
 Shown as a toast "💡 Curiosità su <nome>: …" when the comune is found (end of `achCheck(i)`, live guesses only) and in the click box (`clickAt()`) as a closed `<details class="fact">`: "💡 Indizio: una curiosità" before the comune is found, "💡 Curiosità" under residents/rarity after.
 Rules (checked by `tests/smoke.js`): every entry has an `https` `fonte` supporting the whole text; no capoluoghi; texts never contain the comune's name or a `/` part, ≤ 200 characters, typographic apostrophe; avoid yearly numbers.
-Goal: one per province (the test prints uncovered provinces); done by region: Veneto, Trentino-Alto Adige, Umbria, Molise, Basilicata, Valle d’Aosta; next: Toscana, Friuli-Venezia Giulia, Puglia, Campania. `placeInfo()` keeps the box inside the map.
+Goal: one per province (the test prints uncovered provinces); done by region: Veneto, Trentino-Alto Adige, Umbria, Molise, Basilicata, Valle d’Aosta, Toscana; next: Friuli-Venezia Giulia, Puglia, Campania. `placeInfo()` keeps the box inside the map.
 
 ## Quiz logic
 - Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.

@@ -15,6 +15,10 @@
   "testo": "Carlo Levi vi fu confinato e lo chiamò “Gagliano” in Cristo si è fermato a Eboli; volle esservi sepolto «tra i suoi contadini».",
   "fonte": "https://it.wikipedia.org/wiki/Aliano"
  },
+ "Anghiari": {
+  "testo": "Leonardo doveva dipingere in Palazzo Vecchio la battaglia combattuta qui, ma la sua tecnica sperimentale rovinò l’affresco: ne restano disegni e copie.",
+  "fonte": "https://it.wikipedia.org/wiki/Anghiari"
+ },
  "Atrani": {
   "testo": "Il borgo compare nella xilografia Metamorfosi II di M. C. Escher (1939-1940); qui aveva casa anche la famiglia materna di Masaniello.",
   "fonte": "https://it.wikipedia.org/wiki/Atrani"
@@ -251,6 +255,10 @@
   "testo": "La cattedrale custodisce il mosaico pavimentale più grande d’Europa, realizzato tra il 1163 e il 1165 e firmato dal monaco Pantaleone.",
   "fonte": "https://it.wikipedia.org/wiki/Otranto"
  },
+ "Pescia": {
+  "testo": "Una sua frazione diede lo pseudonimo a Carlo Lorenzini, che con quel nome divenne famoso come autore delle Avventure di Pinocchio.",
+  "fonte": "https://it.wikipedia.org/wiki/Collodi"
+ },
  "Pietrapertosa": {
   "testo": "È il comune più alto della Basilicata; con il Volo dell’Angelo si raggiunge il paese vicino appesi a un cavo d’acciaio, fino a 120 km/h.",
   "fonte": "https://it.wikipedia.org/wiki/Pietrapertosa"
@@ -263,13 +271,29 @@
   "testo": "Vi nacque Tiziano Vecellio: la sua casa natale cinquecentesca è oggi un museo. In paese c’è anche un museo dell’occhiale.",
   "fonte": "https://it.wikipedia.org/wiki/Pieve_di_Cadore"
  },
+ "Pitigliano": {
+  "testo": "Per la sua antica comunità ebraica il centro storico è detto «piccola Gerusalemme»: restano il vecchio ghetto, la sinagoga cinquecentesca e il cimitero.",
+  "fonte": "https://it.wikipedia.org/wiki/Pitigliano"
+ },
+ "Poggio a Caiano": {
+  "testo": "Nella villa voluta da Lorenzo de’ Medici morirono Francesco I de’ Medici e Bianca Cappello: si sospettò il veleno, le cronache ufficiali parlarono di febbre.",
+  "fonte": "https://it.wikipedia.org/wiki/Villa_medicea_di_Poggio_a_Caiano"
+ },
  "Poggiodomo": {
   "testo": "La piccola chiesa di San Pietro conserva affreschi medievali, tra cui una delle prime raffigurazioni di santa Rita da Cascia.",
   "fonte": "https://it.wikipedia.org/wiki/Poggiodomo"
  },
+ "Pontremoli": {
+  "testo": "Qui si assegna il Premio Bancarella, nato dai librai ambulanti della Lunigiana che vendevano libri in tutta Italia: il primo vincitore fu Hemingway.",
+  "fonte": "https://it.wikipedia.org/wiki/Premio_Bancarella"
+ },
  "Porto Empedocle": {
   "testo": "Nel 2003 adottò come secondo nome Vigata, la città immaginaria dei romanzi di Camilleri; la scelta fu revocata nel 2009.",
   "fonte": "https://it.wikipedia.org/wiki/Porto_Empedocle"
+ },
+ "Portoferraio": {
+  "testo": "Napoleone, esiliato sull’Elba, ne fece il capoluogo dell’isola: si possono ancora visitare le sue due residenze, la Villa dei Mulini e quella di San Martino.",
+  "fonte": "https://it.wikipedia.org/wiki/Portoferraio"
  },
  "Possagno": {
   "testo": "Vi nacque Antonio Canova, che progettò il grande tempio del paese ispirandosi al Pantheon; la gipsoteca a lui dedicata sorge attorno alla sua casa natale.",
@@ -351,6 +375,10 @@
   "testo": "Nel settembre 1943 sei bombe americane caddero sulla città senza esplodere: due sono esposte nella cattedrale.",
   "fonte": "https://it.wikipedia.org/wiki/Tropea"
  },
+ "Vagli Sotto": {
+  "testo": "Sotto il suo lago artificiale giace un borgo medievale sommerso dalla diga: riemerge solo quando il lago viene svuotato per i lavori di manutenzione.",
+  "fonte": "https://it.wikipedia.org/wiki/Fabbriche_di_Careggine"
+ },
  "Valeggio sul Mincio": {
   "testo": "Il terzo martedì di giugno, per la festa del Nodo d’Amore, una tavolata lunga quanto il ponte visconteo, 650 metri, serve tortellini a oltre quattromila commensali.",
   "fonte": "https://it.wikipedia.org/wiki/Valeggio_sul_Mincio"
@@ -358,6 +386,10 @@
  "Vinci": {
   "testo": "Ha il maggior numero di ulivi dell’area fiorentina e una biblioteca con circa 22.000 opere dedicate al suo concittadino più famoso.",
   "fonte": "https://it.wikipedia.org/wiki/Vinci"
+ },
+ "Volterra": {
+  "testo": "Nei romanzi di Twilight è la città dei Volturi, il potente clan di vampiri; nella realtà è famosa per l’alabastro, lavorato fin dagli Etruschi.",
+  "fonte": "https://it.wikipedia.org/wiki/Volterra"
  },
  "Zerba": {
   "testo": "È il comune più occidentale dell’Emilia-Romagna e uno dei soli due della regione che confinano con il Piemonte.",
