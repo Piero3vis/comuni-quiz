@@ -8,8 +8,8 @@ I comuni italiani sono 7.896, dalle grandi città ai paesini di montagna. Riesci
 Si gioca nel browser, da computer, tablet o telefono. Non serve installare niente né registrarsi.
 
 ## Come si gioca
-1. Apri il [quiz dei comuni](https://piero3vis.github.io/comuni-quiz/) e premi **Inizia**.
-2. Scrivi il nome di un comune: appena è giusto, si colora sulla mappa. Non serve premere Invio.
+1. Apri il [quiz dei comuni](https://piero3vis.github.io/comuni-quiz/) e scrivi il nome di un comune: il tempo parte da solo.
+2. Appena il nome è giusto, il comune si colora sulla mappa. Non serve premere Invio.
 3. Continua finché vuoi. Puoi mettere in pausa e riprendere più tardi.
 
 Qualche aiuto:
