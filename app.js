@@ -213,7 +213,18 @@ const SEC = [[69,'Nice.','😏','Nice.'],[420,'Blaze it','🌿','420 comuni. Bla
 // Occhiolini segreti: n risposte giuste di fila sullo stesso tema (un nome con più comuni conta una volta); id sw:<chiave>, salvati con le sfide.
 const wkName = i => ' '+D.n[i].split('/')[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/['’-]/g,' ')+' ';
 // comuni che sono parole di tutti i giorni (colori, oggetti, numeri, piante…): controllati su map.json, niente nomi che sono solo città (Bari, Torino)
-const PAROLE = new Set(['Ala','Alba','Altare','Alto','Amaro','Arco','Arena','Badia','Barile','Bella','Bianco','Bruno','Calcio','Calvi','Camino','Campana','Canale','Candela','Capriolo','Carbone','Carro','Cascina','Castelli','Cavallino','Cave','Cento','Cervo','Chiusa','Cicala','Colonna','Contrada','Erba','Ferriere','Fondi','Fonte','Fornace','Fortezza','Frassino','Ginestra','Grosso','Grotte','Laghi','Lago','Lana','Lavagna','Lavello','Lettere','Macello','Manta','Massa','Mele','Mese','Monti','Mura','Nave','Noci','Nomi','Nove','Ora','Ossi','Paese','Penne','Pero','Pesche','Piatto','Pigna','Pila','Pizzo','Ponte','Ponti','Porte','Prato','Quarto','Re','Riccia','Rive','Rose','Rossa','Sacco','Sale','Scala','Serre','Sesto','Spiazzo','Stella','Taverna','Terzo','Toro','Torretta','Tramonti','Tufo','Vasto','Vermiglio','Viola','Vita','Volano']);
+// parole di Elementare divise per tema (solo per l'elenco nei Segreti, che mostra solo le parole trovate)
+const PAROLEG = [
+  ['🎨','Colori e aspetto',['Alto','Amaro','Bella','Bianco','Bruno','Calvi','Grosso','Riccia','Rossa','Vasto','Vermiglio','Viola']],
+  ['🔢','Numeri e tempo',['Alba','Cento','Mese','Nove','Ora','Quarto','Sesto','Terzo','Tramonti']],
+  ['🐾','Animali',['Capriolo','Cavallino','Cervo','Cicala','Manta','Toro']],
+  ['🌸','Piante e frutti',['Erba','Frassino','Ginestra','Mele','Noci','Pero','Pesche','Pigna','Rose']],
+  ['⛰️','Paesaggio',['Canale','Cave','Fonte','Grotte','Laghi','Lago','Monti','Pizzo','Prato','Rive','Serre','Spiazzo','Stella','Tufo']],
+  ['🏠','Casa e paese',['Altare','Arena','Badia','Camino','Cascina','Castelli','Chiusa','Colonna','Contrada','Ferriere','Fornace','Fortezza','Lavello','Macello','Mura','Paese','Ponte','Ponti','Porte','Scala','Taverna','Torretta']],
+  ['🧰','Oggetti',['Arco','Barile','Campana','Candela','Carbone','Carro','Lana','Lavagna','Nave','Penne','Piatto','Pila','Sacco','Sale','Volano']],
+  ['💬','Parole varie',['Ala','Calcio','Fondi','Lettere','Massa','Nomi','Ossi','Re','Vita']],
+];
+const PAROLE = new Set(PAROLEG.flatMap(g=>g[2]));
 const PARI = new Map([...PAROLE].map(w=>[w, D.n.map((nm,i)=>nm.split('/')[0]===w ? i : -1).filter(i=>i>=0)]));
 // Divinità nel nome (elenco fisso: Martello, Ceresole o Serdiana contengono le lettere solo per caso)
 const DEI = new Set(['Giove','Collegiove','Campo di Giove','Casagiove','Portovenere','Castelvenere','Giano dell\'Umbria','Giano Vetusto','Nettuno','Spigno Saturnia','Cefalà Diana','Minervino Murge','Minervino di Lecce','Ercolano']);
@@ -445,7 +456,9 @@ function achCats(){
     // segreti: da bloccati si vede solo il nome criptico, senza regola né conteggio; la descrizione (d) arriva con lo sblocco
     { k:'s', ic:'🤫', t:'Segreti', items: SEC.map(([n,l,ic])=>has('s'+n) ? it('s'+n,ic,l,n) : { u:false, ic, l, c:'' }).concat(WINKS.map(w=>has(w.id) ? it(w.id,w.ic,w.l,'',w.d) : { u:false, ic:w.ic, l:w.l, c:'' })),
       // sbloccato Elementare, solo le parole già trovate (le altre restano da scoprire)
-      more: has('sw:parole') ? (pw => `<details class="sub" data-a="parl"${openAch.has('parl')?' open':''}><summary>Parole di Elementare trovate (${pw.length}/${PAROLE.size})</summary><ul>${pw.map(w=>`<li>${w}</li>`).join('')}</ul></details>`)([...PAROLE].filter(w=>PARI.get(w).some(i=>found[i])).sort(byIt)) : '' },
+      more: has('sw:parole') ? (fw => `<details class="sub" data-a="parl"${openAch.has('parl')?' open':''}><summary>Parole di Elementare trovate (${fw.length}/${PAROLE.size})</summary><ul>${
+        PAROLEG.map(([ic,t,ws]) => [ic, t, ws.length, ws.filter(w=>fw.includes(w)).sort(byIt)]).filter(g=>g[3].length).map(([ic,t,n,f])=>`<li>${ic} ${t} (${f.length}/${n}): ${f.join(', ')}</li>`).join('')
+      }</ul></details>`)([...PAROLE].filter(w=>PARI.get(w).some(i=>found[i]))) : '' },
     { k:'pp', ic:'👥', t:'Persone beccate', info: fmtN(popFound)+' persone su '+fmtN(POP), items: PPS.map(([q,l])=>it('pp'+q,'👥',l,q+'%')) },
     { k:'e', ic:'🧭', t:'Esplorazione', items: [it('e:r','🇮🇹','Giro d’Italia',regsTouched()+'/'+D.regs.length), it('e:p','🧭','Giro delle province',provsTouched()+'/'+NP)] },
     { k:'tm', ic:'⏱️', t:'A tempo', info: 'Conta il tempo di gioco: in pausa l’orologio si ferma. Un nome con più comuni (Castro) li conta tutti.',
