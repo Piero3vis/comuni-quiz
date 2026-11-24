@@ -519,11 +519,13 @@ function tick(){ if(running) elapsed = Date.now()-t0; $('time').firstChild.textC
 function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent = fmtN(popFound); $('rar').textContent = fmtN(rarFound); }
 function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TIMED.some(c=>c.best) ? { rb: Object.fromEntries(TIMED.filter(c=>c.best).map(c=>[c.id, c.best])) } : {}), ...(TOURS_ON ? (TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}) : trKept ? { tr: trKept } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
 function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); if(!TOURS_ON && Object.keys(tr).length) trKept = tr; TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); const rb = s.rb || {}; TIMED.forEach(c=>{ if(Number.isInteger(rb[c.id]) && rb[c.id]>0) c.best = rb[c.id]; }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
+// la casella è sempre attiva (tranne a partita finita): scrivere un comune fa partire o riprendere la partita; il pulsante serve solo per il tempo
+const PAUSED = 'In pausa: scrivi un comune per riprendere…';
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
-  $('inp').disabled = false; $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
+  $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
 }
-function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').disabled = true; $('go').textContent = 'Riprendi'; }
+function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').placeholder = PAUSED; $('go').textContent = 'Riprendi'; }
 // Partita finita (resa o tutti trovati): input fermo, il pulsante principale diventa "Ricomincia"
 const over = () => gaveUp || foundCount===N;
 function showOver(){ $('inp').disabled = true; $('inp').placeholder = gaveUp ? 'Ti sei arreso: ecco tutti i comuni. Premi Ricomincia per una nuova partita.' : 'Hai trovato tutti i comuni! Premi Ricomincia per una nuova partita.'; $('giveup').disabled = true; $('go').disabled = false; $('go').textContent = 'Ricomincia'; if(gaveUp) D.regs.forEach((_,k)=>updateReg(k)); draw(); }
@@ -535,15 +537,20 @@ addEventListener('pagehide', ()=>{ if(running){ tick(); save(); } });
 $('giveup').onclick = ()=>{ if(confirm('Vuoi arrenderti? Verranno mostrati tutti i comuni mancanti.')){ gaveUp = true; finish(); } };
 const dupEl = document.createElement('div'); dupEl.style.cssText = 'position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--panel);color:var(--text);border:2px solid var(--bad);border-radius:10px;padding:6px 14px;font-size:14px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .25s;pointer-events:none;z-index:6;max-width:80%;text-align:center'; box.appendChild(dupEl);
 let dupT = 0, dupClr = 0;
+function notice(text, inp, i){
+  dupEl.textContent = text; dupEl.style.opacity = 1; inp.classList.add('shake'); if(i>=0){ flash = i; draw(); }
+  clearTimeout(dupT); dupT = setTimeout(()=>{ dupEl.style.opacity = 0; inp.classList.remove('shake'); if(i>=0 && flash===i){ flash = -1; draw(); } }, 1800);
+}
 function dupNotice(hits, inp){
   const i = hits[0], nm = D.n[i].split('/')[0];
-  dupEl.textContent = 'Già indovinato: ' + nm + (hits.length>1 ? ' (' + hits.length + ' comuni con questo nome)' : '');
-  dupEl.style.opacity = 1; inp.classList.add('shake'); flash = i; draw();
-  clearTimeout(dupT); dupT = setTimeout(()=>{ dupEl.style.opacity = 0; inp.classList.remove('shake'); if(flash===i){ flash = -1; draw(); } }, 1800);
+  notice('Già indovinato: ' + nm + (hits.length>1 ? ' (' + hits.length + ' comuni con questo nome)' : ''), inp, i);
   const v = inp.value; clearTimeout(dupClr); dupClr = setTimeout(()=>{ if(inp.value===v) inp.value = ''; }, 1500);
 }
+// Invio su un nome che non è un comune: un avviso, così il gioco non sembra bloccato (il testo resta)
+$('inp').addEventListener('keydown', e => { const v = e.target.value; if(e.key==='Enter' && !over() && norm(v) && !keyMap.get(norm(v)) && !looseMap.get(lk(v))) notice('Nessun comune si chiama così', e.target, -1); });
 $('inp').addEventListener('input',e=>{
-  if(!running) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
+  if(over()) return; const k = norm(e.target.value); if(!k) return; const hits = keyMap.get(k) || looseMap.get(lk(e.target.value)); if(!hits) return;
+  if(!running) start();
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
   if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); timedCheck(added); winkCheck(added); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
@@ -569,6 +576,6 @@ $('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter'
 // link per sostenere il progetto: l'indirizzo sta solo nel footer (#support), il pannello laterale lo copia
 { const s = $('support'), side = $('supportSide'); if(s && side){ side.href = s.href; $('supportBox').hidden = false; } }
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();
-if(over()) showOver(); else if(foundCount>0){ $('go').textContent = 'Riprendi'; }
+if(over()) showOver(); else if(foundCount>0){ $('go').textContent = 'Riprendi'; $('inp').placeholder = PAUSED; }
 window.addEventListener('resize',resize); resize();
 })();

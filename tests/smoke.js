@@ -232,7 +232,7 @@ async function runGiveUp(){
     await new Promise(r=>setTimeout(r,1500));
     const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
     const state = () => [$('go').textContent, $('go').disabled, $('giveup').disabled, $('inp').disabled, d.querySelectorAll('#regs li').length, d.querySelectorAll('#regs li.miss').length].join(',');
-    return { w, $, state, errors, dom };
+    return { w, d, $, state, errors, dom };
   };
   let p = await open();
   p.$('go').click(); ['roma', 'milano', 'napoli'].forEach(n => { p.$('inp').value = n; p.$('inp').dispatchEvent(new p.w.Event('input')); });
@@ -247,6 +247,23 @@ async function runGiveUp(){
   ok(cleared === null, 'Ricomincia cancella la partita salvata');
   ok(p.errors.length === 0, 'errori JS');
   p.dom.window.close();
+  // inizio scrivendo: senza premere Inizia la casella è attiva e il primo comune fa partire la partita
+  p = await open(); const inp = p.$('inp'), type = v => { inp.value = v; inp.dispatchEvent(new p.w.Event('input')); };
+  const fresh = [inp.disabled, inp.placeholder, p.$('go').textContent].join(',');
+  inp.value = 'paperopoli'; inp.dispatchEvent(new p.w.KeyboardEvent('keydown', { key: 'Enter' }));
+  const nope = p.d.body.textContent.includes('Nessun comune si chiama così') && inp.value === 'paperopoli';
+  type('roma'); const started = [p.$('cnt').textContent, p.$('go').textContent, p.$('giveup').disabled].join(',');
+  p.$('go').click(); const paused = [inp.disabled, inp.placeholder, p.$('go').textContent].join(',');
+  type('milano'); const resumed = [p.$('cnt').textContent, p.$('go').textContent].join(',');
+  const saved2 = p.w.localStorage.getItem('comuniQuizV1'); p.dom.window.close();
+  p = await open(saved2); const back = [p.$('inp').disabled, p.$('inp').placeholder, p.$('go').textContent].join(','); p.dom.window.close();
+  console.log('inizio scrivendo:', fresh, '|', started, '|', paused, '|', resumed, '|', back);
+  ok(fresh === 'false,Scrivi il nome di un comune per iniziare…,Inizia', 'casella attiva prima di Inizia');
+  ok(nope, 'Invio su un nome sbagliato: avviso, il testo resta');
+  ok(started === '1,Pausa,false', 'scrivere un comune fa partire la partita');
+  ok(paused === 'false,In pausa: scrivi un comune per riprendere…,Riprendi', 'in pausa la casella resta attiva');
+  ok(resumed === '2,Pausa', 'scrivere un comune in pausa fa riprendere');
+  ok(back === 'false,In pausa: scrivi un comune per riprendere…,Riprendi', 'al ritorno: casella attiva e testo di pausa');
 }
 // curiosità: nessun testo contiene il nome del comune; il riquadro del clic mostra il menu chiuso (indizio prima, curiosità dopo)
 async function runFacts(){

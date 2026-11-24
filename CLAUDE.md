@@ -54,6 +54,7 @@ Goal: one per province (the test prints uncovered provinces); done by region: Ve
 - Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.
   `looseMap`/`lk()` is the fallback that also drops connecting words (di, del, della, nell, ...). Typing a name fills every comune with that name
   (homonyms: both Castro, etc.; covered by `tests/smoke.js`).
+- Start: the box is enabled unless the game is over; typing a comune while not running calls `start()` (new game or resume), so "Inizia" is optional. The `#go` button (Inizia / Pausa / Riprendi) only starts and stops the timer; `pause()` keeps the box enabled and sets the `PAUSED` placeholder (also on load with progress). Enter on text that is no comune shows "Nessun comune si chiama così" via `notice()` (same element as the "Già indovinato" notice).
 - State: `found[]` (Uint8Array), `foundCount`, `popFound` ("persone beccate", `#pop`) and `rarFound` ("punti rarità", `#rar`: `RAR[i] = max(1, round(10·log10(maxPop/pop)))`), both top-left on the map, `regCount`, `provFound`, `coastFound`, timer in `elapsed`.
 - Persistence: `localStorage['comuniQuizV1'] = { f: [found indices], t: elapsedMs, a: [earned challenge ids], rb: { timed id: record }, tr: { giro, giroP: [last unit, [units]] } while a run is on (old gr still read), g: 1 if given up }`.
   Game over (`over()`: given up or all found) → `showOver()`; `#go` becomes "Ricomincia", which removes `comuniQuizV1` and reloads. Always wrapped in try/catch.
