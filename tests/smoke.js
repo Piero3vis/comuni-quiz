@@ -172,7 +172,7 @@ async function run(label, htmlFile, useFetch){
   const heads = () => [...d.querySelectorAll('#achlist h3.ag')].map(h=>h.textContent), cats = () => [...d.querySelectorAll('#achlist details.cat')].map(c=>c.dataset.a);
   const catOrder = cats(), at = k => catOrder.indexOf(k);
   ok(heads().join('|') === 'Progressi|Sfide|Geografia|Città e borghi|Cultura e storia|Segreti', 'titoli dei gruppi dei traguardi: ' + heads().join('|'));
-  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 32 && at('mr') + 1 === at('ml') && at('t') + 1 === at('bb') && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('bb') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
+  ok(catOrder[0] === 'm' && catOrder[catOrder.length-1] === 's' && at('p50') < at('tm') && at('cc') < at('c') && at('x') < at('w') && catOrder.length === 33 && at('lg') + 1 === at('cg') && at('mr') + 1 === at('ml') && at('t') + 1 === at('bb') && at('k') + 1 === at('lg') && at('cap') + 1 === at('ext') && at('x') + 1 === at('gc') && at('gc') + 1 === at('b1000') && at('b100') + 1 === at('t') && at('bb') + 1 === at('w'), 'ordine delle categorie: ' + catOrder.join(','));
   d.querySelector('#achfilt button[data-f="done"]').click();
   const orphan = [...d.querySelectorAll('#achlist h3.ag')].filter(h => !(h.nextElementSibling && h.nextElementSibling.matches('details.cat'))).length, doneHeads = heads().length;
   d.querySelector('#achfilt button[data-f="all"]').click();
@@ -345,7 +345,7 @@ async function runChallenges(){
     const row = re => ([...$('achlist').querySelectorAll('.ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
     const info = () => (d.querySelector('#achlist details[data-a="ch"] .info') || {}).textContent || '';
     const st = re => { const e = [...$('achlist').querySelectorAll('.ai')].find(x => re.test(x.textContent)); return e && e.querySelector('.st') ? e.querySelector('.st').textContent : '?'; };
-    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸|🗣️|🎉) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
+    const toasts = []; new w.MutationObserver(() => [...d.querySelectorAll('#mapbox > div')].forEach(el => { if (/^(⛵|🚴|🚲|🚶|💡|⚡|🔥|🎯|🔤|📈|🐓|🦌|💬|🔱|🏞️|🌸|🗣️|🎉|🏷️) /.test(el.textContent) && toasts[toasts.length - 1] !== el.textContent) toasts.push(el.textContent); })).observe(d.getElementById('mapbox'), { subtree: true, childList: true, characterData: true });
     return { w, d, $, type, row, info, st, toasts, errors, dom, saved: () => w.localStorage.getItem('comuniQuizV1'), settle: async () => { let n = -1; while (n !== toasts.length) { n = toasts.length; await new Promise(r => setTimeout(r, 300)); } } };   // finché arrivano avvisi
   };
   // 1. da costa a costa: lungo la costa intorno a Leuca non vale, con un comune dell'entroterra si'
@@ -500,6 +500,23 @@ async function runChallenges(){
     ok(/^💬 Elementare/.test(elem), 'Elementare: Rossa, Viola, Nave di fila');
     ok(!before && big === '1.000' && pToasts.includes('🎉 Mille comuni! Un comune italiano su otto è già tuo.') && !again, 'festa per i 1000 comuni, una volta sola');
     ok(pErr.length === 0, 'errori JS: ' + pErr.join('; '));
+  }
+  // 11. stesso cognome: ogni comune del gruppo finisce allo stesso modo; il gruppo completo sblocca il traguardo con l'avviso
+  {
+    const cg = read('data/groups.json').cognomi, byName = Object.fromEntries(cg.map(g => [g.name, g]));
+    ok(cg.length === 25 && cg.every(g => g.nota && g.comuni.length >= 4), 'cognomi: 25 gruppi, ognuno con nota e almeno 4 comuni');
+    ok(byName['Sulla strada del vino'].comuni.length === 8 && byName['Di Cadore'].comuni.length === 19 && byName['Agordino'].comuni.length === 9 && byName['Sopra e sotto'].comuni.length === 24, 'cognomi: vino 8, Cadore 19, Agordino 9, 12 coppie sopra/sotto');
+    ok(!byName['Polesine'].comuni.includes('Polesine Zibello') && !byName['Sannio'].comuni.some(nm => /^Sannic/.test(nm)), 'cognomi: niente omonimi di altre zone');
+    p = await open();
+    const cgRow = re => ([...p.d.querySelectorAll('#achlist details[data-a="cg"] .ai')].find(e => re.test(e.textContent)) || {}).textContent || '?';
+    const vino = byName['Sulla strada del vino'].comuni.map(idx); vino.slice(0, -1).forEach(p.type); const v0 = cgRow(/Sulla strada del vino/);
+    p.type(vino[vino.length - 1]); const v1 = cgRow(/Sulla strada del vino/); await p.settle();
+    const cToasts = p.toasts, cErr = p.errors, cSaved = p.saved(); p.dom.window.close();
+    p = await open(cSaved); const vLoaded = cgRow(/Sulla strada del vino/); p.dom.window.close();
+    console.log('stesso cognome:', cg.map(g => g.comuni.length).join(','), '|', v0, '->', v1, '|', cToasts.filter(t => t.startsWith('🏷️')).join(' | '));
+    ok(/^🔒.*7\/8/s.test(v0) && /^🏷️ Sulla strada del vino/.test(v1) && cToasts.includes('🏷️ Sulla strada del vino: 🍷 VINOOH!!'), 'cognomi: VINOOH!! con la strada del vino completa');
+    ok(/^🏷️ Sulla strada del vino/.test(vLoaded), 'cognomi: ripristinati al caricamento');
+    ok(cErr.length === 0, 'errori JS: ' + cErr.join('; '));
   }
   // 9. minoranze linguistiche: dati con fonte, un traguardo per minoranza, Giro delle minoranze
   {
