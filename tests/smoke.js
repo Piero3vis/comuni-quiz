@@ -501,6 +501,14 @@ async function runChallenges(){
     ok(!before && big === '1.000' && pToasts.includes('🎉 Mille comuni! Un comune italiano su otto è già tuo.') && !again, 'festa per i 1000 comuni, una volta sola');
     ok(pErr.length === 0, 'errori JS: ' + pErr.join('; '));
   }
+  // 12. id unici: la sfida "Cinquanta in cinque" (t50) sbloccava anche "50 tesori"
+  {
+    p = await open(JSON.stringify({ f: [idx('Roma'), idx('Morterone')], t: 1000, a: ['t50'] }));
+    const t50 = p.row(/50 tesori/), c50 = p.row(/Cinquanta in cinque/), tErr = p.errors; p.dom.window.close();
+    console.log('id unici:', t50, '|', c50.slice(0, 22));
+    ok(/^🔒/.test(t50) && /^⏱️ Cinquanta in cinque/.test(c50), 'Cinquanta in cinque non sblocca 50 tesori');
+    ok(tErr.length === 0, 'errori JS (anche traguardi con id doppio): ' + tErr.join('; '));
+  }
   // 11. stesso cognome: ogni comune del gruppo finisce allo stesso modo; il gruppo completo sblocca il traguardo con l'avviso
   {
     const cg = read('data/groups.json').cognomi, byName = Object.fromEntries(cg.map(g => [g.name, g]));
