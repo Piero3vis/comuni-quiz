@@ -50,7 +50,7 @@ geometry from openpolis + Natural Earth, plus `EXTRA` for very short borders, ch
 `{ "Nome": { "testo": "…", "fonte": "https://…" } }`, alphabetical (same naming as groups, `"Livo (CO)"` for duplicates), resolved by `withGroups()` into `D.fact` (Map index → `testo`), embedded by `build_single_file.py`.
 Shown as a toast "💡 Curiosità su <nome>: …" when the comune is found (end of `achCheck(i)`, live guesses only) and in the click box (`clickAt()`) as a closed `<details class="fact">`: "💡 Indizio: una curiosità" before the comune is found, "💡 Curiosità" under residents/rarity after.
 Rules (checked by `tests/smoke.js`): every entry has an `https` `fonte` supporting the whole text; no capoluoghi; texts never contain the comune's name or a `/` part, ≤ 200 characters, typographic apostrophe; avoid yearly numbers.
-Goal: one per province (the test prints uncovered provinces); done by region: Veneto. `placeInfo()` keeps the box inside the map.
+Goal: one per province (the test prints uncovered provinces); done by region: Veneto, Trentino-Alto Adige, Umbria, Molise, Basilicata, Valle d’Aosta, Toscana; next: Friuli-Venezia Giulia, Puglia, Campania. `placeInfo()` keeps the box inside the map.
 
 ## Quiz logic
 - Matching: `norm()` strips accents/non-alphanumerics; `keyMap` maps normalised names (and each `/` part) to indices.
@@ -116,5 +116,3 @@ Ideas from the player (November 2026):
 - More strategy winks (`WINKS`, secret, consecutive correct guesses; keep them out of README and DEVELOPMENT.md): food and wine products (comuni named like a product: Barolo, Gorgonzola, Montepulciano, Castelmagno…),
   plants.
 - Rethink the "Percorsi" category (Sfide group): with the tours paused it has only "Italia a piedi", which is very hard. Ideas welcome: easier steps (3, 6, 12 regions), shorter chains, the tours back once the prefix problem is solved.
-- `data/facts.json`: add Cortina sulla Strada del Vino (BZ): known as "Piccola Venezia",
-  flooded by Adige branches until the 19th-century river works, people moved between houses by boat or in barrels. It needs a `fonte` that supports the whole text.
