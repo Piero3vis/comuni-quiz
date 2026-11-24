@@ -605,5 +605,132 @@
    "nota": "conquistata dagli aragonesi nel 1354 e ripopolata da catalani: qui si parla l’alguerese",
    "fonte": "https://www.regione.piemonte.it/web/media/42708/download"
   }
+ ],
+ "cognomi": [
+  {
+   "name": "Sulla strada del vino",
+   "comuni": ["Appiano sulla strada del vino/Eppan an der Weinstraße", "Caldaro sulla strada del vino/Kaltern an der Weinstraße", "Cortaccia sulla strada del vino/Kurtatsch an der Weinstraße", "Cortina sulla strada del vino/Kurtinig an der Weinstraße", "Magrè sulla strada del vino/Margreid an der Weinstraße", "Montagna sulla strada del vino/Montan an der Weinstraße", "Salorno sulla strada del vino/Salurn an der Weinstraße", "Termeno sulla strada del vino/Tramin an der Weinstraße"],
+   "nota": "🍷 VINOOH!!"
+  },
+  {
+   "name": "Agordino",
+   "comuni": ["Agordo", "Cencenighe Agordino", "Canale d'Agordo", "La Valle Agordina", "Rivamonte Agordino", "San Tomaso Agordino", "Taibon Agordino", "Vallada Agordina", "Voltago Agordino"],
+   "nota": "⛰️ Tutti attorno ad Agordo, sotto le Dolomiti"
+  },
+  {
+   "name": "Di Cadore",
+   "comuni": ["Auronzo di Cadore", "Borca di Cadore", "Calalzo di Cadore", "Cibiana di Cadore", "Danta di Cadore", "Domegge di Cadore", "Lorenzago di Cadore", "Lozzo di Cadore", "Ospitale di Cadore", "Perarolo di Cadore", "Pieve di Cadore", "San Pietro di Cadore", "Santo Stefano di Cadore", "San Vito di Cadore", "Selva di Cadore", "Valle di Cadore", "Vigo di Cadore", "Vodo Cadore", "Zoppè di Cadore"],
+   "nota": "🥟 Casunziei par duto el Cadore!"
+  },
+  {
+   "name": "Terme",
+   "comuni": ["Agliano Terme", "Acqui Terme", "Gaverina Terme", "San Pellegrino Terme", "Sant'Omobono Terme", "Angolo Terme", "Darfo Boario Terme", "Vallio Terme", "Godiasco Salice Terme", "Miradolo Terme", "Rivanazzano Terme", "Caderzone Terme", "Garniga Terme", "Levico Terme", "Roncegno Terme", "Sant'Orsola Terme", "Comano Terme", "Recoaro Terme", "Abano Terme", "Battaglia Terme", "Galzignano Terme", "Montegrotto Terme", "Arta Terme", "Salsomaggiore Terme", "Castel San Pietro Terme", "Alto Reno Terme", "Riolo Terme", "Castrocaro Terme e Terra del Sole", "Monte Grimano Terme", "Acquasanta Terme", "Monsummano Terme", "Montecatini-Terme", "Gambassi Terme", "San Giuliano Terme", "Casciana Terme Lari", "Chianciano Terme", "Rapolano Terme", "Telese Terme", "Casamicciola Terme", "Contursi Terme", "Caramanico Terme", "Popoli Terme", "Santa Cesarea Terme", "Lamezia Terme", "Alì Terme", "Terme Vigliatore"],
+   "nota": "♨️ Accappatoio e ciabatte: tutte le terme!"
+  },
+  {
+   "name": "Monferrato",
+   "comuni": ["Calliano Monferrato", "Casorzo Monferrato", "Castagnole Monferrato", "Grana Monferrato", "Montemagno Monferrato", "Nizza Monferrato", "Montiglio Monferrato", "Altavilla Monferrato", "Belforte Monferrato", "Camagna Monferrato", "Casale Monferrato", "Castelletto Monferrato", "Cerrina Monferrato", "Frassinello Monferrato", "Fubine Monferrato", "Mirabello Monferrato", "Mombello Monferrato", "Murisengo Monferrato", "Ozzano Monferrato", "Pomaro Monferrato", "Ponzano Monferrato", "Rosignano Monferrato", "Sala Monferrato", "San Giorgio Monferrato", "San Salvatore Monferrato", "Spigno Monferrato", "Tagliolo Monferrato", "Vignale Monferrato", "Villanova Monferrato", "Lu e Cuccaro Monferrato"],
+   "nota": "🍇 Barbera per tutti!"
+  },
+  {
+   "name": "Canavese",
+   "comuni": ["Baldissero Canavese", "Barone Canavese", "Candia Canavese", "Cossano Canavese", "Fiorano Canavese", "Forno Canavese", "Orio Canavese", "Palazzo Canavese", "Pavone Canavese", "Perosa Canavese", "Pont Canavese", "Rivarolo Canavese", "Rocca Canavese", "Romano Canavese", "Ronco Canavese", "Salerano Canavese", "San Benigno Canavese", "San Carlo Canavese", "San Giorgio Canavese", "San Giusto Canavese", "San Martino Canavese", "San Maurizio Canavese", "Torre Canavese", "Vauda Canavese", "Villanova Canavese"],
+   "nota": "🏰 Tutto il Canavese, la terra attorno a Ivrea"
+  },
+  {
+   "name": "Sannio",
+   "comuni": ["Gioia Sannitica", "Prata Sannita", "San Potito Sannitico", "Cerreto Sannita", "Colle Sannita", "Pesco Sannita", "San Giorgio del Sannio", "San Leucio del Sannio", "San Martino Sannita", "Santa Croce del Sannio", "Mirabello Sannitico", "Montefalcone nel Sannio", "Morrone del Sannio", "San Giuliano del Sannio", "Torella del Sannio", "Belmonte del Sannio", "Cantalupo nel Sannio", "Civitanova del Sannio", "Forlì del Sannio", "Poggio Sannita", "Rionero Sannitico", "Sant'Elena Sannita"],
+   "nota": "🛡️ Nelle terre degli antichi Sanniti"
+  },
+  {
+   "name": "Sabina",
+   "comuni": ["Belmonte in Sabina", "Cantalupo in Sabina", "Collalto Sabino", "Fara in Sabina", "Frasso Sabino", "Longone Sabino", "Magliano Sabina", "Monteleone Sabino", "Montenero Sabino", "Monte San Giovanni in Sabina", "Montopoli di Sabina", "Paganico Sabino", "Pozzaglia Sabina", "Torricella in Sabina", "Torri in Sabina", "Varco Sabino", "Palombara Sabina"],
+   "nota": "🫒 La terra degli antichi Sabini, e del suo olio"
+  },
+  {
+   "name": "Brianza",
+   "comuni": ["Alzate Brianza", "Annone di Brianza", "Cassago Brianza", "Castello di Brianza", "Cesana Brianza", "Colle Brianza", "Monticello Brianza", "La Valletta Brianza", "Agrate Brianza", "Besana in Brianza", "Carate Brianza", "Cavenago di Brianza", "Verano Brianza"],
+   "nota": "🏡 Ville, colline e mobilifici: tutta la Brianza"
+  },
+  {
+   "name": "Irpinia",
+   "comuni": ["Altavilla Irpina", "Ariano Irpino", "Bagnoli Irpino", "Capriglia Irpina", "Cassano Irpino", "Melito Irpino", "Montecalvo Irpino", "Monteforte Irpino", "Petruro Irpino", "Salza Irpina", "Savignano Irpino", "Volturara Irpina"],
+   "nota": "🍷 Tutta l’Irpinia, la terra del Taurasi"
+  },
+  {
+   "name": "Lucania",
+   "comuni": ["Atena Lucana", "Vallo della Lucania", "Albano di Lucania", "Genzano di Lucania", "Muro Lucano", "Oppido Lucano", "San Severino Lucano", "Satriano di Lucania", "Savoia di Lucania", "Oliveto Lucano", "San Giorgio Lucano"],
+   "nota": "🏞️ Lucania, l’antico nome della Basilicata"
+  },
+  {
+   "name": "Lomellina",
+   "comuni": ["Candia Lomellina", "Ceretto Lomellina", "Gravellona Lomellina", "Olevano di Lomellina", "San Giorgio di Lomellina", "Sant'Angelo Lomellina", "Sartirana Lomellina", "Valle Lomellina", "Velezzo Lomellina"],
+   "nota": "🌾 Risaie a perdita d’occhio"
+  },
+  {
+   "name": "Ed Uniti",
+   "comuni": ["Grandola ed Uniti", "Gravedona ed Uniti", "San Genesio ed Uniti", "Casalbuttano ed Uniti", "Grumello Cremonese ed Uniti", "Pescarolo ed Uniti", "Pozzaglio ed Uniti", "Rivarolo del Re ed Uniti", "Sesto ed Uniti"],
+   "nota": "🤝 Uniti si vince!"
+  },
+  {
+   "name": "Cilento",
+   "comuni": ["Castelnuovo Cilento", "Laureana Cilento", "Monteforte Cilento", "Ogliastro Cilento", "Prignano Cilento", "San Mauro Cilento", "Sessa Cilento", "Stella Cilento"],
+   "nota": "🫒 Il Cilento, patria della dieta mediterranea"
+  },
+  {
+   "name": "Lario",
+   "comuni": ["Bene Lario", "Faggeto Lario", "Gera Lario", "Pianello del Lario", "Pognana Lario", "Esino Lario", "Mandello del Lario", "Oliveto Lario"],
+   "nota": "🚤 Lario è l’altro nome del lago di Como"
+  },
+  {
+   "name": "Marsica",
+   "comuni": ["Gioia dei Marsi", "Lecce nei Marsi", "Luco dei Marsi", "Magliano de' Marsi", "Ortona dei Marsi", "San Benedetto dei Marsi", "Scurcola Marsicana"],
+   "nota": "🏔️ Nella terra degli antichi Marsi, attorno al Fucino"
+  },
+  {
+   "name": "Polesine",
+   "comuni": ["Ariano nel Polesine", "Arquà Polesine", "Badia Polesine", "Frassinelle Polesine", "Fratta Polesine", "Pontecchio Polesine"],
+   "nota": "🌊 Tutto il Polesine, tra l’Adige e il Po"
+  },
+  {
+   "name": "Salento",
+   "comuni": ["San Michele Salentino", "San Pancrazio Salentino", "Campi Salentina", "Carpignano Salentino", "Montesano Salentino", "Salice Salentino"],
+   "nota": "☀️ Lu sole, lu mare, lu ientu!"
+  },
+  {
+   "name": "Della Battaglia",
+   "comuni": ["San Fermo della Battaglia", "Montebello della Battaglia", "Moriago della Battaglia", "Nervesa della Battaglia", "Sernaglia della Battaglia"],
+   "nota": "⚔️ Tre ricordano la battaglia del Piave, due quelle del Risorgimento"
+  },
+  {
+   "name": "Matese",
+   "comuni": ["Castello del Matese", "Gallo Matese", "Piedimonte Matese", "San Gregorio Matese", "San Polo Matese"],
+   "nota": "⛰️ Attorno ai monti del Matese, tra Campania e Molise"
+  },
+  {
+   "name": "Del Grappa",
+   "comuni": ["Bassano del Grappa", "Pove del Grappa", "Seren del Grappa", "Borso del Grappa", "Pieve del Grappa"],
+   "nota": "⛰️ Tutti ai piedi del Monte Grappa"
+  },
+  {
+   "name": "In Chianti",
+   "comuni": ["Greve in Chianti", "Castellina in Chianti", "Gaiole in Chianti", "Radda in Chianti"],
+   "nota": "🐓 Gallo nero per tutti!"
+  },
+  {
+   "name": "Aspromonte",
+   "comuni": ["Santa Cristina d'Aspromonte", "Sant'Alessio in Aspromonte", "Sant'Eufemia d'Aspromonte", "Santo Stefano in Aspromonte"],
+   "nota": "🌲 Sull’Aspromonte, in punta allo stivale"
+  },
+  {
+   "name": "Gargano",
+   "comuni": ["Rignano Garganico", "Rodi Garganico", "San Nicandro Garganico", "Vico del Gargano"],
+   "nota": "🦵 Tutto lo sperone d’Italia"
+  },
+  {
+   "name": "Sopra e sotto",
+   "comuni": ["Frabosa Soprana", "Frabosa Sottana", "Venegono Inferiore", "Venegono Superiore", "Bonate Sopra", "Bonate Sotto", "Cenate Sopra", "Cenate Sotto", "Osio Sopra", "Osio Sotto", "Forni di Sopra", "Forni di Sotto", "Nocera Inferiore", "Nocera Superiore", "Castelluccio Inferiore", "Castelluccio Superiore", "Petralia Soprana", "Petralia Sottana", "Tramonti di Sopra", "Tramonti di Sotto", "Occhieppo Inferiore", "Occhieppo Superiore", "Quarna Sopra", "Quarna Sotto"],
+   "nota": "🛗 Si sale e si scende: tutte le dodici coppie"
+  }
  ]
 }

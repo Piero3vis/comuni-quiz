@@ -52,6 +52,7 @@ function withGroups(map, groups, facts, borghi) {
   map.mar = resolve(groups.marinare);
   map.sto = resolve(groups.storia);
   map.min = resolve(groups.minoranze);
+  map.cog = resolve(groups.cognomi);
   map.fact = new Map(Object.entries(facts).map(([nm, f]) => [lookup(nm), f.testo]));
   map.bpb = { agg: borghi.agg, fraz: new Map(Object.entries(borghi.fraz).map(([nm, f]) => [lookup(nm), f])),
     reg: Object.entries(borghi.reg).map(([rn, list]) => {
@@ -347,7 +348,7 @@ const TS = [10,50,TES.size], tesFound = () => [...TES.keys()].filter(i=>found[i]
 const RT = regTot.map(T=>[Math.ceil(T*.25),Math.ceil(T*.5)]);
 const openAch = new Set();
 const CAM = D.cam, camOf = new Map(); CAM.forEach((g,gi)=>g[1].forEach(i=>{ if(!camOf.has(i)) camOf.set(i,[]); camOf.get(i).push(gi); }));
-// Gruppi a tema da groups.json (confini, repubbliche marinare, storia, minoranze linguistiche): id <pre>:<gi>, sbloccati quando il gruppo è completo
+// Gruppi a tema da groups.json (confini, repubbliche marinare, storia, minoranze linguistiche, stesso cognome): id <pre>:<gi>, sbloccati quando il gruppo è completo
 const CONF = D.conf, CONFA = { 'Francia':'la Francia', 'Svizzera':'la Svizzera', 'Austria':'l’Austria', 'Slovenia':'la Slovenia', 'Città del Vaticano':'il Vaticano' };
 const confTouched = () => CONF.filter(g=>g[1].some(i=>found[i])).length;
 const MLG = D.min, minTouched = () => MLG.filter(g=>g[1].some(i=>found[i])).length;
@@ -356,6 +357,7 @@ const TG = [
   { pre:'mr', ic:'⚓', list: D.mar, label: g => g[0] },
   { pre:'h', ic:'📜', list: D.sto, label: g => g[0] },
   { pre:'ml', ic:'🗣️', list: D.min, label: g => 'Minoranza '+g[0].toLowerCase() },
+  { pre:'cg', ic:'🏷️', list: D.cog, label: g => g[0] },
 ];
 const tgOf = new Map(); TG.forEach(t=>t.list.forEach((g,gi)=>g[1].forEach(i=>{ if(!tgOf.has(i)) tgOf.set(i,[]); tgOf.get(i).push([t,gi]); })));
 // Sfide legate al momento della risposta: non si ricavano dai comuni trovati, quindi i loro id si salvano in comuniQuizV1.a
@@ -444,7 +446,7 @@ $('achlist').addEventListener('toggle', e => { const el = e.target; if(el.datase
 const byProv = (a,b)=>(PN[a]||a).localeCompare(PN[b]||b,'it'), regName = k => D.regs[k].split('/')[0];
 const PROVS = Object.keys(provTot).sort(byProv), REGK = D.regs.map((_,k)=>k);
 // Gruppi del pannello, nell'ordine in cui si vedono: ogni categoria (chiave k) sta in un solo gruppo; gli id dei traguardi non cambiano
-const ACHG = [['Progressi',['m','pp','e','cap','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','lg','i','f','x']],
+const ACHG = [['Progressi',['m','pp','e','cap','ext','r','p','r25','r50','p25','p50']], ['Sfide',['tm','ch','cc']], ['Geografia',['c','k','lg','cg','i','f','x']],
   ['Città e borghi',['gc',...BG.map(b=>'b'+b.lim),'t','bb']], ['Cultura e storia',['w','h','mr','ml','nm']], ['Segreti',['s']]];
 const ACHO = new Map(ACHG.flatMap(([g,ks],gi)=>ks.map((k,j)=>[k,[gi*100+j,g]])));
 function achCats(){
@@ -495,6 +497,8 @@ function achCats(){
     { k:'h', ic:'📜', t:'Storia', items: TG[2].list.map((g,gi)=>tg(TG[2],g,gi)) },
     { k:'ml', ic:'🗣️', t:'Minoranze linguistiche', info: 'Comuni dove la lingua della minoranza è tutelata (legge 482/1999 e statuti speciali).',
       items: [it('ml:giro','🗣️','Giro delle minoranze',minTouched()+'/'+MLG.length,'un comune per ogni minoranza linguistica')].concat(MLG.map((g,gi)=>tg(TG[3],g,gi))) },
+    { k:'cg', ic:'🏷️', t:'Stesso cognome', info: 'Tutti i comuni che finiscono allo stesso modo: Pieve di Cadore, San Vito di Cadore…',
+      items: TG[4].list.map((g,gi)=>tg(TG[4],g,gi)) },
     { k:'mr', ic:'⚓', t:'Repubbliche marinare', items: TG[1].list.map((g,gi)=>tg(TG[1],g,gi)) },
     { k:'f', ic:'🛂', t:'Confini', items: [it('f:giro','🛂','Giro delle frontiere',confTouched()+'/'+CONF.length,'un comune al confine con ogni Stato vicino')].concat(CONF.map((g,gi)=>tg(TG[0],g,gi))) },
     { k:'r', ic:'🥇', t:'Regioni completate', items: REGK.map(k=>it('r:'+k,'🥇',regName(k),regCount[k]+'/'+regTot[k])) },
