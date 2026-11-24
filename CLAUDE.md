@@ -116,5 +116,5 @@ Ideas from the player (November 2026):
 - More strategy winks (`WINKS`, secret, consecutive correct guesses; keep them out of README and DEVELOPMENT.md): food and wine products (comuni named like a product: Barolo, Gorgonzola, Montepulciano, Castelmagno…),
   plants.
 - Rethink the "Percorsi" category (Sfide group): with the tours paused it has only "Italia a piedi", which is very hard. Ideas welcome: easier steps (3, 6, 12 regions), shorter chains, the tours back once the prefix problem is solved.
-- `data/facts.json`: replace the Cefalù fact (Crowley's Abbey of Thelema) with another one; add Cortina sulla Strada del Vino (BZ): known as "Piccola Venezia",
-  flooded by Adige branches until the 19th-century river works, people moved between houses by boat or in barrels. Both need a `fonte` that supports the whole text.
+- `data/facts.json`: add Cortina sulla Strada del Vino (BZ): known as "Piccola Venezia",
+  flooded by Adige branches until the 19th-century river works, people moved between houses by boat or in barrels. It needs a `fonte` that supports the whole text.
