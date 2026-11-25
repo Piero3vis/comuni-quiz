@@ -39,6 +39,8 @@ A borgo that is a frazione is listed under its comune (Tellaro → Lerici) with 
 `nota` is a short anecdote shown in the toast and under the unlocked achievement (hidden while locked, since it can give the answer away).
 `withGroups()` in `app.js` converts names to `[name, indices, nota]` and throws if a name is missing or not unique (Samone, Livo, Peglio, Castro, San Teodoro are duplicated names in the data):
 write a duplicated name as `"Livo (CO)"`.
+`cammini`: only the stage towns (start and end of each stage, a frazione counted as its comune: Casamari → Veroli, Cassio → Terenzo, Ponte d’Arbia → Monteroni d’Arbia and Buonconvento, La Storta → Roma), never every comune the path crosses.
+Stages from camminodibenedetto.it/percorso (16 stages, 17 places), viadeglidei.it/tappe-a-piedi, movimentolento.it (Via di Francesco), viefrancigene.com/le-tappe-italia (44 stages, Gran San Bernardo → Saint-Rhémy-en-Bosses, Passo della Cisa → Berceto).
 `minoranze`: 8 linguistic minorities (Francoprovenzale with all of Valle d’Aosta, Occitana, Ladina, Albanese, Slovena, Greca, Croata, Catalana = Alghero; no Sardinian, Friulian, German, French), each with `fonte` (URL or list):
 the national list of comuni under law 482/1999 (Regione Piemonte, April 2023) is the reference, plus the Bolzano Ladin valleys (statute); doubtful cases are in the archived `add-minoranze` design.
 `cognomi`: 26 groups of comuni whose names end the same way and lie in the same historical area (di Cadore + Vodo Cadore, Agordo + Agordino/a, sulla strada del vino, Monferrato, Canavese, Sannio, Sabina, del/sul Garda…), plus a few themes (Terme, ed Uniti, della Battaglia, the 12 Sopra/Sotto pairs).
@@ -114,7 +116,7 @@ https://piero3vis.github.io/comuni-quiz/ (only `dist/quiz.html` as `index.html`)
 ## Ideas not done yet
 To think about first: a guess is accepted as soon as the text matches, so typing "Castrocaro Terme" takes "Castro" (if not found yet) and clears the field; 471 names are the start of a longer one (1,061 comuni affected). Options, detailed in the `pause-tours` OpenSpec design (wait or Enter for prefix names, keep the text and undo, tour-only fix); the tours come back (`TOURS_ON = true`) once it is solved.
 Merge the 2026 comuni (Castegnero Nanto, Lirio into Montalto Pavese) in `build_data.py`. Export/import of progress (for moving between devices), optional highlight of all coastal comuni, more cammini (Cammino dei Briganti, Cammino Materano, Via Appia),
-region labels on the map, a tidy Via Francigena list from the official stage data.
+region labels on the map.
 Ideas from the player (November 2026):
 - More strategy winks (`WINKS`, secret, consecutive correct guesses; keep them out of README and DEVELOPMENT.md): food and wine products (comuni named like a product: Barolo, Gorgonzola, Montepulciano, Castelmagno…),
   plants.
