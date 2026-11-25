@@ -224,7 +224,7 @@ async function runGiveUp(){
     const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
       beforeParse(w){
         w.Path2D = class {};
-        if(o.phone) w.matchMedia = q => ({ matches: /coarse/.test(q), addEventListener(){}, addListener(){} });
+        if(o.phone) w.matchMedia = q => ({ matches: /coarse|max-width/.test(q), addEventListener(){}, addListener(){} });
         const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
         w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
         w.addEventListener('error', e=>errors.push(e.message));
@@ -268,6 +268,11 @@ async function runGiveUp(){
   // avviso sul telefono: solo con puntatore grossolano; la ✕ lo chiude e resta chiuso
   p = await open(); const deskNote = p.$('mobnote').hidden; p.dom.window.close();
   p = await open(null, { phone: true }); const phoneNote = p.$('mobnote').hidden; p.$('mobnote').querySelector('button').click();
+  // telefono: pannello a linguetta (una scheda lo apre, la freccia lo chiude), testo corto nella casella
+  const side = p.d.querySelector('.side'), sh0 = side.classList.contains('open'); p.$('tabA').click(); const sh1 = [side.classList.contains('open'), p.$('paneA').hidden, p.$('sheet').getAttribute('aria-expanded')].join(',');
+  p.$('sheet').click(); const sh2 = side.classList.contains('open'), phPh = p.$('inp').placeholder;
+  console.log('telefono: linguetta', sh0, '->', sh1, '->', sh2, '|', phPh);
+  ok(!sh0 && sh1 === 'true,false,true' && !sh2 && phPh === 'Scrivi un comune per iniziare…', 'telefono: linguetta del pannello e testo corto');
   const closed = [p.$('mobnote').hidden, p.w.localStorage.getItem('comuniQuizMobileNote')].join(','); p.dom.window.close();
   p = await open(null, { phone: true, noteOff: true }); const again = p.$('mobnote').hidden; p.dom.window.close();
   console.log('avviso telefono: computer', deskNote, '| telefono', phoneNote, '| chiuso', closed, '| dopo', again);
