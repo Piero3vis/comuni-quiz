@@ -91,7 +91,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 @media (prefers-reduced-motion:reduce){.party b{animation:none;opacity:1}}
 /* telefono: titolo e barra compatti, mappa alta quanto lo spazio rimasto (altezza da resize()), pannello laterale come linguetta in basso */
 @media(max-width:600px){
-  body{padding-bottom:64px}
+  /* la pagina non scorre: si muovono solo la mappa e il pannello (testo e crediti stanno in fondo al pannello) */
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   .wrap{position:relative;padding:8px}
   h1{font-size:16px;margin:4px 48px 8px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #theme{position:absolute;top:6px;right:8px;width:36px;padding:6px 0}
@@ -104,7 +105,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
   #mapbox{height:60vh;min-height:220px}
   .score{left:6px;top:6px;gap:10px;padding:3px 8px;font-size:13px}.score small{display:none}
   .zoom{right:6px;top:6px}.zoom button{width:34px;padding:4px 0}
-  .side{position:fixed;left:0;right:0;bottom:0;z-index:20;height:54px;max-height:none;overflow:hidden;border-radius:14px 14px 0 0;border-bottom:0;box-shadow:0 -4px 16px rgba(0,0,0,.15);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .side .about,.side .foot{padding:10px 2px 0}
+  .side{position:fixed;left:0;right:0;bottom:0;z-index:30;overscroll-behavior:contain;height:54px;max-height:none;overflow:hidden;border-radius:14px 14px 0 0;border-bottom:0;box-shadow:0 -4px 16px rgba(0,0,0,.15);padding-bottom:env(safe-area-inset-bottom,0px)}
   .side.open{height:62vh;height:62dvh;overflow:auto}
   .sheet{display:block;flex:none;width:40px;padding:4px 0;border-color:transparent;background:transparent;color:var(--muted)}
 }
