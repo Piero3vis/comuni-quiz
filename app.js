@@ -389,6 +389,20 @@ function celebrate(big){
 }
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
+// suoni dei traguardi (Web Audio, nessun file da scaricare): spenti finché il giocatore non li accende con #snd, scelta in localStorage['comuniQuizSound']
+// i traguardi più difficili (provincia o regione completa, metà degli italiani, capoluoghi, un comune per provincia, 1000 comuni) suonano una fanfara
+const BIGACH = id => /^[pr]:/.test(id) || id==='cap' || id==='e:p' || (/^pp\d+$/.test(id) && +id.slice(2)>=50) || (/^m\d+$/.test(id) && +id.slice(1)>=1000);
+let sndOn = false, actx = null; try{ sndOn = localStorage.getItem('comuniQuizSound')==='1'; }catch(e){}
+function audio(){ const A = window.AudioContext || window.webkitAudioContext; if(!A) return null; try{ if(!actx) actx = new A(); if(actx.state==='suspended' && actx.resume) actx.resume(); }catch(e){ return null; } return actx; }
+function note(a, f, at, dur, vol, type){ const o = a.createOscillator(), g = a.createGain(), t = a.currentTime+at; o.type = type||'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.05); }
+function achSound(big){
+  const a = sndOn && audio(); if(!a) return;
+  if(!big){ note(a,1047,0,.3,.12,'sine'); note(a,1568,.09,.45,.1,'sine'); return; }
+  // fanfara: arpeggio do-mi-sol-do, poi l'accordo che risuona e un luccichio in alto
+  [523,659,784,1047].forEach((f,j)=>note(a,f,j*.09,.35,.13));
+  [523,659,784,1047].forEach(f=>note(a,f,.4,1.8,.08));
+  [2093,2637,3136].forEach((f,j)=>note(a,f,.45+j*.07,.6,.03,'sine'));
+}
 function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('tes:'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); if(minTouched()===MLG.length) unlocked.add('ml:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); { const bf = nFound(BB); BBS.forEach(n=>{ if(bf>=n) unlocked.add('bb:'+n); }); } BBR.forEach(([k,a])=>{ if(nFound(a)===a.length) unlocked.add('bb:r'+k); }); }
 function winkCheck(added){
   WINKS.forEach(w=>{
@@ -574,7 +588,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) start();
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); added.forEach(achCheck); timedCheck(added); winkCheck(added); TOURS.forEach(t=>tourStep(t, added)); renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); const u0 = unlocked.size; added.forEach(achCheck); timedCheck(added); winkCheck(added); TOURS.forEach(t=>tourStep(t, added)); { const fresh = [...unlocked].slice(u0); if(fresh.length) achSound(fresh.some(BIGACH)); } renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];
@@ -593,7 +607,12 @@ $('sheet').onclick = () => setSheet(!sideEl.classList.contains('open'));
 document.querySelectorAll('.tabs button[role=tab]').forEach(b => b.onclick = () => { if(isPhone()) setSheet(true);
   document.querySelectorAll('.tabs button[role=tab]').forEach(x => { const on = x===b; x.setAttribute('aria-selected', on); $(x.getAttribute('aria-controls')).hidden = !on; });
 });
-showTheme();
+function showSnd(){ const b = $('snd'), l = 'Suoni dei traguardi: '+(sndOn ? 'accesi' : 'spenti'); b.textContent = sndOn ? '🔊' : '🔇'; b.title = l; b.setAttribute('aria-label', l); b.setAttribute('aria-pressed', sndOn); }
+$('snd').onclick = ()=>{
+  sndOn = !sndOn; try{ if(sndOn) localStorage.setItem('comuniQuizSound', '1'); else localStorage.removeItem('comuniQuizSound'); }catch(e){}
+  showSnd(); achSound(false); if(running) $('inp').focus();
+};
+showTheme(); showSnd();
 // spiegazione dei punti rarità: tooltip col mouse, avviso al clic (anche da telefono)
 const rarInfo = () => { if(!toastQ.some(t => t[0]==='💎')) toast('💎', 'Punti rarità: ' + $('rarbox').title); };
 $('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); rarInfo(); } };
