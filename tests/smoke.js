@@ -224,11 +224,13 @@ async function runGiveUp(){
     const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
       beforeParse(w){
         w.Path2D = class {};
+        // finto Web Audio: conta le note suonate (w.notes)
+        if(o.audio){ w.notes = []; w.AudioContext = class { constructor(){ this.currentTime = 0; this.state = 'running'; this.destination = {}; } createOscillator(){ const n = { frequency: {}, connect(){}, start(){}, stop(){} }; w.notes.push(n); return n; } createGain(){ return { gain: { setValueAtTime(){}, exponentialRampToValueAtTime(){} }, connect(){} }; } }; }
         if(o.phone) w.matchMedia = q => ({ matches: /coarse|max-width/.test(q), addEventListener(){}, addListener(){} });
         const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
         w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
         w.addEventListener('error', e=>errors.push(e.message));
-        w.localStorage.clear(); if(saved) w.localStorage.setItem('comuniQuizV1', saved); if(o.noteOff) w.localStorage.setItem('comuniQuizMobileNote', '1');
+        w.localStorage.clear(); if(o.snd) w.localStorage.setItem('comuniQuizSound', '1'); if(saved) w.localStorage.setItem('comuniQuizV1', saved); if(o.noteOff) w.localStorage.setItem('comuniQuizMobileNote', '1');
       }});
     await new Promise(r=>setTimeout(r,1500));
     const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
@@ -276,6 +278,15 @@ async function runGiveUp(){
   ok(side.contains(p.d.querySelector('.foot')) && side.contains(p.d.querySelector('.about')) && /CC BY 4\.0/.test(side.textContent), 'telefono: crediti e presentazione in fondo al pannello');
   const closed = [p.$('mobnote').hidden, p.w.localStorage.getItem('comuniQuizMobileNote')].join(','); p.dom.window.close();
   p = await open(null, { phone: true, noteOff: true }); const again = p.$('mobnote').hidden; p.dom.window.close();
+  // suoni dei traguardi: spenti all'inizio; acceso, un traguardo normale suona 2 note, uno difficile (provincia completa) la fanfara
+  const guess = (q, n) => { q.$('inp').value = n; q.$('inp').dispatchEvent(new q.w.Event('input')); };
+  p = await open(null, { audio: true }); guess(p, 'milano'); const off = [p.$('snd').textContent, p.$('snd').getAttribute('aria-pressed'), p.w.notes.length].join(',');
+  p.$('snd').click(); const on = [p.$('snd').textContent, p.w.localStorage.getItem('comuniQuizSound'), p.w.notes.length].join(','); p.w.notes.length = 0;
+  guess(p, 'roma'); const small = p.w.notes.length; guess(p, 'roma'); const quiet = p.w.notes.length - small; p.dom.window.close();
+  const mj = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')), ts = mj.p.map((x,i)=>x==='TS' ? i : -1).filter(i=>i>=0 && mj.n[i]!=='Muggia');
+  p = await open(JSON.stringify({ f: ts, t: 1000 }), { audio: true, snd: true }); guess(p, 'muggia'); const big = p.w.notes.length; p.dom.window.close();
+  console.log('suoni: spenti', off, '| acceso', on, '| Roma (record)', small, '| di nuovo', quiet, '| provincia completa', big);
+  ok(off === '🔇,false,0' && on === '🔊,1,2' && quiet === 0 && small === 2 && big === 11, 'suoni: spenti di default, din per i traguardi, fanfara per i difficili');
   console.log('avviso telefono: computer', deskNote, '| telefono', phoneNote, '| chiuso', closed, '| dopo', again);
   ok(deskNote && !phoneNote && closed === 'true,1' && again, 'avviso telefono: solo su telefono, la ✕ lo chiude per sempre');
 }
