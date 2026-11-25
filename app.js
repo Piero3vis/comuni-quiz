@@ -600,6 +600,8 @@ $('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter'
 // avviso sul telefono (puntatore grossolano): da computer si gioca meglio; chiuso una volta, resta chiuso (localStorage['comuniQuizMobileNote'], a parte dalla partita)
 { const el = $('mobnote'); let off = false; try{ off = localStorage.getItem('comuniQuizMobileNote')==='1'; }catch(e){}
   if(el && !off && window.matchMedia && matchMedia('(pointer: coarse)').matches){ el.hidden = false; el.querySelector('button').onclick = () => { el.hidden = true; try{ localStorage.setItem('comuniQuizMobileNote', '1'); }catch(e){} }; } }
+// telefono: la pagina non scorre, quindi la presentazione e i crediti (attribuzione CC BY) vanno in fondo al pannello a linguetta
+if(isPhone()) document.querySelector('.side').append(document.querySelector('.about'), document.querySelector('.foot'));
 // link per sostenere il progetto: l'indirizzo sta solo nel footer (#support), il pannello laterale lo copia
 { const s = $('support'), side = $('supportSide'); if(s && side){ side.href = s.href; $('supportBox').hidden = false; } }
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();

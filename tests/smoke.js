@@ -273,6 +273,7 @@ async function runGiveUp(){
   p.$('sheet').click(); const sh2 = side.classList.contains('open'), phPh = p.$('inp').placeholder;
   console.log('telefono: linguetta', sh0, '->', sh1, '->', sh2, '|', phPh);
   ok(!sh0 && sh1 === 'true,false,true' && !sh2 && phPh === 'Scrivi un comune per iniziare…', 'telefono: linguetta del pannello e testo corto');
+  ok(side.contains(p.d.querySelector('.foot')) && side.contains(p.d.querySelector('.about')) && /CC BY 4\.0/.test(side.textContent), 'telefono: crediti e presentazione in fondo al pannello');
   const closed = [p.$('mobnote').hidden, p.w.localStorage.getItem('comuniQuizMobileNote')].join(','); p.dom.window.close();
   p = await open(null, { phone: true, noteOff: true }); const again = p.$('mobnote').hidden; p.dom.window.close();
   console.log('avviso telefono: computer', deskNote, '| telefono', phoneNote, '| chiuso', closed, '| dopo', again);
