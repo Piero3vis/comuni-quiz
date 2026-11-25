@@ -394,10 +394,10 @@ function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return
 const BIGACH = id => /^[pr]:/.test(id) || id==='cap' || id==='e:p' || (/^pp\d+$/.test(id) && +id.slice(2)>=50) || (/^m\d+$/.test(id) && +id.slice(1)>=1000);
 let sndOn = false, actx = null; try{ sndOn = localStorage.getItem('comuniQuizSound')==='1'; }catch(e){}
 function audio(){ const A = window.AudioContext || window.webkitAudioContext; if(!A) return null; try{ if(!actx) actx = new A(); if(actx.state==='suspended' && actx.resume) actx.resume(); }catch(e){ return null; } return actx; }
-function note(a, f, at, dur, vol, type){ const o = a.createOscillator(), g = a.createGain(), t = a.currentTime+at; o.type = type||'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.05); }
+function note(a, f, at, dur, vol, type, to){ const o = a.createOscillator(), g = a.createGain(), t = a.currentTime+at; o.type = type||'triangle'; o.frequency.setValueAtTime(f,t); if(to) o.frequency.exponentialRampToValueAtTime(to,t+.08); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.05); }
 function achSound(big){
   const a = sndOn && audio(); if(!a) return;
-  if(!big){ note(a,1047,0,.3,.12,'sine'); note(a,1568,.09,.45,.1,'sine'); return; }
+  if(!big){ note(a,380,0,.18,.16,'sine',1100); return; }  // «bolla»: un plop breve che sale
   // fanfara: arpeggio do-mi-sol-do, poi l'accordo che risuona e un luccichio in alto
   [523,659,784,1047].forEach((f,j)=>note(a,f,j*.09,.35,.13));
   [523,659,784,1047].forEach(f=>note(a,f,.4,1.8,.08));
