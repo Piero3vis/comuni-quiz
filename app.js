@@ -84,7 +84,10 @@ const cv = $('cv'), ctx = cv.getContext('2d'), box = $('mapbox');
 const [bx0,by0,bx1,by1] = D.bb;
 let scale = 1, ox = 0, oy = 0, W = 0, H = 0, dpr = 1, minScale = 1;
 function fit(){ const s = Math.min(W/(bx1-bx0), H/(by1-by0)) * .95; scale = minScale = s; ox = (W - (bx1-bx0)*s)/2 - bx0*s; oy = (H - (by1-by0)*s)/2 - by0*s; }
-function resize(){ dpr = window.devicePixelRatio||1; const pw = W, ph = H, ps = minScale; W = box.clientWidth; H = box.clientHeight; cv.width = W*dpr; cv.height = H*dpr; if(!pw){ fit(); } else { const cx = (pw/2-ox)/scale, cy = (ph/2-oy)/scale, ratio = scale/ps; fit(); scale = minScale*ratio; ox = W/2-cx*scale; oy = H/2-cy*scale; } draw(); }
+// telefono (≤ 600 px): la mappa arriva fino alla linguetta del pannello, anche con la tastiera aperta (visualViewport)
+const PHONE = window.matchMedia ? matchMedia('(max-width:600px)') : null, isPhone = () => !!(PHONE && PHONE.matches);
+function fitBox(){ if(!isPhone()){ box.style.height = ''; return; } const vh = window.visualViewport ? visualViewport.height : innerHeight, top = box.getBoundingClientRect().top + (window.scrollY||0); box.style.height = Math.max(220, Math.round(vh - top - 66)) + 'px'; }
+function resize(){ fitBox(); dpr = window.devicePixelRatio||1; const pw = W, ph = H, ps = minScale; W = box.clientWidth; H = box.clientHeight; cv.width = W*dpr; cv.height = H*dpr; if(!pw){ fit(); } else { const cx = (pw/2-ox)/scale, cy = (ph/2-oy)/scale, ratio = scale/ps; fit(); scale = minScale*ratio; ox = W/2-cx*scale; oy = H/2-cy*scale; } draw(); }
 let raf = 0; function draw(){ if(raf) return; raf = requestAnimationFrame(()=>{ raf = 0; render(); }); }
 function render(){
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
@@ -538,10 +541,10 @@ function refreshStats(){ $('cnt').textContent = foundCount; $('pop').textContent
 function save(){ try{ localStorage.setItem('comuniQuizV1', JSON.stringify({f:[...found].map((v,i)=>v?i:-1).filter(i=>i>=0), t:elapsed, a:[...earned], ...(TIMED.some(c=>c.best) ? { rb: Object.fromEntries(TIMED.filter(c=>c.best).map(c=>[c.id, c.best])) } : {}), ...(TOURS_ON ? (TOURS.some(t=>t.last!==null) ? { tr: Object.fromEntries(TOURS.filter(t=>t.last!==null).map(t=>[t.id, [t.last, [...t.seen]]])) } : {}) : trKept ? { tr: trKept } : {}), ...(gaveUp ? {g:1} : {})})); }catch(e){} }
 function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')||'null'); if(s&&s.f){ s.f.forEach(addFound); elapsed = s.t||0; gaveUp = !!s.g; const tr = s.tr || (Array.isArray(s.gr) ? { giro: [s.gr[0], REGK.filter(k=>s.gr[1]>>k&1)] } : {}); if(!TOURS_ON && Object.keys(tr).length) trKept = tr; TOURS.forEach(t=>{ const v = tr[t.id]; if(Array.isArray(v) && Array.isArray(v[1]) && v[1].includes(v[0]) && t.adj(v[0])){ t.last = v[0]; t.seen = new Set(v[1]); } }); const rb = s.rb || {}; TIMED.forEach(c=>{ if(Number.isInteger(rb[c.id]) && rb[c.id]>0) c.best = rb[c.id]; }); (s.a||[]).forEach(id=>{ if(CH.some(c=>c[0]===id)) earned.add(id); }); } }catch(e){} }
 // la casella è sempre attiva (tranne a partita finita): scrivere un comune fa partire o riprendere la partita; il pulsante serve solo per il tempo
-const PAUSED = 'In pausa: scrivi un comune per riprendere…';
+const ph = (long, short) => isPhone() ? short : long, PAUSED = ph('In pausa: scrivi un comune per riprendere…', 'In pausa: scrivi per riprendere…');
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
-  $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa'; $('go').dataset.state = 'run';
+  $('inp').placeholder = ph('Scrivi il nome di un comune…', 'Scrivi un comune…'); $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa'; $('go').dataset.state = 'run';
 }
 function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').placeholder = PAUSED; $('go').textContent = 'Riprendi'; $('go').dataset.state = 'pause'; }
 // Partita finita (resa o tutti trovati): input fermo, il pulsante principale diventa "Ricomincia"
@@ -584,8 +587,11 @@ $('theme').onclick = ()=>{
 };
 if(window.matchMedia){ const mq = matchMedia('(prefers-color-scheme: dark)'); (mq.addEventListener ? mq.addEventListener('change', draw) : mq.addListener(draw)); }
 // Schede del pannello laterale: Regioni / Traguardi
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tabs button').forEach(x => { const on = x===b; x.setAttribute('aria-selected', on); $(x.getAttribute('aria-controls')).hidden = !on; });
+// telefono: il pannello è una linguetta in basso; una scheda la apre, la freccia la apre e la chiude
+const sideEl = document.querySelector('.side'), setSheet = o => { sideEl.classList.toggle('open', o); $('sheet').setAttribute('aria-expanded', o); $('sheet').textContent = o ? '▼' : '▲'; $('sheet').setAttribute('aria-label', o ? 'Chiudi il pannello' : 'Apri il pannello'); };
+$('sheet').onclick = () => setSheet(!sideEl.classList.contains('open'));
+document.querySelectorAll('.tabs button[role=tab]').forEach(b => b.onclick = () => { if(isPhone()) setSheet(true);
+  document.querySelectorAll('.tabs button[role=tab]').forEach(x => { const on = x===b; x.setAttribute('aria-selected', on); $(x.getAttribute('aria-controls')).hidden = !on; });
 });
 showTheme();
 // spiegazione dei punti rarità: tooltip col mouse, avviso al clic (anche da telefono)
@@ -597,6 +603,7 @@ $('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter'
 // link per sostenere il progetto: l'indirizzo sta solo nel footer (#support), il pannello laterale lo copia
 { const s = $('support'), side = $('supportSide'); if(s && side){ side.href = s.href; $('supportBox').hidden = false; } }
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();
+if(isPhone() && !over() && !foundCount) $('inp').placeholder = 'Scrivi un comune per iniziare…';
 if(over()) showOver(); else if(foundCount>0){ $('go').textContent = 'Riprendi'; $('inp').placeholder = PAUSED; }
-window.addEventListener('resize',resize); resize();
+window.addEventListener('resize',resize); if(window.visualViewport) visualViewport.addEventListener('resize',resize); resize();
 })();

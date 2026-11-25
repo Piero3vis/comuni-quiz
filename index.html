@@ -27,7 +27,7 @@
     <div class="stat" id="time">0:00:00<small>tempo</small></div>
     <button id="theme" class="icon" aria-label="Tema: automatico" title="Tema: automatico">◐</button>
     <button class="primary" id="go">Inizia</button>
-    <button id="giveup" disabled>Mi arrendo</button>
+    <button id="giveup" disabled aria-label="Mi arrendo"><span class="gi" aria-hidden="true">🏳️</span><span class="lbl">Mi arrendo</span></button>
   </div>
   <p class="mobnote" id="mobnote" hidden><span>📱 Il quiz funziona anche da telefono, ma da computer la mappa è più grande e scorre meglio.</span><button type="button" aria-label="Chiudi l’avviso">✕</button></p>
   <div class="main">
@@ -36,7 +36,7 @@
       <div class="zoom"><button id="zi" aria-label="Ingrandisci">+</button><button id="zo" aria-label="Riduci">−</button><button id="zr" aria-label="Reimposta" style="font-size:13px">⌂</button></div>
     </div>
     <div class="side">
-      <div class="tabs" role="tablist"><button role="tab" id="tabR" aria-controls="paneR" aria-selected="true">Regioni</button><button role="tab" id="tabA" aria-controls="paneA" aria-selected="false">🏆 Traguardi <span class="c" id="achc"></span></button></div>
+      <div class="tabs" role="tablist"><button role="tab" id="tabR" aria-controls="paneR" aria-selected="true">Regioni</button><button role="tab" id="tabA" aria-controls="paneA" aria-selected="false">🏆 Traguardi <span class="c" id="achc"></span></button><button type="button" id="sheet" class="sheet" aria-expanded="false" aria-label="Apri il pannello">▲</button></div>
       <div id="paneR" role="tabpanel" aria-labelledby="tabR">
         <div class="seg" id="regsort" role="group" aria-label="Ordina le regioni"><span>Ordina</span><button data-s="az" aria-pressed="true">A-Z</button><button data-s="pct" aria-pressed="false">%</button><button data-s="miss" aria-pressed="false">Mancanti</button></div>
         <div id="regs"></div>
