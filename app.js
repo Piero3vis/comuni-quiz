@@ -390,19 +390,48 @@ function celebrate(big){
 function toast(icon,text){ toastQ.push([icon,text]); if(!toasting) nextToast(); }
 function nextToast(){ const q = toastQ.shift(); if(!q){ toasting = false; return; } toasting = true; toastEl.textContent = q[0]+' '+q[1]; toastEl.style.opacity = 1; setTimeout(()=>{ toastEl.style.opacity = 0; setTimeout(nextToast,350); },Math.max(2800, q[1].length*45)); }
 // suoni dei traguardi (Web Audio, nessun file da scaricare): spenti finché il giocatore non li accende con #snd, scelta in localStorage['comuniQuizSound']
-// i traguardi più difficili (provincia o regione completa, metà degli italiani, capoluoghi, un comune per provincia, 1000 comuni) suonano una fanfara
-const BIGACH = id => /^[pr]:/.test(id) || id==='cap' || id==='e:p' || (/^pp\d+$/.test(id) && +id.slice(2)>=50) || (/^m\d+$/.test(id) && +id.slice(1)>=1000);
-let sndOn = false, actx = null; try{ sndOn = localStorage.getItem('comuniQuizSound')==='1'; }catch(e){}
-function audio(){ const A = window.AudioContext || window.webkitAudioContext; if(!A) return null; try{ if(!actx) actx = new A(); if(actx.state==='suspended' && actx.resume) actx.resume(); }catch(e){ return null; } return actx; }
-function note(a, f, at, dur, vol, type, to){ const o = a.createOscillator(), g = a.createGain(), t = a.currentTime+at; o.type = type||'triangle'; o.frequency.setValueAtTime(f,t); if(to) o.frequency.exponentialRampToValueAtTime(to,t+.08); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.015); g.gain.exponentialRampToValueAtTime(0.0001,t+dur); o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.05); }
-function achSound(big){
-  const a = sndOn && audio(); if(!a) return;
-  if(!big){ note(a,380,0,.18,.16,'sine',1100); return; }  // «bolla»: un plop breve che sale
-  // fanfara: arpeggio do-mi-sol-do, poi l'accordo che risuona e un luccichio in alto
-  [523,659,784,1047].forEach((f,j)=>note(a,f,j*.09,.35,.13));
-  [523,659,784,1047].forEach(f=>note(a,f,.4,1.8,.08));
-  [2093,2637,3136].forEach((f,j)=>note(a,f,.45+j*.07,.6,.03,'sine'));
+// un suono per risposta, il più importante: «Arpa e coro» per una regione completa e per i 1000 comuni (e le soglie dopo), «Vittoria 8-bit» per una provincia completa,
+// «Livello superato» quando si trova Arcade, la fanfara per metà degli italiani (e oltre), tutti i capoluoghi e un comune per provincia, la «bolla» per gli altri traguardi
+const SNDK = id => /^r:/.test(id) || (/^m\d+$/.test(id) && +id.slice(1)>=1000) ? 'reg' : /^p:/.test(id) ? 'prov' : id==='cap' || id==='e:p' || (/^pp\d+$/.test(id) && +id.slice(2)>=50) ? 'fan' : 'ach';
+const SNDP = ['reg','prov','arc','fan','ach'], ARCADE = D.n.indexOf('Arcade');
+let sndOn = false, actx = null, sndOut = null; try{ sndOn = localStorage.getItem('comuniQuizSound')==='1'; }catch(e){}
+function audio(){ const A = window.AudioContext || window.webkitAudioContext; if(!A) return null;
+  try{ if(!actx){ actx = new A(); sndOut = actx.createDynamicsCompressor(); sndOut.connect(actx.destination); } if(actx.state==='suspended' && actx.resume) actx.resume(); }catch(e){ return null; } return actx; }
+// una nota: frequenza f, inizio at e durata dur in secondi, volume vol; o: type, to (glissando fino a to in toT secondi), lp (filtro passa basso), att (attacco)
+function note(a, f, at, dur, vol, o = {}){
+  const osc = a.createOscillator(), g = a.createGain(), t = a.currentTime+at; let out = osc;
+  osc.type = o.type || 'sine'; osc.frequency.setValueAtTime(f, t); if(o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t+(o.toT || dur*.6));
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+(o.att || .012)); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  if(o.lp){ const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; osc.connect(fl); out = fl; }
+  out.connect(g); g.connect(sndOut); osc.start(t); osc.stop(t+dur+.05);
 }
+const chip = (a, f, at, d, v = .06) => note(a, f, at, d, v, { type:'square', lp:4000, att:.004 });   // 8-bit
+// campana: fondamentale e parziali inarmoniche che si spengono prima
+const bell = (a, f, at, dur, vol) => [[1,1],[2.76,.35],[5.4,.12],[2,.25]].forEach(([m,v],j)=>note(a, f*m, at, dur/(1+j*.8), vol*v));
+// rumore filtrato: il colpo di batteria dell'8-bit
+function noise(a, at, dur, vol){
+  const t = a.currentTime+at, len = Math.ceil(a.sampleRate*dur), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  const src = a.createBufferSource(), fl = a.createBiquadFilter(), g = a.createGain(); src.buffer = buf; fl.type = 'highpass'; fl.frequency.value = 3000;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t+dur); src.connect(fl); fl.connect(g); g.connect(sndOut); src.start(t);
+}
+// coro: tre voci leggermente stonate con vibrato e attacco lento
+function choir(a, f, at, dur, vol){
+  const t = a.currentTime+at, g = a.createGain(), lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 5; lg.gain.value = f*.006; lfo.connect(lg);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+.35); g.gain.setValueAtTime(vol, t+dur-.6); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  [-8,0,8].forEach(c => { const o = a.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.detune.value = c; lg.connect(o.frequency); o.connect(g); o.start(t); o.stop(t+dur+.05); });
+  lfo.start(t); lfo.stop(t+dur+.05); g.connect(sndOut);
+}
+const SND = {
+  ach: a => note(a, 380, 0, .18, .16, { to:1100, toT:.08 }),   // bolla: un plop breve che sale
+  fan: a => { [523,659,784,1047].forEach((f,j)=>note(a,f,j*.09,.35,.13,{type:'triangle'})); [523,659,784,1047].forEach(f=>note(a,f,.4,1.8,.08,{type:'triangle'})); [2093,2637,3136].forEach((f,j)=>note(a,f,.45+j*.07,.6,.03)); },
+  arc: a => { [[784,0,.1],[1047,.11,.1],[1319,.22,.1],[1568,.33,.18],[1319,.52,.1],[1568,.63,.45]].forEach(([f,t,d])=>chip(a,f,t,d)); [[131,0,.3],[196,.33,.3],[262,.63,.45]].forEach(([f,t,d])=>note(a,f,t,d,.12,{type:'triangle'})); },
+  prov: a => { [[523,0,.12],[523,.13,.12],[523,.26,.12],[523,.39,.3],[415,.72,.3],[466,1.05,.3],[523,1.38,.12],[466,1.51,.08],[523,1.6,.6]].forEach(([f,t,d])=>{ chip(a,f*2,t,d); chip(a,f,t,d,.03); });
+    [[131,0],[131,.39],[104,.72],[117,1.05],[131,1.38]].forEach(([f,t])=>note(a,f,t,.3,.12,{type:'triangle'})); [0,.39,.72,1.05,1.38,1.6].forEach(t=>noise(a,t,.08,.08)); },
+  reg: a => { const sc = [262,294,330,392,440]; for(let j=0;j<16;j++) note(a, sc[j%5]*2**Math.floor(j/5), j*.045, .7, .06, {type:'triangle'});
+    [262,330,392,523].forEach(f=>choir(a,f,.8,3.4,.035)); note(a,131,.8,3.4,.1,{type:'triangle'}); [1047,1319,1568,2093].forEach((f,j)=>bell(a,f,1+j*.25,1.6,.05)); },
+};
+function playSnd(k){ const a = sndOn && audio(); if(a) SND[k](a); }
 function achInit(){ CAM.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('w:'+gi); }); Object.keys(PT).forEach(p=>{ const f = provFound[p]||0; if(f>=PT[p][0]) unlocked.add('p25:'+p); if(f>=PT[p][1]) unlocked.add('p50:'+p); }); RT.forEach((x,k)=>{ if(regCount[k]>=x[0]) unlocked.add('r25:'+k); if(regCount[k]>=x[1]) unlocked.add('r50:'+k); }); ISL.forEach((g,gi)=>{ if(islDone(g)) unlocked.add('i:'+gi); }); CMS.forEach(([n])=>{ if(coastFound>=n) unlocked.add('c'+n); }); coastRegTot.forEach((tt,k)=>{ if(tt>0 && coastRegFound[k]===tt) unlocked.add('k:'+k); }); MS.forEach(([n])=>{ if(foundCount>=n) unlocked.add('m'+n); }); SEC.forEach(([n])=>{ if(foundCount>=n) unlocked.add('s'+n); }); PPS.forEach(([q,,n])=>{ if(popFound>=n) unlocked.add('pp'+q); }); Object.keys(provTot).forEach(p=>{ if(provFound[p]===provTot[p]) unlocked.add('p:'+p); }); D.regs.forEach((_,k)=>{ if(regCount[k]===regTot[k]) unlocked.add('r:'+k); }); if(provsTouched()===NP) unlocked.add('e:p'); if(regsTouched()===D.regs.length) unlocked.add('e:r'); if(capFound()===CAPS.size) unlocked.add('cap'); BIGS.forEach(b=>{ if(nFound(b.list)===b.list.length) unlocked.add('big:'+b.lim); }); POPS.forEach(p=>{ if(nFound(p.list)===p.n) unlocked.add('pop:'+p.n); }); EXTS.forEach(e=>{ if(nFound(e.list)===e.n) unlocked.add('ext:'+e.n); }); { const lf = nFound(LG); LGS.forEach(n=>{ if(lf>=n) unlocked.add('lg:'+n); }); } NMS.forEach(x=>{ if(nFound(x.list)===x.list.length) unlocked.add(x.id); }); BG.forEach((b,j)=>b.steps.forEach(n=>{ if(bgFound[j]>=n) unlocked.add('b'+b.lim+':'+n); })); { const tf = tesFound().length; TS.forEach(n=>{ if(tf>=n) unlocked.add('tes:'+n); }); } earned.forEach(id=>unlocked.add(id)); TG.forEach(t=>t.list.forEach((g,gi)=>{ if(islDone(g)) unlocked.add(t.pre+':'+gi); })); if(confTouched()===CONF.length) unlocked.add('f:giro'); if(minTouched()===MLG.length) unlocked.add('ml:giro'); REC.forEach(([k])=>{ if(found[D.rec[k]]) unlocked.add('x:'+k); }); ccDone.forEach((_,id)=>unlocked.add(id)); if(wkBest===MREGN) unlocked.add('walk'); { const bf = nFound(BB); BBS.forEach(n=>{ if(bf>=n) unlocked.add('bb:'+n); }); } BBR.forEach(([k,a])=>{ if(nFound(a)===a.length) unlocked.add('bb:r'+k); }); }
 function winkCheck(added){
   WINKS.forEach(w=>{
@@ -588,7 +617,7 @@ $('inp').addEventListener('input',e=>{
   if(!running) start();
   let added = [], touched = new Set();
   hits.forEach(i=>{ if(addFound(i)){ added.push(i); touched.add(D.r[i]); } });
-  if(added.length){ e.target.value = ''; touched.forEach(updateReg); const u0 = unlocked.size; added.forEach(achCheck); timedCheck(added); winkCheck(added); TOURS.forEach(t=>tourStep(t, added)); { const fresh = [...unlocked].slice(u0); if(fresh.length) achSound(fresh.some(BIGACH)); } renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
+  if(added.length){ e.target.value = ''; touched.forEach(updateReg); const u0 = unlocked.size; added.forEach(achCheck); timedCheck(added); winkCheck(added); TOURS.forEach(t=>tourStep(t, added)); { const ks = [...unlocked].slice(u0).map(SNDK); if(added.includes(ARCADE)) ks.push('arc'); const k = SNDP.find(x=>ks.includes(x)); if(k) playSnd(k); } renderAch(); refreshStats(); save(); if(added.length===1){ flash = added[0]; ensureVisible(added[0]); setTimeout(()=>{ flash=-1; draw(); },1200); } draw(); if(foundCount===N) finish(); } else dupNotice(hits, e.target);
 });
 // ---- tema: automatico (segue il sistema) -> chiaro -> scuro; scelta salvata a parte in localStorage['comuniQuizTheme'] ----
 const THEMES = [['', '◐', 'automatico'], ['light', '☀', 'chiaro'], ['dark', '☾', 'scuro']];
@@ -610,7 +639,7 @@ document.querySelectorAll('.tabs button[role=tab]').forEach(b => b.onclick = () 
 function showSnd(){ const b = $('snd'), l = 'Suoni dei traguardi: '+(sndOn ? 'accesi' : 'spenti'); b.textContent = sndOn ? '🔊' : '🔇'; b.title = l; b.setAttribute('aria-label', l); b.setAttribute('aria-pressed', sndOn); }
 $('snd').onclick = ()=>{
   sndOn = !sndOn; try{ if(sndOn) localStorage.setItem('comuniQuizSound', '1'); else localStorage.removeItem('comuniQuizSound'); }catch(e){}
-  showSnd(); achSound(false); if(running) $('inp').focus();
+  showSnd(); playSnd('ach'); if(running) $('inp').focus();
 };
 showTheme(); showSnd();
 // spiegazione dei punti rarità: tooltip col mouse, avviso al clic (anche da telefono)

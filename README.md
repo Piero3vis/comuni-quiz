@@ -33,7 +33,7 @@ Qualche aiuto:
 - Il punteggio delle “persone beccate”: quanti abitanti hanno i comuni che hai trovato (dati ISTAT).
 - I punti rarità: più il comune è piccolo, più vale. E obiettivi per i borghi, i microcomuni e il comune più piccolo di ogni provincia.
 - Tema chiaro e scuro.
-- Suoni per i traguardi (spenti all’inizio, pulsante 🔇/🔊): una «bolla» per quelli normali, una fanfara per i più difficili.
+- Suoni per i traguardi (spenti all’inizio, pulsante 🔇/🔊): una «bolla» per quelli normali, una fanfara per i più difficili, una musica più grande per una provincia o una regione completata e per i 1.000 comuni.
 - I progressi si salvano da soli: chiudi la pagina e riprendi quando vuoi, sullo stesso dispositivo e browser.
 
 ## Privacy

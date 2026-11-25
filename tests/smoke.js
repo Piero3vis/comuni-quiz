@@ -225,7 +225,8 @@ async function runGiveUp(){
       beforeParse(w){
         w.Path2D = class {};
         // finto Web Audio: conta le note suonate (w.notes)
-        if(o.audio){ w.notes = []; w.AudioContext = class { constructor(){ this.currentTime = 0; this.state = 'running'; this.destination = {}; } createOscillator(){ const n = { frequency: { setValueAtTime(){}, exponentialRampToValueAtTime(){} }, connect(){}, start(){}, stop(){} }; w.notes.push(n); return n; } createGain(){ return { gain: { setValueAtTime(){}, exponentialRampToValueAtTime(){} }, connect(){} }; } }; }
+        if(o.audio){ w.notes = []; const node = () => ({ connect(){}, start(){}, stop(){}, frequency: { value: 0, setValueAtTime(){}, exponentialRampToValueAtTime(){} }, detune: {}, gain: { value: 0, setValueAtTime(){}, exponentialRampToValueAtTime(){} } });
+          w.AudioContext = class { constructor(){ this.currentTime = 0; this.state = 'running'; this.destination = {}; this.sampleRate = 8000; } createOscillator(){ const n = node(); w.notes.push(n); return n; } createGain(){ return node(); } createBiquadFilter(){ return node(); } createDynamicsCompressor(){ return node(); } createBufferSource(){ return node(); } createBuffer(c, n){ const d = new Float32Array(n); return { getChannelData: () => d }; } }; }
         if(o.phone) w.matchMedia = q => ({ matches: /coarse|max-width/.test(q), addEventListener(){}, addListener(){} });
         const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
         w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
@@ -278,15 +279,17 @@ async function runGiveUp(){
   ok(side.contains(p.d.querySelector('.foot')) && side.contains(p.d.querySelector('.about')) && /CC BY 4\.0/.test(side.textContent), 'telefono: crediti e presentazione in fondo al pannello');
   const closed = [p.$('mobnote').hidden, p.w.localStorage.getItem('comuniQuizMobileNote')].join(','); p.dom.window.close();
   p = await open(null, { phone: true, noteOff: true }); const again = p.$('mobnote').hidden; p.dom.window.close();
-  // suoni dei traguardi: spenti all'inizio; acceso, un traguardo normale suona una nota (bolla), uno difficile (provincia completa) la fanfara
+  // suoni dei traguardi: spenti all'inizio; acceso, un traguardo normale suona una nota (bolla), una provincia completa la Vittoria 8-bit (23 note), Arcade il Livello superato (9), il millesimo comune Arpa e coro (49)
   const guess = (q, n) => { q.$('inp').value = n; q.$('inp').dispatchEvent(new q.w.Event('input')); };
   p = await open(null, { audio: true }); guess(p, 'milano'); const off = [p.$('snd').textContent, p.$('snd').getAttribute('aria-pressed'), p.w.notes.length].join(',');
   p.$('snd').click(); const on = [p.$('snd').textContent, p.w.localStorage.getItem('comuniQuizSound'), p.w.notes.length].join(','); p.w.notes.length = 0;
   guess(p, 'roma'); const small = p.w.notes.length; guess(p, 'roma'); const quiet = p.w.notes.length - small; p.dom.window.close();
   const mj = JSON.parse(fs.readFileSync(path.join(root, 'data/map.json'), 'utf8')), ts = mj.p.map((x,i)=>x==='TS' ? i : -1).filter(i=>i>=0 && mj.n[i]!=='Muggia');
-  p = await open(JSON.stringify({ f: ts, t: 1000 }), { audio: true, snd: true }); guess(p, 'muggia'); const big = p.w.notes.length; p.dom.window.close();
-  console.log('suoni: spenti', off, '| acceso', on, '| Roma (record)', small, '| di nuovo', quiet, '| provincia completa', big);
-  ok(off === '🔇,false,0' && on === '🔊,1,1' && quiet === 0 && small === 1 && big === 11, 'suoni: spenti di default, bolla per i traguardi, fanfara per i difficili');
+  p = await open(JSON.stringify({ f: ts, t: 1000 }), { audio: true, snd: true }); guess(p, 'muggia'); const big = p.w.notes.length; p.w.notes.length = 0; guess(p, 'arcade'); const arc = p.w.notes.length; p.dom.window.close();
+  const roma = mj.n.indexOf('Roma'), f999 = mj.n.map((_,i)=>i).filter(i=>i!==roma && mj.p[i]!=='RM').slice(0, 999);
+  p = await open(JSON.stringify({ f: f999, t: 1000 }), { audio: true, snd: true }); guess(p, 'roma'); const mille = p.w.notes.length; p.dom.window.close();
+  console.log('suoni: spenti', off, '| acceso', on, '| Roma (record)', small, '| di nuovo', quiet, '| provincia completa', big, '| Arcade', arc, '| 1000 comuni', mille);
+  ok(off === '🔇,false,0' && on === '🔊,1,1' && quiet === 0 && small === 1 && big === 23 && arc === 9 && mille === 49, 'suoni: spenti di default, bolla per i traguardi, Vittoria 8-bit per la provincia, Livello superato per Arcade, Arpa e coro per i 1000');
   console.log('avviso telefono: computer', deskNote, '| telefono', phoneNote, '| chiuso', closed, '| dopo', again);
   ok(deskNote && !phoneNote && closed === 'true,1' && again, 'avviso telefono: solo su telefono, la ✕ lo chiude per sempre');
 }
