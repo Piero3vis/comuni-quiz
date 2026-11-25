@@ -591,6 +591,9 @@ showTheme();
 // spiegazione dei punti rarità: tooltip col mouse, avviso al clic (anche da telefono)
 const rarInfo = () => { if(!toastQ.some(t => t[0]==='💎')) toast('💎', 'Punti rarità: ' + $('rarbox').title); };
 $('rarbox').onclick = rarInfo; $('rarbox').onkeydown = e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); rarInfo(); } };
+// avviso sul telefono (puntatore grossolano): da computer si gioca meglio; chiuso una volta, resta chiuso (localStorage['comuniQuizMobileNote'], a parte dalla partita)
+{ const el = $('mobnote'); let off = false; try{ off = localStorage.getItem('comuniQuizMobileNote')==='1'; }catch(e){}
+  if(el && !off && window.matchMedia && matchMedia('(pointer: coarse)').matches){ el.hidden = false; el.querySelector('button').onclick = () => { el.hidden = true; try{ localStorage.setItem('comuniQuizMobileNote', '1'); }catch(e){} }; } }
 // link per sostenere il progetto: l'indirizzo sta solo nel footer (#support), il pannello laterale lo copia
 { const s = $('support'), side = $('supportSide'); if(s && side){ side.href = s.href; $('supportBox').hidden = false; } }
 buildSide(); load(); D.regs.forEach((_,k)=>updateReg(k)); refreshStats(); achInit(); renderAch(); tick();

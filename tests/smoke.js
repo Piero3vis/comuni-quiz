@@ -219,15 +219,16 @@ async function runTimer(){
 // resa: mostra tutti i comuni, resta valida dopo il ricaricamento, "Ricomincia" cancella la partita
 async function runGiveUp(){
   const html = fs.readFileSync(path.join(root, 'dist/quiz.html'), 'utf8');
-  const open = async saved => {
+  const open = async (saved, o = {}) => {
     const errors = [];
     const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'http://localhost/', pretendToBeVisual: true,
       beforeParse(w){
         w.Path2D = class {};
+        if(o.phone) w.matchMedia = q => ({ matches: /coarse/.test(q), addEventListener(){}, addListener(){} });
         const noop = new Proxy(function(){}, { get: (t,k)=> k==='isPointInPath' ? ()=>false : (k==='measureText'? ()=>({width:0}) : noop), apply: ()=>undefined, set: ()=>true });
         w.HTMLCanvasElement.prototype.getContext = ()=>noop; w.confirm = ()=>true;
         w.addEventListener('error', e=>errors.push(e.message));
-        w.localStorage.clear(); if(saved) w.localStorage.setItem('comuniQuizV1', saved);
+        w.localStorage.clear(); if(saved) w.localStorage.setItem('comuniQuizV1', saved); if(o.noteOff) w.localStorage.setItem('comuniQuizMobileNote', '1');
       }});
     await new Promise(r=>setTimeout(r,1500));
     const w = dom.window, d = w.document, $ = id=>d.getElementById(id);
@@ -264,6 +265,13 @@ async function runGiveUp(){
   ok(paused === 'false,In pausa: scrivi un comune per riprendere…,Riprendi,pause', 'in pausa la casella resta attiva');
   ok(resumed === '2,Pausa', 'scrivere un comune in pausa fa riprendere');
   ok(back === 'false,In pausa: scrivi un comune per riprendere…,Riprendi', 'al ritorno: casella attiva e testo di pausa');
+  // avviso sul telefono: solo con puntatore grossolano; la ✕ lo chiude e resta chiuso
+  p = await open(); const deskNote = p.$('mobnote').hidden; p.dom.window.close();
+  p = await open(null, { phone: true }); const phoneNote = p.$('mobnote').hidden; p.$('mobnote').querySelector('button').click();
+  const closed = [p.$('mobnote').hidden, p.w.localStorage.getItem('comuniQuizMobileNote')].join(','); p.dom.window.close();
+  p = await open(null, { phone: true, noteOff: true }); const again = p.$('mobnote').hidden; p.dom.window.close();
+  console.log('avviso telefono: computer', deskNote, '| telefono', phoneNote, '| chiuso', closed, '| dopo', again);
+  ok(deskNote && !phoneNote && closed === 'true,1' && again, 'avviso telefono: solo su telefono, la ✕ lo chiude per sempre');
 }
 // curiosità: nessun testo contiene il nome del comune; il riquadro del clic mostra il menu chiuso (indizio prima, curiosità dopo)
 async function runFacts(){
