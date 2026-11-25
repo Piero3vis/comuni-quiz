@@ -683,6 +683,11 @@
    "nota": "🚤 Lario è l’altro nome del lago di Como"
   },
   {
+   "name": "Del Garda",
+   "comuni": ["Brenzone sul Garda", "Castelnuovo del Garda", "Costermano sul Garda", "Desenzano del Garda", "Limone sul Garda", "Lonato del Garda", "Manerba del Garda", "Moniga del Garda", "Padenghe sul Garda", "Peschiera del Garda", "Polpenazze del Garda", "Puegnago del Garda", "Riva del Garda", "Tremosine sul Garda"],
+   "nota": "🍋 Limonaie, ulivi e vela: tutto il Garda!"
+  },
+  {
    "name": "Marsica",
    "comuni": ["Gioia dei Marsi", "Lecce nei Marsi", "Luco dei Marsi", "Magliano de' Marsi", "Ortona dei Marsi", "San Benedetto dei Marsi", "Scurcola Marsicana"],
    "nota": "🏔️ Nella terra degli antichi Marsi, attorno al Fucino"

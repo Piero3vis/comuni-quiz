@@ -252,16 +252,16 @@ async function runGiveUp(){
   const fresh = [inp.disabled, inp.placeholder, p.$('go').textContent].join(',');
   inp.value = 'paperopoli'; inp.dispatchEvent(new p.w.KeyboardEvent('keydown', { key: 'Enter' }));
   const nope = p.d.body.textContent.includes('Nessun comune si chiama così') && inp.value === 'paperopoli';
-  type('roma'); const started = [p.$('cnt').textContent, p.$('go').textContent, p.$('giveup').disabled].join(',');
-  p.$('go').click(); const paused = [inp.disabled, inp.placeholder, p.$('go').textContent].join(',');
+  type('roma'); const started = [p.$('cnt').textContent, p.$('go').textContent, p.$('giveup').disabled, p.$('go').dataset.state].join(',');
+  p.$('go').click(); const paused = [inp.disabled, inp.placeholder, p.$('go').textContent, p.$('go').dataset.state].join(',');
   type('milano'); const resumed = [p.$('cnt').textContent, p.$('go').textContent].join(',');
   const saved2 = p.w.localStorage.getItem('comuniQuizV1'); p.dom.window.close();
   p = await open(saved2); const back = [p.$('inp').disabled, p.$('inp').placeholder, p.$('go').textContent].join(','); p.dom.window.close();
   console.log('inizio scrivendo:', fresh, '|', started, '|', paused, '|', resumed, '|', back);
   ok(fresh === 'false,Scrivi il nome di un comune per iniziare…,Inizia', 'casella attiva prima di Inizia');
   ok(nope, 'Invio su un nome sbagliato: avviso, il testo resta');
-  ok(started === '1,Pausa,false', 'scrivere un comune fa partire la partita');
-  ok(paused === 'false,In pausa: scrivi un comune per riprendere…,Riprendi', 'in pausa la casella resta attiva');
+  ok(started === '1,Pausa,false,run', 'scrivere un comune fa partire la partita');
+  ok(paused === 'false,In pausa: scrivi un comune per riprendere…,Riprendi,pause', 'in pausa la casella resta attiva');
   ok(resumed === '2,Pausa', 'scrivere un comune in pausa fa riprendere');
   ok(back === 'false,In pausa: scrivi un comune per riprendere…,Riprendi', 'al ritorno: casella attiva e testo di pausa');
 }
@@ -512,7 +512,7 @@ async function runChallenges(){
   // 11. stesso cognome: ogni comune del gruppo finisce allo stesso modo; il gruppo completo sblocca il traguardo con l'avviso
   {
     const cg = read('data/groups.json').cognomi, byName = Object.fromEntries(cg.map(g => [g.name, g]));
-    ok(cg.length === 25 && cg.every(g => g.nota && g.comuni.length >= 4), 'cognomi: 25 gruppi, ognuno con nota e almeno 4 comuni');
+    ok(cg.length === 26 && cg.every(g => g.nota && g.comuni.length >= 4), 'cognomi: 26 gruppi, ognuno con nota e almeno 4 comuni');
     ok(byName['Sulla strada del vino'].comuni.length === 8 && byName['Di Cadore'].comuni.length === 19 && byName['Agordino'].comuni.length === 9 && byName['Sopra e sotto'].comuni.length === 24, 'cognomi: vino 8, Cadore 19, Agordino 9, 12 coppie sopra/sotto');
     ok(!byName['Polesine'].comuni.includes('Polesine Zibello') && !byName['Sannio'].comuni.some(nm => /^Sannic/.test(nm)), 'cognomi: niente omonimi di altre zone');
     p = await open();
