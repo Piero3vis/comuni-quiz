@@ -217,7 +217,7 @@ const wkName = i => ' '+D.n[i].split('/')[0].normalize('NFD').replace(/[\u0300-\
 // parole di Elementare divise per tema (solo per l'elenco nei Segreti, che mostra solo le parole trovate)
 const PAROLEG = [
   ['🎨','Colori e aspetto',['Alto','Amaro','Bella','Bianco','Bruno','Calvi','Grosso','Riccia','Rossa','Vasto','Vermiglio','Viola']],
-  ['🔢','Numeri e tempo',['Alba','Cento','Mese','Nove','Ora','Quarto','Sesto','Terzo','Tramonti']],
+  ['🔢','Numeri e tempo',['Alba','Cento','Mese','Nove','Ora','Quarto','Quindici','Sesto','Terzo','Tramonti']],
   ['🐾','Animali',['Capriolo','Cavallino','Cervo','Cicala','Manta','Toro']],
   ['🌸','Piante e frutti',['Erba','Frassino','Ginestra','Mele','Noci','Pero','Pesche','Pigna','Rose']],
   ['⛰️','Paesaggio',['Canale','Cave','Fonte','Grotte','Laghi','Lago','Monti','Pizzo','Prato','Rive','Serre','Spiazzo','Stella','Tufo']],
@@ -541,12 +541,12 @@ function load(){ try{ const s = JSON.parse(localStorage.getItem('comuniQuizV1')|
 const PAUSED = 'In pausa: scrivi un comune per riprendere…';
 function start(){
   running = true; t0 = Date.now()-elapsed; timer = setInterval(()=>{ tick(); }, 500);
-  $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa';
+  $('inp').placeholder = 'Scrivi il nome di un comune…'; $('inp').focus(); $('giveup').disabled = false; $('go').textContent = 'Pausa'; $('go').dataset.state = 'run';
 }
-function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').placeholder = PAUSED; $('go').textContent = 'Riprendi'; }
+function pause(){ tick(); running = false; clearInterval(timer); save(); $('inp').placeholder = PAUSED; $('go').textContent = 'Riprendi'; $('go').dataset.state = 'pause'; }
 // Partita finita (resa o tutti trovati): input fermo, il pulsante principale diventa "Ricomincia"
 const over = () => gaveUp || foundCount===N;
-function showOver(){ $('inp').disabled = true; $('inp').placeholder = gaveUp ? 'Ti sei arreso: ecco tutti i comuni. Premi Ricomincia per una nuova partita.' : 'Hai trovato tutti i comuni! Premi Ricomincia per una nuova partita.'; $('giveup').disabled = true; $('go').disabled = false; $('go').textContent = 'Ricomincia'; if(gaveUp) D.regs.forEach((_,k)=>updateReg(k)); draw(); }
+function showOver(){ $('inp').disabled = true; $('inp').placeholder = gaveUp ? 'Ti sei arreso: ecco tutti i comuni. Premi Ricomincia per una nuova partita.' : 'Hai trovato tutti i comuni! Premi Ricomincia per una nuova partita.'; $('giveup').disabled = true; $('go').disabled = false; $('go').textContent = 'Ricomincia'; delete $('go').dataset.state; if(gaveUp) D.regs.forEach((_,k)=>updateReg(k)); draw(); }
 function finish(){ tick(); running = false; clearInterval(timer); save(); showOver(); if(gaveUp) toast('🏳️','Hai trovato '+fmtN(foundCount)+' comuni su '+fmtN(N)+' in '+fmt(elapsed)); }
 // Ricomincia: cancella solo la partita (comuniQuizV1), il tema resta; la pagina si ricarica da zero
 function restart(){ if(!confirm('Ricominciare da zero? Comuni trovati, tempo e sfide verranno cancellati.')) return; try{ localStorage.removeItem('comuniQuizV1'); }catch(e){} location.reload(); }
